@@ -1,0 +1,99 @@
+/* Global navigation styles.
+  Used in all pages */
+.custom-nav-links .nav-link {
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 0.45rem 0.9rem;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+/* Keep the site navbar visible while scrolling on all pages. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+@media (min-width: 576px) {
+  .custom-nav-links .nav-link {
+    display: inline-flex;
+    justify-content: center;
+    min-width: 120px;
+    text-align: center;
+  }
+}
+
+/* Keep layout width stable when tab content height changes and scrollbar appears/disappears. */
+
+html {
+  overflow-y: scroll;
+}
+
+.custom-nav-links {
+  gap: 0.75rem;
+}
+
+.custom-nav-links .nav-link:hover,
+.custom-nav-links .nav-link:focus {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.custom-nav-links .nav-link.active {
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 1px;
+}
+
+.custom-nav-links .nav-link-login {
+  background: linear-gradient(135deg, #a85a00, #f98400);
+}
+
+.custom-nav-links .nav-link-nutrition {
+  background: linear-gradient(135deg, #ad1457, #ec407a);
+}
+
+.custom-nav-links .nav-link-exercise {
+  background: linear-gradient(135deg, #2e7d32, #4caf50);
+}
+
+.custom-nav-links .nav-link-ai {
+  background: linear-gradient(135deg, #1565c0, #42a5f5);
+}
+
+.custom-nav-links .nav-link-myprofile {
+  background: linear-gradient(135deg, #546e7a, #90a4ae);
+}
+
+/* Mobile navbar: keep toggler and collapsed links balanced and separated. */
+@media (max-width: 991.98px) {
+  .navbar-toggler {
+    padding: 0.25rem 0.5rem;
+    border-width: 1px;
+    border-radius: 0.55rem;
+  }
+
+  .navbar-toggler .navbar-toggler-icon {
+    width: 1.1em;
+    height: 1.1em;
+  }
+
+  .navbar-collapse {
+    margin-top: 0.6rem;
+  }
+
+  .custom-nav-links {
+    gap: 0.5rem;
+    padding-top: 0.2rem;
+  }
+
+  .custom-nav-links .nav-link {
+    display: inline-block;
+    width: 100%;
+  }
+}
