@@ -1,0 +1,340 @@
+/* EXERCISE PAGE - DARK GYM THEME */
+.exercise-page {
+  --exercise-bg-1: #07110d;
+  --exercise-bg-2: #101d17;
+  --exercise-panel: rgba(8, 14, 11, 0.92);
+  --exercise-border: rgba(110, 255, 176, 0.16);
+  --exercise-accent: #72ffb7;
+  --exercise-accent-strong: #25c56d;
+  --exercise-text-soft: #abc8b8;
+  --exercise-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
+  color: #f4fff8;
+  background: var(--exercise-bg-1);
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* Hero Section */
+.exercise-hero {
+  margin-bottom: 2rem;
+  padding: 2.5rem;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(114, 255, 183, 0.18), transparent 28%),
+    linear-gradient(135deg, var(--exercise-bg-2), var(--exercise-bg-1));
+  border: 1px solid var(--exercise-border);
+  box-shadow: var(--exercise-shadow);
+}
+
+.exercise-kicker {
+  display: inline-block;
+  margin-bottom: 0.85rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(114, 255, 183, 0.12);
+  color: var(--exercise-accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exercise-title {
+  margin-bottom: 0.9rem;
+  font-size: clamp(2.2rem, 4.5vw, 3.3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  background: linear-gradient(135deg, #f4fff8, var(--exercise-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.exercise-subtitle {
+  color: var(--exercise-text-soft);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.exercise-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.exercise-chip {
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(114, 255, 183, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--exercise-accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.exercise-chip:hover {
+  background: rgba(114, 255, 183, 0.12);
+  border-color: var(--exercise-accent);
+}
+
+/* BMI Summary Card */
+.bmi-summary-card {
+  padding: 2rem;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(18, 35, 26, 0.96), rgba(7, 16, 12, 0.96));
+  border: 1px solid var(--exercise-border);
+  box-shadow: var(--exercise-shadow);
+  height: 100%;
+}
+
+.bmi-summary-card--empty {
+  background: linear-gradient(180deg, rgba(24, 28, 26, 0.96), rgba(10, 12, 11, 0.96));
+}
+
+.bmi-label {
+  margin-bottom: 0.3rem;
+  color: var(--exercise-text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.bmi-value {
+  font-size: 4rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--exercise-accent);
+  margin-bottom: 0.5rem;
+}
+
+.bmi-status {
+  margin: 0.8rem 0 1rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f4fff8;
+}
+
+.bmi-focus {
+  color: var(--exercise-text-soft);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.bmi-meta {
+  margin-top: 1.2rem;
+  font-weight: 600;
+  color: var(--exercise-accent);
+  font-size: 0.95rem;
+}
+
+/* Section Layout */
+.exercise-section {
+  margin-bottom: 3rem;
+}
+
+.section-heading {
+  margin-bottom: 1.8rem;
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin-bottom: 0.6rem;
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f4fff8, var(--exercise-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-heading p {
+  color: var(--exercise-text-soft);
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+}
+
+/* Cards */
+.category-card,
+.exercise-card,
+.exercise-panel,
+.exercise-empty-state {
+  height: 100%;
+  padding: 1.8rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
+  border: 1px solid var(--exercise-border);
+  box-shadow: var(--exercise-shadow);
+  transition: all 0.3s ease;
+}
+
+.category-card:hover,
+.exercise-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(114, 255, 183, 0.35);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+}
+
+.category-card h3,
+.exercise-card h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  margin-bottom: 0.8rem;
+  color: #f4fff8;
+}
+
+.exercise-badge {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #106238, #2dbc74);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.exercise-tip,
+.category-card p {
+  color: var(--exercise-text-soft);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.exercise-empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--exercise-text-soft);
+}
+
+.exercise-empty-state::before {
+  content: "🔒";
+  display: block;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* Form Styling */
+.exercise-panel {
+  background:
+    radial-gradient(circle at top left, rgba(114, 255, 183, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(12, 20, 17, 0.98), rgba(8, 13, 11, 0.98));
+}
+
+.exercise-input,
+.exercise-input:focus {
+  border: 1.5px solid rgba(114, 255, 183, 0.2);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4fff8;
+  padding: 0.9rem 1.2rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.exercise-input:focus {
+  border-color: rgba(114, 255, 183, 0.6);
+  box-shadow: 0 0 0 0.25rem rgba(114, 255, 183, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.exercise-input::placeholder {
+  color: #89a998;
+}
+
+.exercise-textarea {
+  min-height: 130px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.exercise-check .form-check-input {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(114, 255, 183, 0.3);
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.exercise-check .form-check-input:checked {
+  background-color: var(--exercise-accent-strong);
+  border-color: var(--exercise-accent-strong);
+}
+
+.exercise-submit-btn {
+  padding: 1.1rem 2.5rem;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #118344, #42e28a);
+  color: #06150d;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 30px rgba(66, 226, 138, 0.3);
+}
+
+.exercise-submit-btn:hover {
+  background: linear-gradient(135deg, #16a553, #73ffb8);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(66, 226, 138, 0.4);
+}
+
+.exercise-error {
+  margin-top: 0.5rem;
+  color: #ff9d9d;
+  font-size: 0.9rem;
+  background: rgba(255, 157, 157, 0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border-left: 3px solid #ff6b6b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .exercise-page {
+    padding: 0.5rem;
+  }
+  
+  .exercise-hero,
+  .exercise-panel,
+  .category-card,
+  .exercise-card,
+  .bmi-summary-card,
+  .exercise-empty-state {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .bmi-value {
+    font-size: 3rem;
+  }
+  
+  .section-heading h2 {
+    font-size: 1.7rem;
+  }
+  
+  .exercise-title {
+    font-size: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .exercise-hero {
+    padding: 1.5rem;
+  }
+  
+  .bmi-value {
+    font-size: 2.5rem;
+  }
+}

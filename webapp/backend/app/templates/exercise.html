@@ -1,2 +1,209 @@
-{% extends "base.html" %} {% block title %}Exercise{% endblock %} {% block
-content %}{% endblock %}
+{% extends "base.html" %}
+{% block title %}Exercise{% endblock %}
+
+{% macro render_errors(field) %}
+  {% for error in field.errors %}
+    <div class="exercise-error">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exercise.css') }}">
+<section class="exercise-page">
+  <section class="exercise-hero">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-7">
+        <span class="exercise-kicker">Gym Mode</span>
+        <h1 class="exercise-title">Train With Purpose</h1>
+        <p class="exercise-subtitle">
+          Log your workout, build consistency, and unlock BMI-based exercise guidance
+          once your profile details are available.
+        </p>
+
+        <div class="exercise-chip-row">
+          <span class="exercise-chip">Strength</span>
+          <span class="exercise-chip">Cardio</span>
+          <span class="exercise-chip">Mobility</span>
+          <span class="exercise-chip">Recovery</span>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        {% if recommendation %}
+          <div class="bmi-summary-card">
+            <p class="bmi-label">Current BMI</p>
+            <div class="bmi-value">{{ "%.1f"|format(bmi_value) }}</div>
+            <div class="bmi-status">{{ recommendation.label }}</div>
+            <p class="bmi-focus">{{ recommendation.focus }}</p>
+            <div class="bmi-meta">Exercise level: {{ exercise_level }}</div>
+          </div>
+        {% else %}
+          <div class="bmi-summary-card bmi-summary-card--empty">
+            <p class="bmi-label">BMI Guidance Locked</p>
+            <div class="bmi-status">Complete profile details first</div>
+            <p class="bmi-focus">
+              Once height, weight, and exercise level are saved on the main or profile page,
+              this section can show BMI-based training guidance.
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Recommended Exercise Categories</h2>
+      <p>
+        {% if recommendation %}
+          {{ recommendation.message }}
+        {% else %}
+          Your recommended categories will appear here after BMI and exercise level are available.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="row g-4">
+      {% if recommendation %}
+        {% for category in recommendation.categories %}
+          <div class="col-md-6 col-xl-3">
+            <article class="category-card">
+              <h3>{{ category }}</h3>
+            </article>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="exercise-empty-state">
+            Add profile details first to unlock your personalized categories.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Featured Exercises</h2>
+      <p>
+        {% if recommendation %}
+          These are simple exercises recommended from your BMI range and current exercise level.
+        {% else %}
+          Exercise suggestions will appear here once BMI guidance is available.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="row g-4">
+      {% if recommendation %}
+        {% for item in recommendation.exercises %}
+          <div class="col-md-6 col-xl-4">
+            <article class="exercise-card">
+              <span class="exercise-badge">{{ item.category }}</span>
+              <h3>{{ item.name }}</h3>
+              <p class="exercise-tip">{{ item.tip }}</p>
+            </article>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="exercise-empty-state">
+            No exercise suggestions yet because BMI data has not been set.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="exercise-panel">
+      <div class="section-heading">
+        <h2>Workout Log</h2>
+        <p>
+          This follows the same simple pattern as your login form:
+          enter data, submit, and then you are redirected to your profile page.
+        </p>
+      </div>
+
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.exercise_name.label.text }}</label>
+            {{ form.exercise_name(class="form-control exercise-input", placeholder="e.g. Squat") }}
+            {{ render_errors(form.exercise_name) }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.category.label.text }}</label>
+            {{ form.category(class="form-select exercise-input") }}
+            {{ render_errors(form.category) }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.workout_date.label.text }}</label>
+            {{ form.workout_date(class="form-control exercise-input") }}
+            {{ render_errors(form.workout_date) }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.duration_minutes.label.text }}</label>
+            {{ form.duration_minutes(class="form-control exercise-input", placeholder="30") }}
+            {{ render_errors(form.duration_minutes) }}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.difficulty.label.text }}</label>
+            {{ form.difficulty(class="form-select exercise-input") }}
+            {{ render_errors(form.difficulty) }}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.sets.label.text }}</label>
+            {{ form.sets(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.sets) }}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.reps.label.text }}</label>
+            {{ form.reps(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.reps) }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.weight_kg.label.text }}</label>
+            {{ form.weight_kg(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.weight_kg) }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.distance_km.label.text }}</label>
+            {{ form.distance_km(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.distance_km) }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.notes.label.text }}</label>
+            {{ form.notes(class="form-control exercise-input exercise-textarea", rows="4", placeholder="How did the workout feel today?") }}
+            {{ render_errors(form.notes) }}
+          </div>
+
+          <div class="col-12">
+            <div class="form-check exercise-check">
+              {{ form.is_public(class="form-check-input") }}
+              <label class="form-check-label" for="{{ form.is_public.id }}">
+                {{ form.is_public.label.text }}
+              </label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            {{ form.submit(class="btn exercise-submit-btn") }}
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+</section>
+{% endblock %}

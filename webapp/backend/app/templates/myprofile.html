@@ -1,10 +1,50 @@
 {% extends "base.html" %}
 {% block title %}My Profile{% endblock %}
+
 {% block content %}
-<h1>Hello, {{ username }}!</h1>
+<h1 class="mb-4">Hello, {{ username }}!</h1>
+
+{% if last_workout %}
+  <section class="profile-workout-card mb-4">
+    <h2>Latest Workout</h2>
+    <div class="profile-stat-row">
+      <p><strong>Exercise:</strong> {{ last_workout.exercise_name }}</p>
+      <p><strong>Category:</strong> {{ last_workout.category }}</p>
+      <p><strong>Date:</strong> {{ last_workout.workout_date }}</p>
+      <p><strong>Duration:</strong> {{ last_workout.duration_minutes }} min</p>
+      <p><strong>Difficulty:</strong> {{ last_workout.difficulty }}</p>
+
+      {% if last_workout.sets %}
+        <p><strong>Sets:</strong> {{ last_workout.sets }}</p>
+      {% endif %}
+      {% if last_workout.reps %}
+        <p><strong>Reps:</strong> {{ last_workout.reps }}</p>
+      {% endif %}
+      {% if last_workout.weight_kg %}
+        <p><strong>Weight:</strong> {{ last_workout.weight_kg }} kg</p>
+      {% endif %}
+      {% if last_workout.distance_km %}
+        <p><strong>Distance:</strong> {{ last_workout.distance_km }} km</p>
+      {% endif %}
+      {% if last_workout.notes %}
+        <p><strong>Notes:</strong> {{ last_workout.notes }}</p>
+      {% endif %}
+
+      <p><strong>Visibility:</strong> {{ "Public" if last_workout.is_public else "Private" }}</p>
+
+      {% if bmi_value %}
+        <p><strong>BMI:</strong> {{ bmi_value }}</p>
+      {% endif %}
+      {% if exercise_level %}
+        <p><strong>Exercise Level:</strong> {{ exercise_level }}</p>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
+
 {% for post in posts %}
-<div>
-  <p>{{ post.author.username }} says: <b>{{ post.body }}</b></p>
-</div>
+  <div>
+    <p>{{ post.author.username }} says: <b>{{ post.body }}</b></p>
+  </div>
 {% endfor %}
 {% endblock %}
