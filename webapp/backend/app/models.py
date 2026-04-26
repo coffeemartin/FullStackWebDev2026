@@ -3,10 +3,18 @@ from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
+
+    # Login/auth fields
+    username: so.Mapped[str] = so.mapped_column(sa.String(64), unique=True, index=True)
+    email: so.Mapped[str] = so.mapped_column(sa.String(120), unique=True, index=True)
+    password_hash: so.Mapped[str] = so.mapped_column(sa.String(256))
+
+
     name: so.Mapped[str] = so.mapped_column(sa.String(100)) 
     age: so.Mapped[Optional[int]]
     gender: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20))
@@ -17,12 +25,35 @@ class User(db.Model):
     activity_level: so.Mapped[Optional[str]] = so.mapped_column(sa.String(100))
     injury_notes: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
 
+    # Audit fields
+    created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    last_login_at: so.Mapped[Optional[datetime]] 
+
     exercise_logs: so.Mapped[list["ExerciseLog"]] = so.relationship(back_populates="user")
     nutrition_logs: so.Mapped[list["NutritionLog"]] = so.relationship(back_populates="user")
     recommendations: so.Mapped[list["LLMRecommendation"]] = so.relationship(back_populates="user")
+    login_events: so.Mapped[list["LoginEvent"]] = so.relationship(back_populates="user")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f"<{self.name}>"
+        return f"<User {self.username}>"
+    
+class LoginEvent(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    login_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+
+    ip_address: so.Mapped[Optional[str]] = so.mapped_column(sa.String(45))
+    user_agent: so.Mapped[Optional[str]] = so.mapped_column(sa.String(300))
+    success: so.Mapped[bool] = so.mapped_column(default=True)
+
+    user: so.Mapped["User"] = so.relationship(back_populates="login_events")
 
 class Exercise(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -34,7 +65,7 @@ class Exercise(db.Model):
     logs: so.Mapped[list["ExerciseLog"]] = so.relationship(back_populates="exercise")
     
     def __repr__(self):
-        return f"<{self.name}>"
+        return f"<Exercise {self.name}>"
 
 class ExerciseLog(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)

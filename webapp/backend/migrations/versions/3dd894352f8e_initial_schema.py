@@ -1,8 +1,8 @@
-"""initial tables
+"""initial schema
 
-Revision ID: 81468698ace7
+Revision ID: 3dd894352f8e
 Revises: 
-Create Date: 2026-04-26 10:33:15.946031
+Create Date: 2026-04-26 18:58:06.681409
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '81468698ace7'
+revision = '3dd894352f8e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,6 +43,10 @@ def upgrade():
 
     op.create_table('user',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('username', sa.String(length=64), nullable=False),
+    sa.Column('email', sa.String(length=120), nullable=False),
+    sa.Column('password_hash', sa.String(length=256), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('age', sa.Integer(), nullable=True),
     sa.Column('gender', sa.String(length=20), nullable=True),
     sa.Column('height_cm', sa.Float(), nullable=True),
@@ -50,8 +54,14 @@ def upgrade():
     sa.Column('goal', sa.String(length=200), nullable=True),
     sa.Column('activity_level', sa.String(length=100), nullable=True),
     sa.Column('injury_notes', sa.Text(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('last_login_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_user_email'), ['email'], unique=True)
+        batch_op.create_index(batch_op.f('ix_user_username'), ['username'], unique=True)
+
     op.create_table('exercise_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -83,6 +93,19 @@ def upgrade():
     )
     with op.batch_alter_table('llm_recommendation', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_llm_recommendation_user_id'), ['user_id'], unique=False)
+
+    op.create_table('login_event',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('login_at', sa.DateTime(), nullable=False),
+    sa.Column('ip_address', sa.String(length=45), nullable=True),
+    sa.Column('user_agent', sa.String(length=300), nullable=True),
+    sa.Column('success', sa.Boolean(), nullable=False),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    with op.batch_alter_table('login_event', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_login_event_user_id'), ['user_id'], unique=False)
 
     op.create_table('nutrition_log',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -128,6 +151,10 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_nutrition_log_food_id'))
 
     op.drop_table('nutrition_log')
+    with op.batch_alter_table('login_event', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_login_event_user_id'))
+
+    op.drop_table('login_event')
     with op.batch_alter_table('llm_recommendation', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_llm_recommendation_user_id'))
 
@@ -137,6 +164,10 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_exercise_log_exercise_id'))
 
     op.drop_table('exercise_log')
+    with op.batch_alter_table('user', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_user_username'))
+        batch_op.drop_index(batch_op.f('ix_user_email'))
+
     op.drop_table('user')
     with op.batch_alter_table('food', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_food_name'))
