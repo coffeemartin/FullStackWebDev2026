@@ -1,6 +1,8 @@
-from app import app
-from flask import render_template, flash, redirect, url_for, session
+from datetime import datetime
+from app import app, db
+from flask import render_template, flash, redirect, url_for, session, request
 from app.forms import LoginForm, ExerciseLogForm
+from app.models import User, Exercise, ExerciseLog, LoginEvent
 
 @app.route("/", methods=['GET', 'POST']) 
 @app.route("/login", methods=['GET', 'POST'])  # Allow both GET and POST requests for the login route
@@ -19,50 +21,60 @@ def nutrition():
     return render_template('nutrition.html', title='Nutrition')
 
 
+DUMMY_USER_ID = 1   # TODO: replace with real auth once login is wired up
+
+
 @app.route("/exercise", methods=['GET', 'POST'])
 def exercise():
+    user = db.session.get(User, DUMMY_USER_ID)
+    if not user:
+        return ("No user with id=1 in database. "
+                "Run `python seed.py` from webapp/backend first."), 500
+
     form = ExerciseLogForm()
 
-    bmi_value = session.get('bmi_value')
-    exercise_level = session.get('exercise_level')
-    recommendation = None
+    # Populate the dropdown from the Exercise catalogue
+    exercises = Exercise.query.order_by(Exercise.name).all()
+    form.exercise_id.choices = [(e.id, e.name) for e in exercises]
 
-    if bmi_value is not None and exercise_level:
-        try:
-            bmi_value = float(bmi_value)
-            recommendation = get_exercise_plan(bmi_value, exercise_level)
-        except (TypeError, ValueError):
-            bmi_value = None
-            recommendation = None
-
+    # Save the workout to the database
     if form.validate_on_submit():
-        session['last_workout'] = {
-            "exercise_name": form.exercise_name.data,
-            "category": form.category.data,
-            "workout_date": form.workout_date.data.strftime("%d %b %Y"),
-            "duration_minutes": form.duration_minutes.data,
-            "difficulty": form.difficulty.data,
-            "sets": form.sets.data,
-            "reps": form.reps.data,
-            "weight_kg": float(form.weight_kg.data) if form.weight_kg.data is not None else None,
-            "distance_km": float(form.distance_km.data) if form.distance_km.data is not None else None,
-            "notes": form.notes.data,
-            "is_public": form.is_public.data,
-        }
-        flash(f"Workout saved for {form.exercise_name.data}.")
-        return redirect(url_for('myprofile'))
+        log = ExerciseLog(
+            user_id=user.id,
+            exercise_id=form.exercise_id.data,
+            log_date=form.workout_date.data,
+            sets=form.sets.data,
+            reps=form.reps.data,
+            weight_kg=float(form.weight_kg.data) if form.weight_kg.data is not None else None,
+            duration_minutes=form.duration_minutes.data,
+            notes=form.notes.data,
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        chosen = db.session.get(Exercise, form.exercise_id.data)
+        flash(f"Workout logged: {chosen.name}")
+        return redirect(url_for('exercise'))
+
+    # Pull the user's recent workouts from the database
+    recent_logs = (
+        ExerciseLog.query
+        .filter_by(user_id=user.id)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .limit(10)
+        .all()
+    )
 
     return render_template(
         'exercise.html',
         title='Exercise',
         form=form,
-        bmi_value=bmi_value,
-        exercise_level=exercise_level,
-        recommendation=recommendation,
+        recent_logs=recent_logs,
+        # Leave BMI / recommendation None so the existing 'locked' UI shows.
+        bmi_value=None,
+        exercise_level=None,
+        recommendation=None,
     )
-
-    return render_template('exercise.html', title='Exercise')
-
 
 @app.route("/AI")
 def AI():

@@ -120,8 +120,8 @@
       <div class="section-heading">
         <h2>Workout Log</h2>
         <p>
-          This follows the same simple pattern as your login form:
-          enter data, submit, and then you are redirected to your profile page.
+          Pick an exercise from the dropdown, fill in the details, and hit save.
+          Your workout will be stored in the database and appear below.
         </p>
       </div>
 
@@ -130,15 +130,9 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">{{ form.exercise_name.label.text }}</label>
-            {{ form.exercise_name(class="form-control exercise-input", placeholder="e.g. Squat") }}
-            {{ render_errors(form.exercise_name) }}
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">{{ form.category.label.text }}</label>
-            {{ form.category(class="form-select exercise-input") }}
-            {{ render_errors(form.category) }}
+            <label class="form-label">{{ form.exercise_id.label.text }}</label>
+            {{ form.exercise_id(class="form-select exercise-input") }}
+            {{ render_errors(form.exercise_id) }}
           </div>
 
           <div class="col-md-6">
@@ -147,16 +141,10 @@
             {{ render_errors(form.workout_date) }}
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label">{{ form.duration_minutes.label.text }}</label>
             {{ form.duration_minutes(class="form-control exercise-input", placeholder="30") }}
             {{ render_errors(form.duration_minutes) }}
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label">{{ form.difficulty.label.text }}</label>
-            {{ form.difficulty(class="form-select exercise-input") }}
-            {{ render_errors(form.difficulty) }}
           </div>
 
           <div class="col-md-4">
@@ -177,25 +165,10 @@
             {{ render_errors(form.weight_kg) }}
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label">{{ form.distance_km.label.text }}</label>
-            {{ form.distance_km(class="form-control exercise-input", placeholder="Optional") }}
-            {{ render_errors(form.distance_km) }}
-          </div>
-
           <div class="col-12">
             <label class="form-label">{{ form.notes.label.text }}</label>
             {{ form.notes(class="form-control exercise-input exercise-textarea", rows="4", placeholder="How did the workout feel today?") }}
             {{ render_errors(form.notes) }}
-          </div>
-
-          <div class="col-12">
-            <div class="form-check exercise-check">
-              {{ form.is_public(class="form-check-input") }}
-              <label class="form-check-label" for="{{ form.is_public.id }}">
-                {{ form.is_public.label.text }}
-              </label>
-            </div>
           </div>
 
           <div class="col-12">
@@ -204,6 +177,39 @@
         </div>
       </form>
     </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Your Recent Workouts</h2>
+      <p>Last 10 workouts pulled live from the database.</p>
+    </div>
+
+    {% if recent_logs %}
+      <div class="row g-3">
+        {% for log in recent_logs %}
+          <div class="col-md-6 col-xl-4">
+            <article class="exercise-card">
+              <span class="exercise-badge">{{ log.exercise.category or 'Workout' }}</span>
+              <h3>{{ log.exercise.name }}</h3>
+              <p class="exercise-tip">
+                <strong>{{ log.log_date.strftime('%d %b %Y') }}</strong>
+                {% if log.sets and log.reps %}
+                  — {{ log.sets }} × {{ log.reps }}{% if log.weight_kg %} @ {{ log.weight_kg }} kg{% endif %}
+                {% elif log.duration_minutes %}
+                  — {{ log.duration_minutes }} min
+                {% endif %}
+              </p>
+              {% if log.notes %}<p class="exercise-tip"><em>{{ log.notes }}</em></p>{% endif %}
+            </article>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="exercise-card text-center">
+        <p class="exercise-tip">No workouts logged yet — your first one will appear here.</p>
+      </article>
+    {% endif %}
   </section>
 </section>
 {% endblock %}

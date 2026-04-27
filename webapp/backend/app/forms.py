@@ -23,18 +23,9 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 class ExerciseLogForm(FlaskForm):
-    exercise_name = StringField(
-        'Exercise Name',
-        validators=[DataRequired(), Length(max=100)]
-    )
-    category = SelectField(
-        'Category',
-        choices=[
-            ('Strength', 'Strength'),
-            ('Cardio', 'Cardio'),
-            ('Mobility', 'Mobility'),
-            ('Recovery', 'Recovery'),
-        ],
+    exercise_id = SelectField(
+        'Exercise',
+        coerce=int,
         validators=[DataRequired()],
     )
     workout_date = DateField(
@@ -45,16 +36,7 @@ class ExerciseLogForm(FlaskForm):
     )
     duration_minutes = IntegerField(
         'Duration (minutes)',
-        validators=[DataRequired(), NumberRange(min=1, max=300)],
-    )
-    difficulty = SelectField(
-        'Difficulty',
-        choices=[
-            ('Easy', 'Easy'),
-            ('Moderate', 'Moderate'),
-            ('Hard', 'Hard'),
-        ],
-        validators=[DataRequired()],
+        validators=[Optional(), NumberRange(min=1, max=300)],
     )
     sets = IntegerField('Sets', validators=[Optional(), NumberRange(min=1, max=20)])
     reps = IntegerField('Reps', validators=[Optional(), NumberRange(min=1, max=200)])
@@ -63,11 +45,5 @@ class ExerciseLogForm(FlaskForm):
         places=1,
         validators=[Optional(), NumberRange(min=0, max=500)],
     )
-    distance_km = DecimalField(
-        'Distance (km)',
-        places=2,
-        validators=[Optional(), NumberRange(min=0, max=500)],
-    )
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=250)])
-    is_public = BooleanField('Share this workout publicly')
     submit = SubmitField('Save Workout')
