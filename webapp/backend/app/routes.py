@@ -3,6 +3,7 @@ from app import app, db
 from flask import render_template, flash, redirect, url_for, session, request
 from app.forms import LoginForm, ExerciseLogForm
 from app.models import User, Exercise, ExerciseLog, LoginEvent
+from app.exercise_recommendation import get_exercise_plan
 
 @app.route("/", methods=['GET', 'POST']) 
 @app.route("/login", methods=['GET', 'POST'])  # Allow both GET and POST requests for the login route
@@ -31,6 +32,13 @@ def exercise():
         return ("No user with id=1 in database. "
                 "Run `python seed.py` from webapp/backend first."), 500
 
+    # Compute BMI and recommendation from the user's profile in the database
+    bmi_value = None
+    recommendation = None
+    if user.height_cm and user.weight_kg:
+        bmi_value = user.weight_kg / ((user.height_cm / 100) ** 2)
+        if user.activity_level:
+            recommendation = get_exercise_plan(bmi_value, user.activity_level)
     form = ExerciseLogForm()
 
     # Populate the dropdown from the Exercise catalogue
@@ -71,9 +79,9 @@ def exercise():
         form=form,
         recent_logs=recent_logs,
         # Leave BMI / recommendation None so the existing 'locked' UI shows.
-        bmi_value=None,
-        exercise_level=None,
-        recommendation=None,
+        bmi_value=bmi_value,
+        exercise_level=user.activity_level,
+        recommendation=recommendation,
     )
 
 @app.route("/AI")
