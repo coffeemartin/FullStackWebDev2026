@@ -51,3 +51,18 @@ def myprofile():
         }
     ]
     return render_template('myprofile.html', title='My Profile', username=username, posts=posts)
+from flask import request
+
+@app.route("/details", methods=['GET', 'POST'])
+def user_details():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        height = request.form.get('height_cm')
+        weight = request.form.get('weight_kg')
+        injury = request.form.get('injury_notes')
+
+        print(name, age, gender, height, weight, injury)
+
+    return render_template("user_details.html")
