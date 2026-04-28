@@ -1,10 +1,11 @@
 from app import app
-from flask import render_template, flash, redirect, url_for, session
+from flask import render_template, flash, redirect, url_for, session, request
 from app.forms import LoginForm
 
+
 @app.route("/", methods=['GET', 'POST']) 
-@app.route("/login", methods=['GET', 'POST'])  # Allow both GET and POST requests for the login route
-def login():  # create a login route, use form validation, flash messages, and redirect to myprofile page on successful login
+@app.route("/login", methods=['GET', 'POST'])
+def login():
     form = LoginForm()
     if form.validate_on_submit():
         flash('Login requested for user {}, remember_me={}'.format(
@@ -51,3 +52,42 @@ def myprofile():
         }
     ]
     return render_template('myprofile.html', title='My Profile', username=username, posts=posts)
+
+
+# ✅ YOUR NEW FEATURE
+@app.route("/details", methods=['GET', 'POST'])
+def user_details():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        height = request.form.get('height_cm')
+        weight = request.form.get('weight_kg')
+        injury = request.form.get('injury_notes')
+
+        try:
+            height = float(height)
+            weight = float(weight)
+
+            height_m = height / 100
+            bmi = weight / (height_m ** 2)
+
+            if bmi < 18.5:
+                quote = "Start building strength and nourish your body!"
+            elif bmi < 25:
+                quote = "Great shape! Keep maintaining your healthy lifestyle!"
+            elif bmi < 30:
+                quote = "You're doing well—let’s improve fitness step by step!"
+            else:
+                quote = "Start your fitness journey today—small steps make big changes!"
+
+            return render_template(
+                "user_details.html",
+                bmi=round(bmi, 2),
+                quote=quote
+            )
+
+        except:
+            return "Invalid input!"
+
+    return render_template("user_details.html")
