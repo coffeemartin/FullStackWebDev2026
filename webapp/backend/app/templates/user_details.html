@@ -30,6 +30,10 @@
         <button type="submit">Save</button>
 
     </form>
+    {% if bmi is not none %}
+    <h2>Your BMI: {{ bmi }}</h2>
+    <p>{{ quote }}</p>
+{% endif %}
 
 </body>
-</html>
+</html>   
