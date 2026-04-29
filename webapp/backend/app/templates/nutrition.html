@@ -1,2 +1,326 @@
-{% extends "base.html" %} {% block title %}Nutrition{% endblock %} {% block
-content %}{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Nutrition{% endblock %}
+
+{% block content %}
+<div class="nutrition-floating-foods" aria-hidden="true">
+  <span>🥦</span>
+  <span>🍎</span>
+  <span>🥕</span>
+  <span>🥗</span>
+  <span>🍌</span>
+  <span>🍓</span>
+  <span>🥑</span>
+  <span>🍚</span>
+  <span>🍇</span>
+  <span>🥚</span>
+</div>
+
+<section class="nutrition-hero mb-4">
+  <div>
+    <p class="text-uppercase text-success fw-bold mb-2">Daily Nutrition Dashboard</p>
+    <h1 class="display-5 fw-bold">Fuel Your Fitness</h1>
+    <p class="lead mb-0">
+      Track meals, calculate calories from grams, improve hydration, and build healthier food habits.
+    </p>
+  </div>
+</section>
+
+<section class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="nutrition-stat">
+      <span>Total Calories</span>
+      <strong id="totalCalories">0 kcal</strong>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="nutrition-stat">
+      <span>Foods Logged</span>
+      <strong id="foodCount">0</strong>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="nutrition-stat">
+      <span>Water Intake</span>
+      <strong id="waterCount">0 glasses</strong>
+      <div class="d-flex flex-wrap gap-2 mt-2">
+        <button class="btn btn-sm btn-outline-info" onclick="addWater()">Add Water</button>
+        <button class="btn btn-sm btn-success" onclick="saveWater()">Save</button>
+      </div>
+      <small id="waterSaveStatus" class="text-success d-block mt-2"></small>
+    </div>
+  </div>
+</section>
+
+<section class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="nutrition-panel">
+      <h2 class="h4 mb-3">Nutrition Information</h2>
+
+      <div class="smart-plate">
+        <div>
+          <h3 class="h6 text-success">Smart Plate Guide</h3>
+          <p>Half your plate should include fruits or vegetables.</p>
+        </div>
+        <div>
+          <h3 class="h6 text-warning">Energy Foods</h3>
+          <p>Carbohydrates help fuel workouts and daily activities.</p>
+        </div>
+        <div>
+          <h3 class="h6 text-info">Protein Power</h3>
+          <p>Protein supports muscle repair and recovery after exercise.</p>
+        </div>
+        <div>
+          <h3 class="h6 text-danger">Healthy Fats</h3>
+          <p>Healthy fats support hormones and long-term energy.</p>
+        </div>
+      </div>
+
+      <div class="nutrition-tip mt-3">
+        <h3 class="h6 text-success">Quick Tip</h3>
+        <p class="mb-0">
+          Choose mostly whole foods, drink enough water, and balance every meal with protein, energy foods, and vegetables.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="nutrition-panel">
+      <h2 class="h4 mb-3">Food Log</h2>
+
+      <form id="foodForm">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="mealType">Meal Type</label>
+            <select id="mealType" class="form-select" required>
+              <option value="">Choose meal</option>
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option>Snack</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="foodName">Food Name</label>
+            <input id="foodName" class="form-control" type="text" list="foodOptions" placeholder="Example: Rice" required>
+            <datalist id="foodOptions">
+              <option value="Apple"></option>
+              <option value="Banana"></option>
+              <option value="Boiled Egg"></option>
+              <option value="Brown Rice"></option>
+              <option value="Chicken Breast"></option>
+              <option value="Greek Yogurt"></option>
+              <option value="Oats"></option>
+              <option value="Pasta"></option>
+              <option value="Potato"></option>
+              <option value="Rice"></option>
+              <option value="Salmon"></option>
+              <option value="Tofu"></option>
+              <option value="Whole Wheat Bread"></option>
+            </datalist>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="quantity">Quantity Taken</label>
+            <input id="quantity" class="form-control" type="number" min="1" placeholder="grams" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label" for="calculatedCalories">Calculated Calories</label>
+            <input id="calculatedCalories" class="form-control" type="text" value="0 kcal" readonly>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="feedback">Meal Feedback</label>
+            <select id="feedback" class="form-select">
+              <option>Energized</option>
+              <option>Full</option>
+              <option>Still hungry</option>
+              <option>Tired</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="comments">Comments</label>
+            <textarea id="comments" class="form-control" rows="2" placeholder="Example: Healthy homemade meal"></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-success mt-3" type="submit">Add Food Entry</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="nutrition-panel mb-4">
+  <h2 class="h4 mb-3">Today's Food Entries</h2>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Meal</th>
+          <th>Food</th>
+          <th>Quantity</th>
+          <th>Total Calories</th>
+          <th>Feedback</th>
+          <th>Comments</th>
+        </tr>
+      </thead>
+      <tbody id="foodTable">
+        <tr>
+          <td colspan="6" class="text-center text-secondary">No food entries yet.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="nutrition-insight mb-4">
+  <h2 class="h5">Nutrition Insight</h2>
+  <p id="nutritionMessage" class="mb-0">
+    Start logging your meals to receive a simple daily nutrition suggestion.
+  </p>
+</section>
+
+<script>
+  const foodForm = document.getElementById("foodForm");
+  const foodTable = document.getElementById("foodTable");
+  const totalCalories = document.getElementById("totalCalories");
+  const foodCount = document.getElementById("foodCount");
+  const nutritionMessage = document.getElementById("nutritionMessage");
+  const waterCount = document.getElementById("waterCount");
+  const waterSaveStatus = document.getElementById("waterSaveStatus");
+  const foodNameInput = document.getElementById("foodName");
+  const quantityInput = document.getElementById("quantity");
+  const calculatedCaloriesInput = document.getElementById("calculatedCalories");
+
+  let entries = [];
+  let water = 0;
+
+  const foodCalories = {
+    "apple": 52,
+    "banana": 89,
+    "boiled egg": 155,
+    "brown rice": 111,
+    "chicken breast": 165,
+    "greek yogurt": 59,
+    "oats": 389,
+    "pasta": 131,
+    "potato": 77,
+    "rice": 130,
+    "salmon": 208,
+    "tofu": 76,
+    "whole wheat bread": 247
+  };
+
+  foodNameInput.addEventListener("input", updateCalculatedCalories);
+  quantityInput.addEventListener("input", updateCalculatedCalories);
+
+  foodForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const mealType = document.getElementById("mealType").value;
+    const foodName = foodNameInput.value.trim();
+    const quantity = Number(quantityInput.value);
+    const caloriesPer100g = getCaloriesPer100g(foodName);
+    const calculatedCalories = calculateCalories(quantity, caloriesPer100g);
+    const feedback = document.getElementById("feedback").value;
+    const comments = document.getElementById("comments").value.trim();
+
+    if (!mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
+      alert("Please enter a valid meal type, food name, and quantity.");
+      return;
+    }
+
+    if (!Number.isFinite(caloriesPer100g)) {
+      alert("Please choose a food from the suggested list so calories can be calculated automatically.");
+      return;
+    }
+
+    entries.push({
+      mealType,
+      foodName,
+      quantity,
+      calculatedCalories,
+      feedback,
+      comments
+    });
+
+    foodForm.reset();
+    calculatedCaloriesInput.value = "0 kcal";
+    renderFoodLog();
+  });
+
+  function calculateCalories(quantity, caloriesPer100g) {
+    return Math.round((quantity / 100) * caloriesPer100g);
+  }
+
+  function getCaloriesPer100g(foodName) {
+    return foodCalories[foodName.trim().toLowerCase()];
+  }
+
+  function updateCalculatedCalories() {
+    const foodName = foodNameInput.value.trim();
+    const quantity = Number(quantityInput.value);
+    const caloriesPer100g = getCaloriesPer100g(foodName);
+
+    if (quantity > 0 && Number.isFinite(caloriesPer100g)) {
+      calculatedCaloriesInput.value = calculateCalories(quantity, caloriesPer100g) + " kcal";
+    } else if (foodName && !Number.isFinite(caloriesPer100g)) {
+      calculatedCaloriesInput.value = "Choose a listed food";
+    } else {
+      calculatedCaloriesInput.value = "0 kcal";
+    }
+  }
+
+  function renderFoodLog() {
+    foodTable.innerHTML = "";
+
+    entries.forEach(function (entry) {
+      const row = document.createElement("tr");
+      const values = [
+        entry.mealType,
+        entry.foodName,
+        entry.quantity + "g",
+        entry.calculatedCalories + " kcal",
+        entry.feedback,
+        entry.comments || "No comment"
+      ];
+
+      values.forEach(function (value) {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+
+      foodTable.appendChild(row);
+    });
+
+    const calorieTotal = entries.reduce((sum, entry) => sum + entry.calculatedCalories, 0);
+
+    totalCalories.textContent = calorieTotal + " kcal";
+    foodCount.textContent = entries.length;
+
+    if (calorieTotal < 1200) {
+      nutritionMessage.textContent = "Your intake looks low today. Consider adding a balanced meal with protein, carbohydrates, and vegetables.";
+    } else if (calorieTotal <= 2200) {
+      nutritionMessage.textContent = "Nice balance. Keep focusing on whole foods, hydration, and consistent meal timing.";
+    } else {
+      nutritionMessage.textContent = "Your calories are quite high today. Try reviewing portion sizes or choosing lighter snacks.";
+    }
+  }
+
+  function addWater() {
+    water += 1;
+    waterCount.textContent = water + (water === 1 ? " glass" : " glasses");
+    waterSaveStatus.textContent = "";
+  }
+
+  function saveWater() {
+    waterSaveStatus.textContent = "Water intake saved.";
+  }
+</script>
+{% endblock %}
