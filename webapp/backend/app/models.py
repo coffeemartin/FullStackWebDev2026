@@ -2,11 +2,12 @@ from datetime import datetime, date
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
-from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from app import db, login
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
 
     # Login/auth fields
@@ -16,10 +17,10 @@ class User(db.Model):
 
 
     name: so.Mapped[str] = so.mapped_column(sa.String(100)) 
-    age: so.Mapped[Optional[int]]
+    age: so.Mapped[Optional[int]] = so.mapped_column(nullable=True)
     gender: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20))
-    height_cm: so.Mapped[Optional[float]]
-    weight_kg: so.Mapped[Optional[float]]
+    height_cm: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+    weight_kg: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
 
     goal: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200))
     activity_level: so.Mapped[Optional[str]] = so.mapped_column(sa.String(100))
@@ -33,6 +34,7 @@ class User(db.Model):
     nutrition_logs: so.Mapped[list["NutritionLog"]] = so.relationship(back_populates="user")
     recommendations: so.Mapped[list["LLMRecommendation"]] = so.relationship(back_populates="user")
     login_events: so.Mapped[list["LoginEvent"]] = so.relationship(back_populates="user")
+    embeddings: so.Mapped[list["UserEmbedding"]] = so.relationship(back_populates="user")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -42,7 +44,11 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
-    
+
+@login.user_loader
+def load_user(id):
+    return db.session.get(User, int(id))
+   
 class LoginEvent(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
 
@@ -126,6 +132,7 @@ class UserEmbedding(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
 
     user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    user: so.Mapped["User"] = so.relationship(back_populates="embeddings")
     source_type: so.Mapped[str] = so.mapped_column(sa.String(50))
     source_id: so.Mapped[int]
 
@@ -133,3 +140,4 @@ class UserEmbedding(db.Model):
     embedding_json: so.Mapped[str] = so.mapped_column(sa.Text)
 
     created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    
