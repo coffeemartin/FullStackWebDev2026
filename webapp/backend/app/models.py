@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import json
 from typing import Optional
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -123,11 +124,28 @@ class LLMRecommendation(db.Model):
     input_summary: so.Mapped[str] = so.mapped_column(sa.Text)
     llm_comments: so.Mapped[str] = so.mapped_column(sa.Text)
 
-    training_plan: so.Mapped[str] = so.mapped_column(sa.Text)
-    nutrition_plan: so.Mapped[str] = so.mapped_column(sa.Text)
+    training_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
+    nutrition_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
 
     user: so.Mapped["User"] = so.relationship(back_populates="recommendations")
 
+    # Helper methods 
+    # Set is to convert dict to json string for stroage,
+    # Get is to convert json string back to dict for use in the app.
+    def set_training_plan(self, data: dict):
+        self.training_plan_json = json.dumps(data)
+
+    def get_training_plan(self):
+        return json.loads(self.training_plan_json) if self.training_plan_json else None
+
+    def set_nutrition_plan(self, data: dict):
+        self.nutrition_plan_json = json.dumps(data)
+
+    def get_nutrition_plan(self):
+        return json.loads(self.nutrition_plan_json) if self.nutrition_plan_json else None
+    
+
+    
 class UserEmbedding(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
 
