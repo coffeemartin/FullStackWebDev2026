@@ -2,7 +2,7 @@
 .env
 
 # database files
-.db
+*.db
 
 # virtual environment
 application-env/
