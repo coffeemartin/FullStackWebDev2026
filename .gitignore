@@ -1,6 +1,9 @@
 # session key
 .env
 
+# database files
+.db
+
 # virtual environment
 application-env/
 
