@@ -1,3 +1,5 @@
+from datetime import date
+
 from app import app, db
 from flask import jsonify, render_template, flash, redirect, url_for, session, request
 from app.forms import LoginForm
@@ -18,7 +20,20 @@ def login():
 
 @app.route("/nutrition")
 def nutrition():
-    return render_template('nutrition.html', title='Nutrition')
+    user = User.query.first()
+    initial_water = 0
+
+    if user is not None:
+        water_log = (
+            NutritionLog.query
+            .filter_by(user_id=user.id, log_date=date.today(), meal_type="Water")
+            .order_by(NutritionLog.id.desc())
+            .first()
+        )
+        if water_log and water_log.water_glasses:
+            initial_water = water_log.water_glasses
+
+    return render_template('nutrition.html', title='Nutrition', initial_water=initial_water)
 
 
 @app.route("/nutrition/log", methods=["POST"])
@@ -66,6 +81,63 @@ def save_nutrition_log():
         "food_name": food.name,
         "quantity_g": nutrition_log.quantity_g,
         "calories": round((quantity_g / 100) * calories_per_100g),
+    })
+
+
+@app.route("/nutrition/water", methods=["POST"])
+def save_water_log():
+    data = request.get_json() or {}
+    water_glasses = data.get("water_glasses")
+
+    try:
+        water_glasses = int(water_glasses)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Water glasses must be a valid number."}), 400
+
+    if water_glasses < 0:
+        return jsonify({"error": "Water glasses cannot be negative."}), 400
+
+    user = User.query.first()
+    if user is None:
+        return jsonify({"error": "Create a user before saving water intake."}), 400
+
+    water_food = Food.query.filter(db.func.lower(Food.name) == "water").first()
+    if water_food is None:
+        water_food = Food(
+            name="Water",
+            calories_per_100g=0,
+            protein_per_100g=0,
+            carbs_per_100g=0,
+            fat_per_100g=0,
+        )
+        db.session.add(water_food)
+
+    water_log = (
+        NutritionLog.query
+        .filter_by(user_id=user.id, log_date=date.today(), meal_type="Water")
+        .order_by(NutritionLog.id.desc())
+        .first()
+    )
+
+    if water_log is None:
+        water_log = NutritionLog(
+            user_id=user.id,
+            food=water_food,
+            log_date=date.today(),
+            meal_type="Water",
+        )
+        db.session.add(water_log)
+
+    water_log.food = water_food
+    water_log.quantity_g = water_glasses * 250
+    water_log.water_glasses = water_glasses
+    water_log.notes = "Daily water intake"
+    db.session.commit()
+
+    return jsonify({
+        "log_id": water_log.id,
+        "water_glasses": water_log.water_glasses,
+        "quantity_g": water_log.quantity_g,
     })
 
 

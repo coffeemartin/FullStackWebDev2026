@@ -42,10 +42,12 @@
   <div class="col-md-4">
     <div class="nutrition-stat">
       <span>Water Intake</span>
-      <strong id="waterCount">0 glasses</strong>
+      <strong id="waterCount">{{ initial_water }} {{ 'glass' if initial_water == 1 else 'glasses' }}</strong>
       <div class="d-flex flex-wrap gap-2 mt-2">
-        <button class="btn btn-sm btn-outline-info" onclick="addWater()">Add Water</button>
-        <button class="btn btn-sm btn-success" onclick="saveWater()">Save</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="decreaseWater()">-</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="increaseWater()">+</button>
+        <button class="btn btn-sm btn-outline-info" type="button" onclick="addWater()">Add Water</button>
+        <button class="btn btn-sm btn-success" type="button" onclick="saveWater()">Save</button>
       </div>
       <small id="waterSaveStatus" class="text-success d-block mt-2"></small>
     </div>
@@ -215,7 +217,8 @@
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
   let entries = [];
-  let water = 0;
+  let water = {{ initial_water|default(0)|tojson }};
+  const dailyWaterTarget = 8;
   const otherFoodCaloriesPer100g = 100;
 
   const foodCalories = {
@@ -386,14 +389,66 @@
     }
   }
 
-  function addWater() {
-    water += 1;
+  function renderWaterCount() {
     waterCount.textContent = water + (water === 1 ? " glass" : " glasses");
-    waterSaveStatus.textContent = "";
+    updateWaterWarning();
   }
 
-  function saveWater() {
-    waterSaveStatus.textContent = "Water intake saved.";
+  function updateWaterWarning() {
+    if (water === 0) {
+      waterSaveStatus.classList.remove("text-success");
+      waterSaveStatus.classList.add("text-warning");
+      waterSaveStatus.textContent = "No water logged yet. Low intake can increase dehydration risk.";
+    } else if (water < dailyWaterTarget) {
+      waterSaveStatus.classList.remove("text-success");
+      waterSaveStatus.classList.add("text-warning");
+      waterSaveStatus.textContent = "Water intake is below the usual daily target. Dehydration risk: drink more water today.";
+    } else {
+      waterSaveStatus.classList.remove("text-warning");
+      waterSaveStatus.classList.add("text-success");
+      waterSaveStatus.textContent = "Good hydration for today.";
+    }
   }
+
+  function increaseWater() {
+    water += 1;
+    renderWaterCount();
+  }
+
+  function decreaseWater() {
+    water = Math.max(0, water - 1);
+    renderWaterCount();
+  }
+
+  function addWater() {
+    increaseWater();
+  }
+
+  async function saveWater() {
+    waterSaveStatus.textContent = "Saving...";
+
+    try {
+      const response = await fetch("/nutrition/water", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ water_glasses: water })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Water intake could not be saved.");
+      }
+
+      water = data.water_glasses;
+      renderWaterCount();
+      waterSaveStatus.textContent = "Water intake saved.";
+    } catch (error) {
+      waterSaveStatus.textContent = error.message;
+    }
+  }
+
+  renderWaterCount();
 </script>
 {% endblock %}
