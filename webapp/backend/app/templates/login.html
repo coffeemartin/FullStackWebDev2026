@@ -3,11 +3,11 @@ Stack Web Development {% else %} Full Stack Web Development {% endif %} {%
 endblock %} {% block content %}
 
 <h1>Sign In</h1>
-<form action="" method="post" novalidate>
+<form action="{{ url_for('login') }}" method="post" novalidate>
   {{ form.hidden_tag() }}
-  <!-- form.hidden_tag() is used to include a hidden field with a CSRF token, combine with secret key, Flask handles the validation -->
+  <input type="hidden" name="form_type" value="login">
   <p>
-    {{ form.username.label }}<br />
+    <label for="{{ form.username.id }}">Login ID</label><br />
     {{ form.username(size=32) }}<br />
     {% for error in form.username.errors %}
     <span style="color: rgba(255, 67, 20, 0.459)">[{{ error }}]</span>
@@ -23,4 +23,78 @@ endblock %} {% block content %}
   <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
   <p>{{ form.submit() }}</p>
 </form>
+
+<hr>
+
+<p>Are you a new user?</p>
+<button id="showProfileForm" type="button">Create your profile</button>
+
+<div id="profileCreatePanel" style="{% if not show_signup %}display: none;{% endif %} margin-top: 1rem;">
+  <h2>Create Your Profile</h2>
+  <form action="{{ url_for('login') }}" method="post">
+    <input type="hidden" name="form_type" value="new_user">
+
+    <p>
+      <label for="new_username">Login ID</label><br>
+      <input id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" required>
+    </p>
+    <p>
+      <label for="email">Email</label><br>
+      <input id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" required>
+    </p>
+    <p>
+      <label for="new_password">Password</label><br>
+      <input id="new_password" name="new_password" type="password" required>
+    </p>
+    <p>
+      <label for="confirm_password">Confirm Password</label><br>
+      <input id="confirm_password" name="confirm_password" type="password" required>
+    </p>
+    <p>
+      <label for="name">Name</label><br>
+      <input id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" required>
+    </p>
+    <p>
+      <label for="age">Age</label><br>
+      <input id="age" name="age" type="number" value="{{ form_data.get('age', '') }}" required>
+    </p>
+    <p>
+      <label for="gender">Gender</label><br>
+      <input id="gender" name="gender" type="text" value="{{ form_data.get('gender', '') }}" required>
+    </p>
+    <p>
+      <label for="height_cm">Height (cm)</label><br>
+      <input id="height_cm" name="height_cm" type="number" step="0.1" value="{{ form_data.get('height_cm', '') }}">
+    </p>
+    <p>
+      <label for="weight_kg">Weight (kg)</label><br>
+      <input id="weight_kg" name="weight_kg" type="number" step="0.1" value="{{ form_data.get('weight_kg', '') }}">
+    </p>
+    <p>
+      <label for="goal">Fitness Goal</label><br>
+      <input id="goal" name="goal" type="text" value="{{ form_data.get('goal', '') }}">
+    </p>
+    <p>
+      <label for="activity_level">Activity Level</label><br>
+      <input id="activity_level" name="activity_level" type="text" value="{{ form_data.get('activity_level', '') }}">
+    </p>
+    <p>
+      <label for="injury_notes">Injury Notes</label><br>
+      <input id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}">
+    </p>
+
+    <button type="submit">Create Profile</button>
+  </form>
+</div>
+
+<script>
+  const showProfileForm = document.getElementById("showProfileForm");
+  const profilePanel = document.getElementById("profileCreatePanel");
+
+  if (showProfileForm && profilePanel) {
+    showProfileForm.addEventListener("click", () => {
+      profilePanel.style.display = "block";
+    });
+  }
+</script>
 {% endblock %}
