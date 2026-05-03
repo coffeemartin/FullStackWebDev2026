@@ -1,69 +1,83 @@
-from datetime import date
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 
 from app import app, db
 from flask import jsonify, render_template, flash, redirect, url_for, session, request
-from app.forms import LoginForm
-from app.models import Food, NutritionLog, User
+from flask_login import login_user, logout_user, current_user, login_required
+from app.forms import LoginForm, ExerciseLogForm
+from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
+from app.exercise_recommendation import get_exercise_plan
 
 
-@app.route("/", methods=['GET', 'POST']) 
+@app.route("/", methods=['GET', 'POST'])
 @app.route("/login", methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('myprofile'))
+
     form = LoginForm()
     if form.validate_on_submit():
-        flash('Login requested for user {}, remember_me={}'.format(
-            form.username.data, form.remember_me.data))
-        session['username'] = form.username.data
+        user = User.query.filter_by(username=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('login'))
+        login_user(user, remember=form.remember_me.data)
+        flash('Logged in successfully as {}'.format(user.username))
+        login_event = LoginEvent(user_id=user.id)
+        db.session.add(login_event)
+        db.session.commit()
         return redirect(url_for('myprofile'))
     return render_template('login.html', title='Sign In', form=form)
 
 
 # Nutrion page route
 @app.route("/nutrition")
+@login_required
 def nutrition():
-    user = User.query.first()
     initial_water = 0
     food_entries = []
 
-    if user is not None:
-        water_log = (
-            NutritionLog.query
-            .filter_by(user_id=user.id, log_date=date.today(), meal_type="Water")
-            .order_by(NutritionLog.id.desc())
-            .first()
-        )
-        if water_log and water_log.water_glasses:
-            initial_water = water_log.water_glasses
-        nutrition_logs = (
-            NutritionLog.query
-            .filter(NutritionLog.user_id == user.id)
-            .filter(NutritionLog.log_date == date.today())
-            .filter(NutritionLog.meal_type != "Water")
-            .join(Food)
-            .order_by(NutritionLog.id.asc())
-            .all()
-        )
-        food_entries = [
-            {
-                "mealType": log.meal_type or "",
-                "foodName": log.food.name,
-                "quantity": log.quantity_g or 0,
-                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)),
-                "feedback": "",
-                "comments": log.notes or "",
-            }
-            for log in nutrition_logs
-        ]
+    water_log = (
+        NutritionLog.query
+        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
+        .order_by(NutritionLog.id.desc())
+        .first()
+    )
+    if water_log and water_log.water_glasses:
+        initial_water = water_log.water_glasses
+
+    nutrition_logs = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == current_user.id)
+        .filter(NutritionLog.log_date == date.today())
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.id.asc())
+        .all()
+    )
+    food_entries = [
+        {
+            "mealType": log.meal_type or "",
+            "foodName": log.food.name if log.food else "",
+            "quantity": log.quantity_g or 0,
+            "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
+            "feedback": "",
+            "comments": log.notes or "",
+        }
+        for log in nutrition_logs
+    ]
 
     return render_template(
         'nutrition.html',
         title='Nutrition',
         initial_water=initial_water,
         food_entries=food_entries,
+        nutrition_logs=nutrition_logs,
     )
 
 
 @app.route("/nutrition/log", methods=["POST"])
+@login_required
 def save_nutrition_log():
     data = request.get_json() or {}
     meal_type = (data.get("meal_type") or "").strip()
@@ -88,12 +102,8 @@ def save_nutrition_log():
 
     food.calories_per_100g = calories_per_100g
 
-    user = User.query.first()
-    if user is None:
-        return jsonify({"error": "Create a user before saving nutrition logs."}), 400
-
     nutrition_log = NutritionLog(
-        user_id=user.id,
+        user_id=current_user.id,
         food=food,
         meal_type=meal_type,
         quantity_g=quantity_g,
@@ -112,6 +122,7 @@ def save_nutrition_log():
 
 
 @app.route("/nutrition/water", methods=["POST"])
+@login_required
 def save_water_log():
     data = request.get_json() or {}
     water_glasses = data.get("water_glasses")
@@ -123,10 +134,6 @@ def save_water_log():
 
     if water_glasses < 0:
         return jsonify({"error": "Water glasses cannot be negative."}), 400
-
-    user = User.query.first()
-    if user is None:
-        return jsonify({"error": "Create a user before saving water intake."}), 400
 
     water_food = Food.query.filter(db.func.lower(Food.name) == "water").first()
     if water_food is None:
@@ -141,14 +148,14 @@ def save_water_log():
 
     water_log = (
         NutritionLog.query
-        .filter_by(user_id=user.id, log_date=date.today(), meal_type="Water")
+        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
         .order_by(NutritionLog.id.desc())
         .first()
     )
 
     if water_log is None:
         water_log = NutritionLog(
-            user_id=user.id,
+            user_id=current_user.id,
             food=water_food,
             log_date=date.today(),
             meal_type="Water",
@@ -169,9 +176,62 @@ def save_water_log():
 # Nutrition Page end
 
 
-@app.route("/exercise")
+@app.route("/exercise", methods=['GET', 'POST'])
+@login_required
 def exercise():
-    return render_template('exercise.html', title='Exercise')
+    user = current_user
+
+    # Compute BMI and recommendation from the user's profile
+    bmi_value = None
+    recommendation = None
+    if user.height_cm and user.weight_kg:
+        bmi_value = user.weight_kg / ((user.height_cm / 100) ** 2)
+        if user.activity_level:
+            recommendation = get_exercise_plan(bmi_value, user.activity_level)
+
+    form = ExerciseLogForm()
+
+    # Populate the dropdown from the Exercise catalogue
+    exercises = Exercise.query.order_by(Exercise.name).all()
+    form.exercise_id.choices = [(e.id, e.name) for e in exercises]
+
+    # Save the workout to the database
+    if form.validate_on_submit():
+        log = ExerciseLog(
+            user_id=user.id,
+            exercise_id=form.exercise_id.data,
+            log_date=form.workout_date.data,
+            sets=form.sets.data,
+            reps=form.reps.data,
+            weight_kg=float(form.weight_kg.data) if form.weight_kg.data is not None else None,
+            duration_minutes=form.duration_minutes.data,
+            notes=form.notes.data,
+        )
+        db.session.add(log)
+        db.session.commit()
+
+        chosen = db.session.get(Exercise, form.exercise_id.data)
+        flash(f"Workout logged: {chosen.name}")
+        return redirect(url_for('exercise'))
+
+    # Pull the user's recent workouts from the database
+    recent_logs = (
+        ExerciseLog.query
+        .filter_by(user_id=user.id)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .limit(10)
+        .all()
+    )
+
+    return render_template(
+        'exercise.html',
+        title='Exercise',
+        form=form,
+        recent_logs=recent_logs,
+        bmi_value=bmi_value,
+        exercise_level=user.activity_level,
+        recommendation=recommendation,
+    )
 
 
 @app.route("/AI")
@@ -180,30 +240,35 @@ def AI():
 
 
 @app.route("/myprofile")
+@login_required
 def myprofile():
-    username = session.get('username', 'Guest')
-    posts = [
-        {
-            'author': {'username': 'Franco'},
-            'body': 'Whatever the mind of man can conceive and believe, it can achieve.'
-        },
-        {
-            'author': {'username': 'Swathy'},
-            'body': 'The only thing that overcomes hard luck is hard work.'
-        },
-        {
-            'author': {'username': 'Faiz'},
-            'body': 'Strive not to be a success, but rather to be of value.'
-        },
-        {
-            'author': {'username': 'Ananya'},
-            'body': 'Success is the good fortune that comes from aspiration, desperation, perspiration and inspiration.'
-        }
-    ]
-    return render_template('myprofile.html', title='My Profile', username=username, posts=posts)
+    latest_login_event = (
+        LoginEvent.query.filter_by(user_id=current_user.id)
+        .order_by(LoginEvent.login_at.desc())
+        .first()
+    )
+    latest_login_at = None
+    if latest_login_event:
+        utc_time = latest_login_event.login_at.replace(tzinfo=timezone.utc)
+        perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
+        latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    return render_template(
+        "myprofile.html",
+        title="My Profile",
+        user=current_user,
+        latest_login_at=latest_login_at
+    )
 
 
-# ✅ YOUR NEW FEATURE
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been logged out.")
+    return redirect(url_for("login"))
+
+
 @app.route("/details", methods=['GET', 'POST'])
 def user_details():
     if request.method == 'POST':
@@ -217,7 +282,6 @@ def user_details():
         try:
             height = float(height)
             weight = float(weight)
-
             height_m = height / 100
             bmi = weight / (height_m ** 2)
 
@@ -226,7 +290,7 @@ def user_details():
             elif bmi < 25:
                 quote = "Great shape! Keep maintaining your healthy lifestyle!"
             elif bmi < 30:
-                quote = "You're doing well—let’s improve fitness step by step!"
+                quote = "You're doing well—let's improve fitness step by step!"
             else:
                 quote = "Start your fitness journey today—small steps make big changes!"
 
