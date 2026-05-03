@@ -3,6 +3,9 @@
 {% block title %}Nutrition{% endblock %}
 
 {% block content %}
+{% set safe_initial_water = initial_water|default(0) %}
+{% set safe_food_entries = food_entries|default([]) %}
+
 <div class="nutrition-floating-foods" aria-hidden="true">
   <span>&#129382;</span>
   <span>&#127822;</span>
@@ -42,7 +45,10 @@
   <div class="col-md-4">
     <div class="nutrition-stat">
       <span>Water Intake</span>
-      <strong id="waterCount">{{ initial_water }} {{ 'glass' if initial_water == 1 else 'glasses' }}</strong>
+      <strong id="waterCount">
+        {{ safe_initial_water }}
+        {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
+      </strong>
       <div class="d-flex flex-wrap gap-2 mt-2">
         <button class="btn btn-sm btn-outline-secondary" type="button" onclick="decreaseWater()">-</button>
         <button class="btn btn-sm btn-outline-secondary" type="button" onclick="increaseWater()">+</button>
@@ -204,7 +210,15 @@
   </p>
 </section>
 
+<script id="nutritionInitialData" type="application/json">
+  {{ {
+    "food_entries": safe_food_entries,
+    "initial_water": safe_initial_water
+  }|tojson }}
+</script>
+
 <script>
+  const nutritionInitialData = JSON.parse(document.getElementById("nutritionInitialData").textContent);
   const foodForm = document.getElementById("foodForm");
   const foodTable = document.getElementById("foodTable");
   const totalCalories = document.getElementById("totalCalories");
@@ -223,8 +237,8 @@
   const otherCaloriesInput = document.getElementById("otherCalories");
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
-  let entries = {{ food_entries|default([])|tojson }};
-  let water = {{ initial_water|default(0)|tojson }};
+  let entries = nutritionInitialData.food_entries;
+  let water = nutritionInitialData.initial_water;
   const dailyWaterTarget = 8;
 
   const foodCalories = {
