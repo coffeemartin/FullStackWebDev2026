@@ -4,16 +4,16 @@
 
 {% block content %}
 <div class="nutrition-floating-foods" aria-hidden="true">
-  <span>🥦</span>
-  <span>🍎</span>
-  <span>🥕</span>
-  <span>🥗</span>
-  <span>🍌</span>
-  <span>🍓</span>
-  <span>🥑</span>
-  <span>🍚</span>
-  <span>🍇</span>
-  <span>🥚</span>
+  <span>&#129382;</span>
+  <span>&#127822;</span>
+  <span>&#129365;</span>
+  <span>&#129367;</span>
+  <span>&#127820;</span>
+  <span>&#127827;</span>
+  <span>&#129361;</span>
+  <span>&#127834;</span>
+  <span>&#127815;</span>
+  <span>&#129370;</span>
 </div>
 
 <section class="nutrition-hero mb-4">
@@ -141,6 +141,11 @@
             <input id="otherQuantity" class="form-control" type="number" min="1" placeholder="grams">
           </div>
 
+          <div class="col-md-6 d-none" id="otherCaloriesGroup">
+            <label class="form-label" for="otherCalories">Calories per 100g for this food</label>
+            <input id="otherCalories" class="form-control" type="number" min="0" step="0.1" placeholder="Example: 60">
+          </div>
+
           <div class="col-md-6">
             <label class="form-label" for="calculatedCalories">Calculated Calories</label>
             <input id="calculatedCalories" class="form-control" type="text" value="0 kcal" readonly>
@@ -212,14 +217,15 @@
   const standardQuantityGroup = document.getElementById("standardQuantityGroup");
   const otherFoodGroup = document.getElementById("otherFoodGroup");
   const otherQuantityGroup = document.getElementById("otherQuantityGroup");
+  const otherCaloriesGroup = document.getElementById("otherCaloriesGroup");
   const otherFoodNameInput = document.getElementById("otherFoodName");
   const otherQuantityInput = document.getElementById("otherQuantity");
+  const otherCaloriesInput = document.getElementById("otherCalories");
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
-  let entries = [];
+  let entries = {{ food_entries|default([])|tojson }};
   let water = {{ initial_water|default(0)|tojson }};
   const dailyWaterTarget = 8;
-  const otherFoodCaloriesPer100g = 100;
 
   const foodCalories = {
     "apple": 52,
@@ -245,6 +251,7 @@
   quantityInput.addEventListener("input", updateCalculatedCalories);
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
+  otherCaloriesInput.addEventListener("input", updateCalculatedCalories);
 
   foodForm.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -302,7 +309,7 @@
 
   function getCaloriesPer100g(foodName) {
     if (foodNameInput.value === "Others" && otherFoodNameInput.value.trim()) {
-      return otherFoodCaloriesPer100g;
+      return otherCaloriesInput.value === "" ? undefined : Number(otherCaloriesInput.value);
     }
 
     return foodCalories[foodName.trim().toLowerCase()];
@@ -317,7 +324,7 @@
     if (quantity > 0 && Number.isFinite(caloriesPer100g)) {
       calculatedCaloriesInput.value = calculateCalories(quantity, caloriesPer100g) + " kcal";
     } else if (foodName && !Number.isFinite(caloriesPer100g)) {
-      calculatedCaloriesInput.value = "Choose a listed food";
+      calculatedCaloriesInput.value = isOtherFood ? "Enter calories per 100g" : "Choose a listed food";
     } else {
       calculatedCaloriesInput.value = "0 kcal";
     }
@@ -329,10 +336,12 @@
     standardQuantityGroup.classList.toggle("d-none", isOtherFood);
     otherFoodGroup.classList.toggle("d-none", !isOtherFood);
     otherQuantityGroup.classList.toggle("d-none", !isOtherFood);
+    otherCaloriesGroup.classList.toggle("d-none", !isOtherFood);
 
     quantityInput.required = !isOtherFood;
     otherFoodNameInput.required = isOtherFood;
     otherQuantityInput.required = isOtherFood;
+    otherCaloriesInput.required = isOtherFood;
   }
 
   async function saveNutritionLog(payload) {
@@ -354,6 +363,16 @@
 
   function renderFoodLog() {
     foodTable.innerHTML = "";
+
+    if (entries.length === 0) {
+      const emptyRow = document.createElement("tr");
+      const emptyCell = document.createElement("td");
+      emptyCell.colSpan = 6;
+      emptyCell.className = "text-center text-secondary";
+      emptyCell.textContent = "No food entries yet.";
+      emptyRow.appendChild(emptyCell);
+      foodTable.appendChild(emptyRow);
+    }
 
     entries.forEach(function (entry) {
       const row = document.createElement("tr");
@@ -443,12 +462,17 @@
 
       water = data.water_glasses;
       renderWaterCount();
-      waterSaveStatus.textContent = "Water intake saved.";
+      if (water < dailyWaterTarget) {
+        waterSaveStatus.textContent = "Water intake saved. Dehydration risk: drink more water today.";
+      } else {
+        waterSaveStatus.textContent = "Water intake saved. Good hydration for today.";
+      }
     } catch (error) {
       waterSaveStatus.textContent = error.message;
     }
   }
 
+  renderFoodLog();
   renderWaterCount();
 </script>
 {% endblock %}

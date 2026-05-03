@@ -18,10 +18,12 @@ def login():
     return render_template('login.html', title='Sign In', form=form)
 
 
+# Nutrion page route
 @app.route("/nutrition")
 def nutrition():
     user = User.query.first()
     initial_water = 0
+    food_entries = []
 
     if user is not None:
         water_log = (
@@ -32,8 +34,33 @@ def nutrition():
         )
         if water_log and water_log.water_glasses:
             initial_water = water_log.water_glasses
+        nutrition_logs = (
+            NutritionLog.query
+            .filter(NutritionLog.user_id == user.id)
+            .filter(NutritionLog.log_date == date.today())
+            .filter(NutritionLog.meal_type != "Water")
+            .join(Food)
+            .order_by(NutritionLog.id.asc())
+            .all()
+        )
+        food_entries = [
+            {
+                "mealType": log.meal_type or "",
+                "foodName": log.food.name,
+                "quantity": log.quantity_g or 0,
+                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)),
+                "feedback": "",
+                "comments": log.notes or "",
+            }
+            for log in nutrition_logs
+        ]
 
-    return render_template('nutrition.html', title='Nutrition', initial_water=initial_water)
+    return render_template(
+        'nutrition.html',
+        title='Nutrition',
+        initial_water=initial_water,
+        food_entries=food_entries,
+    )
 
 
 @app.route("/nutrition/log", methods=["POST"])
@@ -139,6 +166,7 @@ def save_water_log():
         "water_glasses": water_log.water_glasses,
         "quantity_g": water_log.quantity_g,
     })
+# Nutrition Page end
 
 
 @app.route("/exercise")
