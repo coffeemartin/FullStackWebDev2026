@@ -96,6 +96,7 @@ def exercise():
         'exercise.html',
         title='Exercise',
         form=form,
+        exercise_options=exercises,
         recent_logs=recent_logs,
         bmi_value=bmi_value,
         exercise_level=user.activity_level,
