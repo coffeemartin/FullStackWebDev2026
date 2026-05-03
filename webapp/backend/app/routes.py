@@ -6,12 +6,33 @@ from app.models import User
 from sqlalchemy.exc import SQLAlchemyError
 
 
+def calculate_bmi_result(height_cm, weight_kg):
+    height = float(height_cm)
+    weight = float(weight_kg)
+    if height <= 0 or weight <= 0:
+        raise ValueError("Please enter a valid height and weight.")
+
+    height_m = height / 100
+    bmi = round(weight / (height_m ** 2), 1)
+
+    if bmi < 18.5:
+        return bmi, "Underweight", "Start building strength and nourish your body!"
+    if bmi < 25:
+        return bmi, "Healthy weight", "Great shape! Keep maintaining your healthy lifestyle!"
+    if bmi < 30:
+        return bmi, "Overweight", "You are doing well. Let us improve fitness step by step!"
+    return bmi, "Obese", "Start your fitness journey today. Small steps make big changes!"
+
+
 @app.route("/", methods=['GET', 'POST']) 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     show_signup = False
     form_data = {}
+    bmi = None
+    category = None
+    quote = None
 
     if request.method == 'POST' and request.form.get('form_type') == 'new_user':
         show_signup = True
@@ -40,6 +61,11 @@ def login():
             if User.query.filter_by(email=form_data['email']).first():
                 raise ValueError("That email is already registered.")
 
+            bmi, category, quote = calculate_bmi_result(
+                form_data['height_cm'],
+                form_data['weight_kg']
+            )
+
             user = User(
                 username=form_data['username'],
                 email=form_data['email'],
@@ -56,8 +82,10 @@ def login():
             db.session.add(user)
             db.session.commit()
             session['username'] = user.name or user.username
+            session['bmi'] = bmi
+            session['bmi_category'] = category
+            session['bmi_quote'] = quote
             flash("Profile created successfully.")
-            return redirect(url_for('myprofile'))
         except ValueError as error:
             flash(str(error))
         except SQLAlchemyError:
@@ -77,7 +105,10 @@ def login():
         title='Sign In',
         form=form,
         form_data=form_data,
-        show_signup=show_signup
+        show_signup=show_signup,
+        bmi=bmi,
+        category=category,
+        quote=quote
     )
 
 

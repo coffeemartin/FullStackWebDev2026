@@ -85,6 +85,14 @@ endblock %} {% block content %}
 
     <button type="submit">Create Profile</button>
   </form>
+
+  {% if bmi %}
+  <div>
+    <h3>Your BMI: {{ bmi }}</h3>
+    <p>Category: {{ category }}</p>
+    <p>{{ quote }}</p>
+  </div>
+  {% endif %}
 </div>
 
 <script>
