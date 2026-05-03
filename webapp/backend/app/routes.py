@@ -1,6 +1,7 @@
-from app import app
-from flask import render_template, flash, redirect, url_for, session, request
+from app import app, db
+from flask import jsonify, render_template, flash, redirect, url_for, session, request
 from app.forms import LoginForm
+from app.models import Food, NutritionLog, User
 
 
 @app.route("/", methods=['GET', 'POST']) 
@@ -18,6 +19,54 @@ def login():
 @app.route("/nutrition")
 def nutrition():
     return render_template('nutrition.html', title='Nutrition')
+
+
+@app.route("/nutrition/log", methods=["POST"])
+def save_nutrition_log():
+    data = request.get_json() or {}
+    meal_type = (data.get("meal_type") or "").strip()
+    food_name = (data.get("food_name") or "").strip()
+    quantity_g = data.get("quantity_g")
+    notes = (data.get("notes") or "").strip()
+    calories_per_100g = data.get("calories_per_100g")
+
+    try:
+        quantity_g = float(quantity_g)
+        calories_per_100g = float(calories_per_100g)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Quantity and calories must be valid numbers."}), 400
+
+    if not meal_type or not food_name or quantity_g <= 0 or calories_per_100g < 0:
+        return jsonify({"error": "Meal type, food name, and quantity are required."}), 400
+
+    food = Food.query.filter(db.func.lower(Food.name) == food_name.lower()).first()
+    if food is None:
+        food = Food(name=food_name)
+        db.session.add(food)
+
+    food.calories_per_100g = calories_per_100g
+
+    user = User.query.first()
+    if user is None:
+        return jsonify({"error": "Create a user before saving nutrition logs."}), 400
+
+    nutrition_log = NutritionLog(
+        user_id=user.id,
+        food=food,
+        meal_type=meal_type,
+        quantity_g=quantity_g,
+        notes=notes,
+    )
+    db.session.add(nutrition_log)
+    db.session.commit()
+
+    return jsonify({
+        "food_id": food.id,
+        "log_id": nutrition_log.id,
+        "food_name": food.name,
+        "quantity_g": nutrition_log.quantity_g,
+        "calories": round((quantity_g / 100) * calories_per_100g),
+    })
 
 
 @app.route("/exercise")

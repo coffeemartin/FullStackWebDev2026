@@ -104,28 +104,39 @@
 
           <div class="col-md-6">
             <label class="form-label" for="foodName">Food Name</label>
-            <input id="foodName" class="form-control" type="text" list="foodOptions" placeholder="Example: Rice" required>
-            <datalist id="foodOptions">
-              <option value="Apple"></option>
-              <option value="Banana"></option>
-              <option value="Boiled Egg"></option>
-              <option value="Brown Rice"></option>
-              <option value="Chicken Breast"></option>
-              <option value="Greek Yogurt"></option>
-              <option value="Oats"></option>
-              <option value="Pasta"></option>
-              <option value="Potato"></option>
-              <option value="Rice"></option>
-              <option value="Salmon"></option>
-              <option value="Tofu"></option>
-              <option value="White Rice"></option>
-              <option value="Whole Wheat Bread"></option>
-            </datalist>
+            <select id="foodName" class="form-select" required>
+              <option value="">Choose food</option>
+              <option>Apple</option>
+              <option>Banana</option>
+              <option>Boiled Egg</option>
+              <option>Brown Rice</option>
+              <option>Chicken Breast</option>
+              <option>Greek Yogurt</option>
+              <option>Oats</option>
+              <option>Pasta</option>
+              <option>Potato</option>
+              <option>Rice</option>
+              <option>Salmon</option>
+              <option>Tofu</option>
+              <option>White Rice</option>
+              <option>Whole Wheat Bread</option>
+              <option>Others</option>
+            </select>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-6" id="standardQuantityGroup">
             <label class="form-label" for="quantity">Quantity Taken</label>
             <input id="quantity" class="form-control" type="number" min="1" placeholder="grams" required>
+          </div>
+
+          <div class="col-md-6 d-none" id="otherFoodGroup">
+            <label class="form-label" for="otherFoodName">Please enter the name of other food you had</label>
+            <input id="otherFoodName" class="form-control" type="text" placeholder="Example: Mango">
+          </div>
+
+          <div class="col-md-6 d-none" id="otherQuantityGroup">
+            <label class="form-label" for="otherQuantity">Enter the Quantity of the food taken</label>
+            <input id="otherQuantity" class="form-control" type="number" min="1" placeholder="grams">
           </div>
 
           <div class="col-md-6">
@@ -196,10 +207,16 @@
   const waterSaveStatus = document.getElementById("waterSaveStatus");
   const foodNameInput = document.getElementById("foodName");
   const quantityInput = document.getElementById("quantity");
+  const standardQuantityGroup = document.getElementById("standardQuantityGroup");
+  const otherFoodGroup = document.getElementById("otherFoodGroup");
+  const otherQuantityGroup = document.getElementById("otherQuantityGroup");
+  const otherFoodNameInput = document.getElementById("otherFoodName");
+  const otherQuantityInput = document.getElementById("otherQuantity");
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
   let entries = [];
   let water = 0;
+  const otherFoodCaloriesPer100g = 100;
 
   const foodCalories = {
     "apple": 52,
@@ -218,15 +235,21 @@
     "whole wheat bread": 247
   };
 
-  foodNameInput.addEventListener("input", updateCalculatedCalories);
+  foodNameInput.addEventListener("change", function () {
+    toggleOtherFoodFields();
+    updateCalculatedCalories();
+  });
   quantityInput.addEventListener("input", updateCalculatedCalories);
+  otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
+  otherQuantityInput.addEventListener("input", updateCalculatedCalories);
 
-  foodForm.addEventListener("submit", function (event) {
+  foodForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const mealType = document.getElementById("mealType").value;
-    const foodName = foodNameInput.value.trim();
-    const quantity = Number(quantityInput.value);
+    const isOtherFood = foodNameInput.value === "Others";
+    const foodName = isOtherFood ? otherFoodNameInput.value.trim() : foodNameInput.value.trim();
+    const quantity = Number(isOtherFood ? otherQuantityInput.value : quantityInput.value);
     const caloriesPer100g = getCaloriesPer100g(foodName);
     const calculatedCalories = calculateCalories(quantity, caloriesPer100g);
     const feedback = document.getElementById("feedback").value;
@@ -238,7 +261,20 @@
     }
 
     if (!Number.isFinite(caloriesPer100g)) {
-      alert("Please choose a food from the suggested list so calories can be calculated automatically.");
+      alert("Please choose a listed food or use Others.");
+      return;
+    }
+
+    try {
+      await saveNutritionLog({
+        meal_type: mealType,
+        food_name: foodName,
+        quantity_g: quantity,
+        calories_per_100g: caloriesPer100g,
+        notes: [feedback, comments].filter(Boolean).join(" - ")
+      });
+    } catch (error) {
+      alert(error.message);
       return;
     }
 
@@ -252,6 +288,7 @@
     });
 
     foodForm.reset();
+    toggleOtherFoodFields();
     calculatedCaloriesInput.value = "0 kcal";
     renderFoodLog();
   });
@@ -261,12 +298,17 @@
   }
 
   function getCaloriesPer100g(foodName) {
+    if (foodNameInput.value === "Others" && otherFoodNameInput.value.trim()) {
+      return otherFoodCaloriesPer100g;
+    }
+
     return foodCalories[foodName.trim().toLowerCase()];
   }
 
   function updateCalculatedCalories() {
-    const foodName = foodNameInput.value.trim();
-    const quantity = Number(quantityInput.value);
+    const isOtherFood = foodNameInput.value === "Others";
+    const foodName = isOtherFood ? otherFoodNameInput.value.trim() : foodNameInput.value.trim();
+    const quantity = Number(isOtherFood ? otherQuantityInput.value : quantityInput.value);
     const caloriesPer100g = getCaloriesPer100g(foodName);
 
     if (quantity > 0 && Number.isFinite(caloriesPer100g)) {
@@ -276,6 +318,35 @@
     } else {
       calculatedCaloriesInput.value = "0 kcal";
     }
+  }
+
+  function toggleOtherFoodFields() {
+    const isOtherFood = foodNameInput.value === "Others";
+
+    standardQuantityGroup.classList.toggle("d-none", isOtherFood);
+    otherFoodGroup.classList.toggle("d-none", !isOtherFood);
+    otherQuantityGroup.classList.toggle("d-none", !isOtherFood);
+
+    quantityInput.required = !isOtherFood;
+    otherFoodNameInput.required = isOtherFood;
+    otherQuantityInput.required = isOtherFood;
+  }
+
+  async function saveNutritionLog(payload) {
+    const response = await fetch("/nutrition/log", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Food entry could not be saved.");
+    }
+
+    return data;
   }
 
   function renderFoodLog() {
