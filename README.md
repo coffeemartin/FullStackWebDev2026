@@ -134,3 +134,331 @@ Proposed framework:
 ## 5. Initial HTML / CSS Pages 
 
 (Optional but Recommended especially for groups whose meeting is in the later weeks) Start creating some of your pages with HTML and CSS. The page does not need to be interactive (e.g. no need for buttons to work) but it should be sufficient 
+
+# Flask Server Local Setup Guide
+
+This guide explains how to set up and run the Flask backend for this project on a local machine. It is written for new contributors who have just cloned the repository.
+
+## 1. Prerequisites
+
+Install these before running the Flask server:
+
+- **Git**: used to clone and update the repository.
+- **Python 3.11 or newer**: used to run the Flask backend.
+- **pip**: Python package installer. It is usually included with Python.
+- **Terminal access**:
+  - Windows: PowerShell or Command Prompt.
+  - macOS/Linux: Terminal.
+- **Code editor**: Visual Studio Code is recommended, but any editor is fine.
+
+Check that Python and pip are installed:
+
+```powershell
+python --version
+pip --version
+```
+
+If `python` does not work on Windows, try:
+
+```powershell
+py --version
+py -m pip --version
+```
+
+## 2. Clone the Repository
+
+If you have not cloned the project yet:
+
+```powershell
+git clone https://github.com/coffeemartin/FullStackWebDev2026.git
+cd FullStackWebDev2026
+```
+
+If you already have the repository, move into the project folder:
+
+```powershell
+cd "FullStackWebDev2026"
+```
+
+## 3. Go to the Backend Folder
+
+The Flask server is inside `webapp/backend`.
+
+```powershell
+cd webapp\backend
+```
+
+From this folder, you should see files such as:
+
+- `run.py`
+- `requirements.txt`
+- `config.py`
+- `app.db`
+- `app/`
+- `migrations/`
+
+## 4. Create a Virtual Environment
+
+A virtual environment keeps this project's Python packages separate from packages used by other projects.
+
+### Windows
+
+```powershell
+python -m venv venv
+```
+
+Activate it:
+
+```powershell
+.\venv\Scripts\activate
+```
+
+If `python` does not work, use:
+
+```powershell
+py -m venv venv
+.\venv\Scripts\activate
+```
+
+### macOS/Linux
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+After activation, the terminal prompt usually starts with `(venv)`.
+
+## 5. Install Required Python Packages
+
+Install all backend dependencies from `requirements.txt`:
+
+```powershell
+pip install -r requirements.txt
+```
+
+The required packages include Flask and project extensions such as:
+
+- Flask
+- Flask-SQLAlchemy
+- Flask-Migrate
+- Flask-WTF
+- python-dotenv
+- SQLAlchemy
+- WTForms
+
+## 6. Environment Variables
+
+The app loads environment variables from a `.env` file if one exists.
+
+Create a `.env` file inside `webapp/backend`:
+
+```text
+SECRET_KEY=change-this-local-dev-secret
+```
+
+This project already has fallback development values in `config.py`, so the server can still run without a `.env` file. However, creating one is recommended for a clearer local setup.
+
+Optional database setting:
+
+```text
+DATABASE_URL=sqlite:///app.db
+```
+
+If `DATABASE_URL` is not set, the app uses the local SQLite database at:
+
+```text
+webapp/backend/app.db
+```
+
+Do not commit `.env` files to Git. They are already ignored by `.gitignore`.
+
+## 7. Database Setup
+
+The repository currently includes a local SQLite database file:
+
+```text
+webapp/backend/app.db
+```
+
+If `app.db` exists, you can usually run the server immediately.
+
+If you need to create or update the database from migrations, run:
+
+```powershell
+flask db upgrade
+```
+
+If Flask cannot find the app, set the Flask app first:
+
+```powershell
+$env:FLASK_APP = "run.py"
+flask db upgrade
+```
+
+For macOS/Linux:
+
+```bash
+export FLASK_APP=run.py
+flask db upgrade
+```
+
+Optional seed data can be loaded with:
+
+```powershell
+python seed.py
+```
+
+Use seed data carefully because it adds sample records to the database.
+
+## 8. Run the Flask Server
+
+From the `webapp/backend` folder, run:
+
+```powershell
+python run.py
+```
+
+You should see output showing that the Flask development server is running.
+
+Open this URL in your browser:
+
+```text
+http://127.0.0.1:5000
+```
+
+You can also use:
+
+```text
+http://localhost:5000
+```
+
+## 9. Access from Another Device on the Same Network
+
+By default, `run.py` uses:
+
+```python
+app.run(debug=True)
+```
+
+That normally binds the server to `127.0.0.1`, which only works from the same computer.
+
+To allow another device on the same Wi-Fi network to access the server, update `webapp/backend/run.py` temporarily:
+
+```python
+from app import app
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000, debug=True)
+```
+
+Then find your local IP address.
+
+Windows:
+
+```powershell
+ipconfig
+```
+
+Look for the IPv4 address under your Wi-Fi or Ethernet adapter.
+
+Then another device on the same network can open:
+
+```text
+http://YOUR_LOCAL_IP:5000
+```
+
+Example:
+
+```text
+http://192.168.1.56:5000
+```
+
+If it does not load, check Windows Firewall and make sure both devices are on the same network.
+
+## 10. Stop the Server
+
+In the terminal where Flask is running, press:
+
+```text
+Ctrl + C
+```
+
+## 11. Common Problems
+
+### `ModuleNotFoundError`
+
+Install the requirements again:
+
+```powershell
+pip install -r requirements.txt
+```
+
+Make sure your virtual environment is activated before installing packages.
+
+### `flask` command is not recognized
+
+Use Python directly:
+
+```powershell
+python run.py
+```
+
+Or check that the virtual environment is activated and dependencies are installed.
+
+### Database errors
+
+Run migrations:
+
+```powershell
+flask db upgrade
+```
+
+If Flask cannot find the app:
+
+```powershell
+$env:FLASK_APP = "run.py"
+flask db upgrade
+```
+
+### Port 5000 is already in use
+
+Another app is already using port 5000. Either stop that app or run Flask on another port by editing `run.py`:
+
+```python
+app.run(port=5001, debug=True)
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5001
+```
+
+### PowerShell blocks virtual environment activation
+
+If PowerShell blocks `.\venv\Scripts\activate`, run:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Close and reopen PowerShell, then activate the virtual environment again.
+
+## 12. Quick Start Summary
+
+For Windows:
+
+```powershell
+cd webapp\backend
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+python run.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000
+```

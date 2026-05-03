@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Details</title>
+</head>
+<body>
+
+    <h1>Enter Your Details</h1>
+
+    <form method="POST">
+
+        <label>Name:</label><br>
+        <input type="text" name="name"><br><br>
+
+        <label>Age:</label><br>
+        <input type="number" name="age"><br><br>
+
+        <label>Gender:</label><br>
+        <input type="text" name="gender"><br><br>
+
+        <label>Height (cm):</label><br>
+        <input type="number" name="height_cm"><br><br>
+
+        <label>Weight (kg):</label><br>
+        <input type="number" name="weight_kg"><br><br>
+
+        <label>Injury Notes:</label><br>
+        <input type="text" name="injury_notes"><br><br>
+
+        <button type="submit">Save</button>
+
+    </form>
+    {% if bmi is not none %}
+    <h2>Your BMI: {{ bmi }}</h2>
+    <p>{{ quote }}</p>
+{% endif %}
+
+</body>
+</html>   
