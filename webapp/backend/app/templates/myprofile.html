@@ -1,10 +1,25 @@
-{% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
-{% block content %}
-<h1>Hello, {{ username }}!</h1>
-{% for post in posts %}
-<div>
-  <p>{{ post.author.username }} says: <b>{{ post.body }}</b></p>
-</div>
-{% endfor %}
+{% extends "base.html" %} {% block title %}My Profile{% endblock %} {% block
+content %}
+<h1>My Profile</h1>
+
+<section>
+  <h2>Account Details</h2>
+  <p>Username: {{ user.username }}</p>
+  <p>Email: {{ user.email }}</p>
+  <p>User ID: {{ user.id }}</p>
+  <p>Created At: {{ user.created_at | default('Not set', true) }}</p>
+  <p>Most Recent Login At: {{ latest_login_at | default('Not set', true) }}</p>
+</section>
+
+<section>
+  <h2>Personal Information</h2>
+  <p>Name: {{ user.name | default('Not set', true) }}</p>
+  <p>Age: {{ user.age | default('Not set', true) }}</p>
+  <p>Gender: {{ user.gender | default('Not set', true) }}</p>
+  <p>Height (cm): {{ user.height_cm | default('Not set', true) }}</p>
+  <p>Weight (kg): {{ user.weight_kg | default('Not set', true) }}</p>
+  <p>Goal: {{ user.goal | default('Not set', true) }}</p>
+  <p>Activity Level: {{ user.activity_level | default('Not set', true) }}</p>
+  <p>Injury Notes: {{ user.injury_notes | default('Not set', true) }}</p>
+</section>
 {% endblock %}
