@@ -7,6 +7,12 @@ from app.forms import LoginForm, ExerciseLogForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
 
+from app.ai_page import * 
+from app.ai_service import generate_ai_plan
+from app.models import LLMRecommendation
+import json
+
+
 
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/login", methods=['GET', 'POST'])
@@ -104,10 +110,39 @@ def exercise():
     )
 
 
-@app.route("/AI")
+@app.route("/AI", methods=["GET", "POST"])
+@login_required
 def AI():
-    return render_template('AI.html', title='AI')
+    if request.method == "POST":
+        ai_input = build_ai_input(current_user)
+        ai_response = generate_ai_plan(ai_input)
 
+        recommendation = LLMRecommendation(
+            user_id=current_user.id,
+            input_summary=json.dumps(ai_input),
+            llm_comments=ai_response["summary_comment"],
+        )
+
+        recommendation.set_training_plan(ai_response["weekly_training_plan"])
+        recommendation.set_nutrition_plan(ai_response["nutrition_plan"])
+
+        db.session.add(recommendation)
+        db.session.commit()
+
+        flash("AI plan generated successfully.")
+        return redirect(url_for("AI"))
+
+    latest_recommendation = (
+        LLMRecommendation.query
+        .filter_by(user_id=current_user.id)
+        .order_by(LLMRecommendation.created_at.desc())
+        .first()
+    )
+
+    return render_template(
+        "AI.html",
+        latest_recommendation=latest_recommendation,
+    )
 
 @app.route("/myprofile")
 @login_required

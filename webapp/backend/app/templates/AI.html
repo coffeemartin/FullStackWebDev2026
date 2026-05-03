@@ -1,2 +1,58 @@
-{% extends "base.html" %} {% block title %}AI{% endblock %} {% block content
-%}{% endblock %}
+{% extends "base.html" %} {% block title %}AI{% endblock %} {% block content %}
+
+<h1>AI Training Plan</h1>
+
+<form method="post" class="mb-4">
+  {{ form.hidden_tag() if form }}
+  <button type="submit" class="btn btn-primary">Generate AI Plan</button>
+</form>
+
+{% if latest_recommendation %}
+<section class="mb-4">
+  <h2>AI Comment</h2>
+  <p>{{ latest_recommendation.llm_comments }}</p>
+</section>
+
+{% set training_plan = latest_recommendation.get_training_plan() %} {% set
+nutrition_plan = latest_recommendation.get_nutrition_plan() %} {% if
+training_plan %}
+<section class="mb-4">
+  <h2>Weekly Training Plan</h2>
+
+  {% for day in training_plan %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <h3>{{ day.day }} - {{ day.focus }}</h3>
+
+      <ul>
+        {% for exercise in day.exercises %}
+        <li>
+          <strong>{{ exercise.name }}</strong>
+          {% if exercise.sets %} — Sets: {{ exercise.sets }}{% endif %} {% if
+          exercise.reps %}, Reps: {{ exercise.reps }}{% endif %} {% if
+          exercise.duration_minutes %}, Duration: {{ exercise.duration_minutes
+          }}{% endif %} {% if exercise.notes %}<br />{{ exercise.notes }}{%
+          endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %} {% if nutrition_plan %}
+<section class="mb-4">
+  <h2>Nutrition Plan</h2>
+
+  <ul class="list-group">
+    {% for item in nutrition_plan %}
+    <li class="list-group-item">
+      <strong>{{ item.goal }}</strong><br />
+      {{ item.suggestion }}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %} {% else %}
+<p>No AI plan generated yet. Click the button above to create one.</p>
+{% endif %} {% endblock %}
