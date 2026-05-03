@@ -513,6 +513,18 @@
         exerciseSelect.focus();
       });
     });
+
+    // Stop YouTube video when modal is closed
+    document.querySelectorAll(".exercise-modal").forEach((modal) => {
+      modal.addEventListener("hidden.bs.modal", () => {
+        const iframe = modal.querySelector("iframe");
+        if (iframe) {
+          const src = iframe.src;
+          iframe.src = "";
+          iframe.src = src;
+        }
+      });
+    });
   });
 </script>
 {% endblock %}
