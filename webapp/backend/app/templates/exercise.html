@@ -1,43 +1,518 @@
-{% extends "base.html" %} {% block title %}Exercise{% endblock %} {% block
-content %}
+{% extends "base.html" %}
+{% block title %}Exercise{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exercise.css') }}">
+{% endblock %}
 
-<div class="page-header mb-4">
-  <p class="page-kicker mb-2">Training log</p>
-  <h1 class="display-6 mb-2">Exercise Log</h1>
-  <p class="text-body-secondary mb-0">
-    Your latest saved exercise entries from the database.
-  </p>
-</div>
+{% macro render_errors(field) %}
+  {% for error in field.errors %}
+    <div class="exercise-error">{{ error }}</div>
+  {% endfor %}
+{% endmacro %}
 
-{% if exercise_logs %}
-<div class="table-responsive">
-  <table class="table table-sm table-striped">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Exercise</th>
-        <th>Sets</th>
-        <th>Reps</th>
-        <th>Weight (kg)</th>
-        <th>Duration (min)</th>
-        <th>Notes</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in exercise_logs %}
-      <tr>
-        <td>{{ log.log_date }}</td>
-        <td>{{ log.exercise.name }}</td>
-        <td>{{ log.sets or '' }}</td>
-        <td>{{ log.reps or '' }}</td>
-        <td>{{ log.weight_kg or '' }}</td>
-        <td>{{ log.duration_minutes or '' }}</td>
-        <td>{{ log.notes or '' }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% else %}
-<p>No exercise logs yet.</p>
-{% endif %} {% endblock %}
+{% block content %}
+<section class="exercise-page">
+  <section class="exercise-hero">
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-7">
+        <span class="exercise-kicker">Gym Mode</span>
+        <h1 class="exercise-title">Train With Purpose</h1>
+        <p class="exercise-subtitle">
+          Log your workout, build consistency, and unlock BMI-based exercise guidance
+          once your profile details are available.
+        </p>
+
+        <div class="exercise-chip-row">
+          <span class="exercise-chip">Strength</span>
+          <span class="exercise-chip">Cardio</span>
+          <span class="exercise-chip">Mobility</span>
+          <span class="exercise-chip">Recovery</span>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        {% if recommendation %}
+          <div class="bmi-summary-card">
+            <p class="bmi-label">Current BMI</p>
+            <div class="bmi-value">{{ "%.1f"|format(bmi_value) }}</div>
+            <div class="bmi-status">{{ recommendation.label }}</div>
+            <p class="bmi-focus">{{ recommendation.focus }}</p>
+            <div class="bmi-meta">Exercise level: {{ exercise_level }}</div>
+          </div>
+        {% else %}
+          <div class="bmi-summary-card bmi-summary-card--empty">
+            <p class="bmi-label">BMI Guidance Locked</p>
+            <div class="bmi-status">Complete profile details first</div>
+            <p class="bmi-focus">
+              Once height, weight, and exercise level are saved on the main or profile page,
+              this section can show BMI-based training guidance.
+            </p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Recommended Exercise Categories</h2>
+      <p>
+        {% if recommendation %}
+          {{ recommendation.message }}
+        {% else %}
+          Your recommended categories will appear here after BMI and exercise level are available.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="row g-4">
+      {% if recommendation %}
+        {% for category in recommendation.categories %}
+          <div class="col-md-6 col-xl-3">
+            <article class="category-card">
+              <h3>{{ category }}</h3>
+            </article>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="exercise-empty-state">
+            Add profile details first to unlock your personalized categories.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Featured Exercises</h2>
+      <p>
+        {% if recommendation %}
+          These are simple exercises recommended from your BMI range and current exercise level.
+        {% else %}
+          Exercise suggestions will appear here once BMI guidance is available.
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="row g-4">
+      {% if recommendation %}
+        {% for item in recommendation.exercises %}
+          <div class="col-md-6 col-xl-4">
+            <article class="exercise-card exercise-card--interactive">
+              <span class="exercise-badge">{{ item.category }}</span>
+              <h3>{{ item.name }}</h3>
+              <p class="exercise-benefit">{{ item.benefit }}</p>
+              <div class="exercise-card-meta">
+                <p><strong>Targets:</strong> {{ item.target }}</p>
+                <p><strong>Equipment:</strong> {{ item.equipment }}</p>
+              </div>
+              <p class="exercise-tip">{{ item.tip }}</p>
+              <button
+                type="button"
+                class="btn exercise-card-demo-btn mt-3"
+                data-bs-toggle="modal"
+                data-bs-target="#exerciseModal{{ loop.index }}"
+              >
+                View Demo
+              </button>
+            </article>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="col-12">
+          <div class="exercise-empty-state">
+            No exercise suggestions yet because BMI data has not been set.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if recommendation %}
+    {% for item in recommendation.exercises %}
+      <div class="modal fade exercise-modal" id="exerciseModal{{ loop.index }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+          <div class="modal-content exercise-modal-content">
+            <div class="modal-header exercise-modal-header">
+              <div>
+                <span class="exercise-badge mb-2">{{ item.category }}</span>
+                <h2 class="modal-title h4 mb-1">{{ item.name }}</h2>
+                <p class="exercise-modal-subtitle mb-0">{{ item.benefit }}</p>
+              </div>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="row g-4">
+                <div class="col-lg-6">
+                  {% if item.video_embed %}
+                    <div class="ratio ratio-16x9 exercise-modal-video">
+                      <iframe
+                        src="{{ item.video_embed }}"
+                        title="{{ item.name }} demo video"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        loading="lazy"
+                      ></iframe>
+                    </div>
+                  {% elif item.video %}
+                    <div class="ratio ratio-16x9 exercise-modal-video">
+                      <video class="w-100 rounded-4" controls preload="metadata">
+                        <source src="{{ url_for('static', filename=item.video) }}" type="video/mp4">
+                      </video>
+                    </div>
+                  {% else %}
+                    <div class="ratio ratio-16x9 exercise-modal-video d-flex align-items-center justify-content-center rounded-4 bg-secondary bg-opacity-10">
+                      <p class="text-muted mb-0">No demo available</p>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="col-lg-6">
+                  <div class="exercise-modal-grid">
+                    <div class="exercise-modal-stat">
+                      <span class="exercise-modal-label">Targets</span>
+                      <strong>{{ item.target }}</strong>
+                    </div>
+                    <div class="exercise-modal-stat">
+                      <span class="exercise-modal-label">Equipment</span>
+                      <strong>{{ item.equipment }}</strong>
+                    </div>
+                    <div class="exercise-modal-stat">
+                      <span class="exercise-modal-label">Suggested Volume</span>
+                      <strong>{{ item.tip }}</strong>
+                    </div>
+                    <div class="exercise-modal-stat">
+                      <span class="exercise-modal-label">Easier Option</span>
+                      <strong>{{ item.easier_option }}</strong>
+                    </div>
+                  </div>
+
+                  <div class="exercise-modal-callout">
+                    <span class="exercise-modal-label">Form Cue</span>
+                    <p class="mb-0">{{ item.form_tip }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="exercise-modal-steps mt-4">
+                <h3 class="h5 mb-3">How To Do It</h3>
+                <ol class="mb-0">
+                  {% for step in item.steps %}
+                    <li>{{ step }}</li>
+                  {% endfor %}
+                </ol>
+              </div>
+            </div>
+
+            <div class="modal-footer exercise-modal-footer">
+              <button
+                type="button"
+                class="btn exercise-log-shortcut"
+                data-bs-dismiss="modal"
+                data-exercise-name="{{ item.name }}"
+              >
+                Log This Exercise
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <section class="exercise-section" id="workout-log-section">
+    <div class="exercise-panel">
+      <div class="section-heading">
+        <h2>Workout Log</h2>
+        <p>
+          Pick an exercise from the dropdown, fill in the details, and hit save.
+          Your workout will be stored in the database and appear below.
+        </p>
+      </div>
+
+      <form method="post" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.exercise_id.label.text }}</label>
+            <select
+              class="form-select exercise-input"
+              id="{{ form.exercise_id.id }}"
+              name="{{ form.exercise_id.name }}"
+            >
+              {% for exercise in exercise_options %}
+                <option
+                  value="{{ exercise.id }}"
+                  data-category="{{ exercise.category or '' }}"
+                  {% if form.exercise_id.data == exercise.id %}selected{% endif %}
+                >
+                  {{ exercise.name }}
+                </option>
+              {% endfor %}
+            </select>
+            {{ render_errors(form.exercise_id) }}
+            <p class="exercise-field-help mb-0 mt-2">
+              Choose the workout you completed. The form will adapt to strength or cardio-style exercises.
+            </p>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">{{ form.workout_date.label.text }}</label>
+            {{ form.workout_date(class="form-control exercise-input") }}
+            {{ render_errors(form.workout_date) }}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">{{ form.duration_minutes.label.text }}</label>
+            {{ form.duration_minutes(class="form-control exercise-input", placeholder="30") }}
+            {{ render_errors(form.duration_minutes) }}
+            <p class="exercise-field-help mb-0 mt-2">
+              Use duration for cardio, recovery, mobility, and sport sessions.
+            </p>
+          </div>
+
+          <div class="col-md-4" data-strength-field>
+            <label class="form-label">{{ form.sets.label.text }}</label>
+            {{ form.sets(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.sets) }}
+          </div>
+
+          <div class="col-md-4" data-strength-field>
+            <label class="form-label">{{ form.reps.label.text }}</label>
+            {{ form.reps(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.reps) }}
+          </div>
+
+          <div class="col-md-6" data-strength-field>
+            <label class="form-label">{{ form.weight_kg.label.text }}</label>
+            {{ form.weight_kg(class="form-control exercise-input", placeholder="Optional") }}
+            {{ render_errors(form.weight_kg) }}
+          </div>
+
+          <div class="col-12">
+            <div id="exercise-log-guidance" class="exercise-form-guidance" aria-live="polite"></div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">{{ form.notes.label.text }}</label>
+            {{ form.notes(class="form-control exercise-input exercise-textarea", rows="4", placeholder="How did the workout feel today?") }}
+            {{ render_errors(form.notes) }}
+            <p class="exercise-field-help mb-0 mt-2">
+              For running, cycling, or sport, you can record distance, pace, or intervals here.
+            </p>
+          </div>
+
+          <div class="col-12">
+            {{ form.submit(class="btn exercise-submit-btn") }}
+          </div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="exercise-section">
+    <div class="section-heading">
+      <h2>Your Recent Workouts</h2>
+      <p>Last 10 workouts pulled live from the database.</p>
+    </div>
+
+    {% if recent_logs %}
+      <div class="history-stack">
+        {% for log in recent_logs %}
+          {% set category = log.exercise.category or 'Workout' %}
+          {% set category_lower = category|lower %}
+          {% set is_strength = 'strength' in category_lower %}
+          {% set is_cardio_style = 'cardio' in category_lower or 'walking' in category_lower or 'cycling' in category_lower or 'water' in category_lower or 'sport' in category_lower %}
+          <article class="history-card history-card--stacked">
+            <div class="history-card-top">
+              <span class="exercise-badge">{{ category }}</span>
+              <span class="history-date">{{ log.log_date.strftime('%d %b %Y') }}</span>
+            </div>
+
+            <h3 class="history-title">{{ log.exercise.name }}</h3>
+
+            <div class="history-stats">
+              {% if is_strength %}
+                {% if log.sets %}
+                  <div class="history-stat">
+                    <span>Sets</span>
+                    <strong>{{ log.sets }}</strong>
+                  </div>
+                {% endif %}
+                {% if log.reps %}
+                  <div class="history-stat">
+                    <span>Reps</span>
+                    <strong>{{ log.reps }}</strong>
+                  </div>
+                {% endif %}
+                {% if log.weight_kg %}
+                  <div class="history-stat">
+                    <span>Load</span>
+                    <strong>{{ log.weight_kg }} kg</strong>
+                  </div>
+                {% endif %}
+                {% if log.duration_minutes %}
+                  <div class="history-stat">
+                    <span>Time</span>
+                    <strong>{{ log.duration_minutes }} min</strong>
+                  </div>
+                {% endif %}
+              {% elif is_cardio_style %}
+                {% if log.duration_minutes %}
+                  <div class="history-stat history-stat--wide">
+                    <span>Duration</span>
+                    <strong>{{ log.duration_minutes }} min</strong>
+                  </div>
+                {% else %}
+                  <div class="history-stat history-stat--wide">
+                    <span>Session</span>
+                    <strong>Workout saved</strong>
+                  </div>
+                {% endif %}
+              {% else %}
+                {% if log.duration_minutes %}
+                  <div class="history-stat history-stat--wide">
+                    <span>Time</span>
+                    <strong>{{ log.duration_minutes }} min</strong>
+                  </div>
+                {% endif %}
+                {% if log.sets and log.reps %}
+                  <div class="history-stat history-stat--wide">
+                    <span>Volume</span>
+                    <strong>{{ log.sets }} x {{ log.reps }}</strong>
+                  </div>
+                {% endif %}
+              {% endif %}
+            </div>
+
+            {% if log.notes %}
+              <p class="history-note">{{ log.notes }}</p>
+            {% else %}
+              <p class="history-note history-note--muted">
+                {{ "Strength session logged and ready for progress tracking." if is_strength else "Workout captured and saved to your training history." }}
+              </p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <article class="history-card history-card--empty text-center">
+        <p class="history-note history-note--muted">No workouts logged yet — your first one will appear here.</p>
+      </article>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const exerciseSelect = document.getElementById("exercise_id");
+    const logSection = document.getElementById("workout-log-section");
+    const guidanceBox = document.getElementById("exercise-log-guidance");
+    const strengthFieldGroups = document.querySelectorAll("[data-strength-field]");
+    const strengthInputs = Array.from(
+      document.querySelectorAll("[data-strength-field] input, [data-strength-field] select, [data-strength-field] textarea")
+    );
+    const notesField = document.getElementById("notes");
+
+    const getExerciseMode = (categoryText) => {
+      const category = (categoryText || "").toLowerCase();
+
+      if (category.includes("strength")) {
+        return {
+          showStrengthFields: true,
+          message: "Strength workout selected. Sets, reps, and optional load are relevant here."
+        };
+      }
+
+      if (
+        category.includes("cardio") ||
+        category.includes("walking") ||
+        category.includes("cycling") ||
+        category.includes("water") ||
+        category.includes("sport")
+      ) {
+        return {
+          showStrengthFields: false,
+          message: "Cardio-style workout selected. Focus on duration, and use Notes for pace, distance, or intervals."
+        };
+      }
+
+      if (category.includes("mobility") || category.includes("recovery")) {
+        return {
+          showStrengthFields: false,
+          message: "Mobility or recovery session selected. Duration and notes are the most useful fields here."
+        };
+      }
+
+      return {
+        showStrengthFields: true,
+        message: "Use the fields that match your workout. Strength sessions usually need sets and reps."
+      };
+    };
+
+    const updateWorkoutFields = () => {
+      if (!exerciseSelect) {
+        return;
+      }
+
+      const selectedOption = exerciseSelect.options[exerciseSelect.selectedIndex];
+      const mode = getExerciseMode(selectedOption ? selectedOption.dataset.category : "");
+
+      strengthFieldGroups.forEach((group) => {
+        group.classList.toggle("d-none", !mode.showStrengthFields);
+      });
+
+      strengthInputs.forEach((input) => {
+        input.disabled = !mode.showStrengthFields;
+      });
+
+      if (guidanceBox) {
+        guidanceBox.textContent = mode.message;
+      }
+
+      if (notesField) {
+        notesField.placeholder = mode.showStrengthFields
+          ? "How did the workout feel today?"
+          : "Add pace, distance, intervals, or how the session felt.";
+      }
+    };
+
+    if (exerciseSelect) {
+      exerciseSelect.addEventListener("change", updateWorkoutFields);
+      updateWorkoutFields();
+    }
+
+    document.querySelectorAll(".exercise-log-shortcut").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!exerciseSelect) {
+          return;
+        }
+
+        const targetName = button.dataset.exerciseName;
+        const matchingOption = Array.from(exerciseSelect.options).find(
+          (option) => option.text.trim() === targetName
+        );
+
+        if (matchingOption) {
+          exerciseSelect.value = matchingOption.value;
+        }
+
+        updateWorkoutFields();
+
+        if (logSection) {
+          logSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        exerciseSelect.focus();
+      });
+    });
+  });
+</script>
+{% endblock %}
