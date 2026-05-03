@@ -2,6 +2,13 @@
 
 {% block title %}Nutrition{% endblock %}
 
+{% block extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/nutrition.css') }}"
+/>
+{% endblock %}
+
 {% block content %}
 {% set safe_initial_water = initial_water|default(0) %}
 {% set safe_food_entries = food_entries|default([]) %}
