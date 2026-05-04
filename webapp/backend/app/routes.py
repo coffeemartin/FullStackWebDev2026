@@ -27,6 +27,46 @@ def calculate_bmi_result(height_cm, weight_kg):
     return bmi, "Obese", "Start your fitness journey today. Small steps make big changes!"
 
 
+def get_bmi_fitness_points(category):
+    points_by_category = {
+        "Underweight": [
+            "Prioritise balanced meals with enough protein and healthy carbohydrates.",
+            "Use strength training to build muscle gradually.",
+            "Keep cardio light to moderate while you focus on healthy weight gain.",
+            "Track energy levels so workouts support recovery, not exhaustion.",
+            "Speak with a health professional if weight gain is difficult."
+        ],
+        "Healthy weight": [
+            "Maintain your current habits with consistent weekly movement.",
+            "Mix strength, cardio, mobility, and recovery for balance.",
+            "Keep protein, vegetables, hydration, and sleep in your routine.",
+            "Set performance goals such as more reps, better pace, or flexibility.",
+            "Use your BMI as one guide, not the only measure of progress."
+        ],
+        "Overweight": [
+            "Start with realistic sessions such as walking, cycling, or full-body circuits.",
+            "Add strength training to support metabolism and protect joints.",
+            "Choose small nutrition changes you can repeat every week.",
+            "Increase workout time slowly instead of jumping into intense plans.",
+            "Celebrate consistency before focusing only on the scale."
+        ],
+        "Obese": [
+            "Begin with low-impact exercise to protect knees, hips, and back.",
+            "Aim for short, repeatable movement sessions throughout the week.",
+            "Pair activity with simple meal planning and regular hydration.",
+            "Use strength exercises at a comfortable level to build confidence.",
+            "Consider professional guidance for a safe long-term plan."
+        ]
+    }
+    return points_by_category.get(category, [
+        "Add height and weight to unlock BMI-based fitness guidance.",
+        "Begin with simple movement you can repeat consistently.",
+        "Balance exercise with sleep, hydration, and nutrition.",
+        "Avoid comparing your progress with someone else's journey.",
+        "Small improvements each week can become lasting habits."
+    ])
+
+
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -200,9 +240,31 @@ def AI():
     return render_template('AI.html', title='AI')
 
 
-@app.route("/myprofile")
+@app.route("/myprofile", methods=['GET', 'POST'])
 @login_required
 def myprofile():
+    if request.method == 'POST' and request.form.get('form_type') == 'add_friend':
+        friend_username = request.form.get('friend_username', '').strip()
+        if friend_username:
+            flash(f"Friend request ready for {friend_username}.")
+        else:
+            flash("Please choose a friend to add.")
+
+    bmi = None
+    bmi_category = None
+    bmi_quote = "Add your height and weight to unlock your BMI guidance."
+    fitness_points = get_bmi_fitness_points(None)
+
+    if current_user.height_cm and current_user.weight_kg:
+        try:
+            bmi, bmi_category, bmi_quote = calculate_bmi_result(
+                current_user.height_cm,
+                current_user.weight_kg
+            )
+            fitness_points = get_bmi_fitness_points(bmi_category)
+        except ValueError:
+            pass
+
     latest_login_event = (
         LoginEvent.query.filter_by(user_id=current_user.id)
         .order_by(LoginEvent.login_at.desc())
@@ -214,11 +276,24 @@ def myprofile():
         perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
         latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
+    app_friends = (
+        User.query
+        .filter(User.id != current_user.id)
+        .order_by(User.username)
+        .limit(6)
+        .all()
+    )
+
     return render_template(
         "myprofile.html",
         title="My Profile",
         user=current_user,
-        latest_login_at=latest_login_at
+        latest_login_at=latest_login_at,
+        bmi=bmi,
+        bmi_category=bmi_category,
+        bmi_quote=bmi_quote,
+        fitness_points=fitness_points,
+        app_friends=app_friends
     )
 
 

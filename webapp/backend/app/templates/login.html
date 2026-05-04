@@ -28,7 +28,7 @@
 
         <div class="mb-3">
           <label class="form-label" for="{{ form.username.id }}">Login ID</label>
-          {{ form.username(class="form-control", size=32) }}
+          {{ form.username(class="form-control", size=32, autocomplete="username", placeholder="Enter your login ID") }}
           {% for error in form.username.errors %}
             <span class="login-error">[{{ error }}]</span>
           {% endfor %}
@@ -36,7 +36,12 @@
 
         <div class="mb-3">
           {{ form.password.label(class="form-label") }}
-          {{ form.password(class="form-control", size=32) }}
+          <div class="password-field">
+            {{ form.password(class="form-control", size=32, autocomplete="current-password", placeholder="Enter your password") }}
+            <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password">
+              Show
+            </button>
+          </div>
           {% for error in form.password.errors %}
             <span class="login-error">[{{ error }}]</span>
           {% endfor %}
@@ -73,51 +78,83 @@
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label" for="new_username">Login ID</label>
-            <input class="form-control" id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" required>
+            <input class="form-control" id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" autocomplete="username" placeholder="Choose a login ID" required>
           </div>
           <div class="col-md-4">
             <label class="form-label" for="email">Email</label>
-            <input class="form-control" id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" required>
+            <input class="form-control" id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" autocomplete="email" placeholder="name@example.com" required>
           </div>
           <div class="col-md-4">
             <label class="form-label" for="new_password">Password</label>
-            <input class="form-control" id="new_password" name="new_password" type="password" required>
+            <div class="password-field">
+              <input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" placeholder="Create a password" required>
+              <button class="password-toggle" type="button" data-password-toggle="new_password" aria-label="Show password">
+                Show
+              </button>
+            </div>
           </div>
           <div class="col-md-6">
             <label class="form-label" for="confirm_password">Confirm password</label>
-            <input class="form-control" id="confirm_password" name="confirm_password" type="password" required>
+            <div class="password-field">
+              <input class="form-control" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" placeholder="Confirm password" required>
+              <button class="password-toggle" type="button" data-password-toggle="confirm_password" aria-label="Show password">
+                Show
+              </button>
+            </div>
           </div>
           <div class="col-md-6">
             <label class="form-label" for="name">Name</label>
-            <input class="form-control" id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" required>
+            <input class="form-control" id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" autocomplete="name" placeholder="Your full name" required>
           </div>
           <div class="col-md-3">
             <label class="form-label" for="age">Age</label>
-            <input class="form-control" id="age" name="age" type="number" value="{{ form_data.get('age', '') }}" required>
+            <input class="form-control" id="age" name="age" type="number" min="13" max="100" value="{{ form_data.get('age', '') }}" placeholder="Age" required>
           </div>
           <div class="col-md-3">
             <label class="form-label" for="gender">Gender</label>
-            <input class="form-control" id="gender" name="gender" type="text" value="{{ form_data.get('gender', '') }}" required>
+            {% set selected_gender = form_data.get('gender', '') %}
+            <select class="form-select" id="gender" name="gender" required>
+              <option value="" {% if not selected_gender %}selected{% endif %}>Choose gender</option>
+              <option value="Female" {% if selected_gender == 'Female' %}selected{% endif %}>Female</option>
+              <option value="Male" {% if selected_gender == 'Male' %}selected{% endif %}>Male</option>
+              <option value="Non-binary" {% if selected_gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+              <option value="Prefer not to say" {% if selected_gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+            </select>
           </div>
           <div class="col-md-3">
             <label class="form-label" for="height_cm">Height (cm)</label>
-            <input class="form-control" id="height_cm" name="height_cm" type="number" step="0.1" value="{{ form_data.get('height_cm', '') }}">
+            <input class="form-control" id="height_cm" name="height_cm" type="number" min="80" max="250" step="0.1" value="{{ form_data.get('height_cm', '') }}" placeholder="175">
           </div>
           <div class="col-md-3">
             <label class="form-label" for="weight_kg">Weight (kg)</label>
-            <input class="form-control" id="weight_kg" name="weight_kg" type="number" step="0.1" value="{{ form_data.get('weight_kg', '') }}">
+            <input class="form-control" id="weight_kg" name="weight_kg" type="number" min="25" max="300" step="0.1" value="{{ form_data.get('weight_kg', '') }}" placeholder="70">
           </div>
           <div class="col-md-6">
             <label class="form-label" for="goal">Fitness goal</label>
-            <input class="form-control" id="goal" name="goal" type="text" value="{{ form_data.get('goal', '') }}">
+            {% set selected_goal = form_data.get('goal', '') %}
+            <select class="form-select" id="goal" name="goal">
+              <option value="" {% if not selected_goal %}selected{% endif %}>Choose goal</option>
+              <option value="Lose weight" {% if selected_goal == 'Lose weight' %}selected{% endif %}>Lose weight</option>
+              <option value="Build muscle" {% if selected_goal == 'Build muscle' %}selected{% endif %}>Build muscle</option>
+              <option value="Improve stamina" {% if selected_goal == 'Improve stamina' %}selected{% endif %}>Improve stamina</option>
+              <option value="Maintain fitness" {% if selected_goal == 'Maintain fitness' %}selected{% endif %}>Maintain fitness</option>
+              <option value="Improve flexibility" {% if selected_goal == 'Improve flexibility' %}selected{% endif %}>Improve flexibility</option>
+            </select>
           </div>
           <div class="col-md-6">
             <label class="form-label" for="activity_level">Activity level</label>
-            <input class="form-control" id="activity_level" name="activity_level" type="text" value="{{ form_data.get('activity_level', '') }}">
+            {% set selected_activity = form_data.get('activity_level', '') %}
+            <select class="form-select" id="activity_level" name="activity_level">
+              <option value="" {% if not selected_activity %}selected{% endif %}>Choose activity level</option>
+              <option value="Beginner" {% if selected_activity == 'Beginner' %}selected{% endif %}>Beginner</option>
+              <option value="Lightly active" {% if selected_activity == 'Lightly active' %}selected{% endif %}>Lightly active</option>
+              <option value="Active" {% if selected_activity == 'Active' %}selected{% endif %}>Active</option>
+              <option value="Very active" {% if selected_activity == 'Very active' %}selected{% endif %}>Very active</option>
+            </select>
           </div>
           <div class="col-12">
             <label class="form-label" for="injury_notes">Injury notes</label>
-            <input class="form-control" id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}">
+            <input class="form-control" id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}" placeholder="Example: knee pain, shoulder injury, or none">
           </div>
         </div>
 
@@ -139,6 +176,7 @@
 <script>
   const showProfileForm = document.getElementById("showProfileForm");
   const profilePanel = document.getElementById("profileCreatePanel");
+  const passwordToggles = document.querySelectorAll("[data-password-toggle]");
 
   if (showProfileForm && profilePanel) {
     showProfileForm.addEventListener("click", () => {
@@ -146,5 +184,20 @@
       profilePanel.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
+
+  passwordToggles.forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = document.getElementById(button.dataset.passwordToggle);
+
+      if (!input) {
+        return;
+      }
+
+      const shouldShow = input.type === "password";
+      input.type = shouldShow ? "text" : "password";
+      button.textContent = shouldShow ? "Hide" : "Show";
+      button.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
+    });
+  });
 </script>
 {% endblock %}
