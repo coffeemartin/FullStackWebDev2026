@@ -1,105 +1,140 @@
-{% extends "base.html" %} {% block title %} {% if title %} {{ title }} - Full
-Stack Web Development {% else %} Full Stack Web Development {% endif %} {%
-endblock %} {% block content %}
+{% extends "base.html" %}
 
-<h1>Sign In</h1>
+{% block title %}
+  {% if title %}{{ title }} - Full Stack Web Development{% else %}Full Stack Web Development{% endif %}
+{% endblock %}
 
-<form action="{{ url_for('login') }}" method="post" novalidate>
-  {{ form.hidden_tag() }}
-  <!-- CSRF token: works with SECRET_KEY and Flask-WTF -->
-  <input type="hidden" name="form_type" value="login">
+{% block content %}
+<section class="login-page">
+  <div class="login-shell">
+    <div class="login-hero">
+      <div class="login-hero-content">
+        <p class="login-kicker">Fitness companion</p>
+        <h1>Build a healthier routine around your real profile.</h1>
+        <p>
+          Create your profile once, calculate your BMI, and return with your
+          login ID whenever you want to continue.
+        </p>
+      </div>
+    </div>
 
-  <p>
-    <label for="{{ form.username.id }}">Login ID</label><br />
-    {{ form.username(size=32) }}<br />
-    {% for error in form.username.errors %}
-    <span style="color: rgba(255, 67, 20, 0.459)">[{{ error }}]</span>
-    {% endfor %}
-  </p>
+    <div class="login-card">
+      <p class="login-kicker">Welcome back</p>
+      <h2>Sign in</h2>
 
-  <p>
-    {{ form.password.label }}<br />
-    {{ form.password(size=32) }}<br />
-    {% for error in form.password.errors %}
-    <span style="color: rgba(255, 67, 20, 0.459)">[{{ error }}]</span>
-    {% endfor %}
-  </p>
+      <form action="{{ url_for('login') }}" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="form_type" value="login">
 
-  <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+        <div class="mb-3">
+          <label class="form-label" for="{{ form.username.id }}">Login ID</label>
+          {{ form.username(class="form-control", size=32) }}
+          {% for error in form.username.errors %}
+            <span class="login-error">[{{ error }}]</span>
+          {% endfor %}
+        </div>
 
-  <p>{{ form.submit() }}</p>
-</form>
+        <div class="mb-3">
+          {{ form.password.label(class="form-label") }}
+          {{ form.password(class="form-control", size=32) }}
+          {% for error in form.password.errors %}
+            <span class="login-error">[{{ error }}]</span>
+          {% endfor %}
+        </div>
 
-<hr>
+        <div class="form-check mb-3">
+          {{ form.remember_me(class="form-check-input") }}
+          {{ form.remember_me.label(class="form-check-label") }}
+        </div>
 
-<p>Are you a new user?</p>
-<button id="showProfileForm" type="button">Create your profile</button>
+        {{ form.submit(class="btn btn-warning w-100") }}
+      </form>
 
-<div id="profileCreatePanel" style="{% if not show_signup %}display: none;{% endif %} margin-top: 1rem;">
-  <h2>Create Your Profile</h2>
-  <form action="{{ url_for('login') }}" method="post">
-    <input type="hidden" name="form_type" value="new_user">
+      <div class="signup-prompt">
+        <div>
+          <strong>Are you a new user?</strong>
+          <span>Create your profile before entering the app.</span>
+        </div>
+        <button class="btn btn-outline-light" id="showProfileForm" type="button">
+          Create your profile
+        </button>
+      </div>
+    </div>
 
-    <p>
-      <label for="new_username">Login ID</label><br>
-      <input id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" required>
-    </p>
-    <p>
-      <label for="email">Email</label><br>
-      <input id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" required>
-    </p>
-    <p>
-      <label for="new_password">Password</label><br>
-      <input id="new_password" name="new_password" type="password" required>
-    </p>
-    <p>
-      <label for="confirm_password">Confirm Password</label><br>
-      <input id="confirm_password" name="confirm_password" type="password" required>
-    </p>
-    <p>
-      <label for="name">Name</label><br>
-      <input id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" required>
-    </p>
-    <p>
-      <label for="age">Age</label><br>
-      <input id="age" name="age" type="number" value="{{ form_data.get('age', '') }}" required>
-    </p>
-    <p>
-      <label for="gender">Gender</label><br>
-      <input id="gender" name="gender" type="text" value="{{ form_data.get('gender', '') }}" required>
-    </p>
-    <p>
-      <label for="height_cm">Height (cm)</label><br>
-      <input id="height_cm" name="height_cm" type="number" step="0.1" value="{{ form_data.get('height_cm', '') }}">
-    </p>
-    <p>
-      <label for="weight_kg">Weight (kg)</label><br>
-      <input id="weight_kg" name="weight_kg" type="number" step="0.1" value="{{ form_data.get('weight_kg', '') }}">
-    </p>
-    <p>
-      <label for="goal">Fitness Goal</label><br>
-      <input id="goal" name="goal" type="text" value="{{ form_data.get('goal', '') }}">
-    </p>
-    <p>
-      <label for="activity_level">Activity Level</label><br>
-      <input id="activity_level" name="activity_level" type="text" value="{{ form_data.get('activity_level', '') }}">
-    </p>
-    <p>
-      <label for="injury_notes">Injury Notes</label><br>
-      <input id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}">
-    </p>
+    <div class="signup-panel {% if show_signup %}is-open{% endif %}" id="profileCreatePanel">
+      <div class="signup-heading">
+        <p class="login-kicker">New user setup</p>
+        <h2>Create your profile</h2>
+      </div>
 
-    <button type="submit">Create Profile</button>
-  </form>
+      <form action="{{ url_for('login') }}" method="post">
+        <input type="hidden" name="form_type" value="new_user">
 
-  {% if bmi %}
-  <div>
-    <h3>Your BMI: {{ bmi }}</h3>
-    <p>Category: {{ category }}</p>
-    <p>{{ quote }}</p>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="new_username">Login ID</label>
+            <input class="form-control" id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-control" id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="new_password">Password</label>
+            <input class="form-control" id="new_password" name="new_password" type="password" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="confirm_password">Confirm password</label>
+            <input class="form-control" id="confirm_password" name="confirm_password" type="password" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="name">Name</label>
+            <input class="form-control" id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="age">Age</label>
+            <input class="form-control" id="age" name="age" type="number" value="{{ form_data.get('age', '') }}" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="gender">Gender</label>
+            <input class="form-control" id="gender" name="gender" type="text" value="{{ form_data.get('gender', '') }}" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="height_cm">Height (cm)</label>
+            <input class="form-control" id="height_cm" name="height_cm" type="number" step="0.1" value="{{ form_data.get('height_cm', '') }}">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="weight_kg">Weight (kg)</label>
+            <input class="form-control" id="weight_kg" name="weight_kg" type="number" step="0.1" value="{{ form_data.get('weight_kg', '') }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="goal">Fitness goal</label>
+            <input class="form-control" id="goal" name="goal" type="text" value="{{ form_data.get('goal', '') }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="activity_level">Activity level</label>
+            <input class="form-control" id="activity_level" name="activity_level" type="text" value="{{ form_data.get('activity_level', '') }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="injury_notes">Injury notes</label>
+            <input class="form-control" id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}">
+          </div>
+        </div>
+
+        <button class="btn btn-success w-100 mt-4" type="submit">Create profile</button>
+      </form>
+
+      {% if bmi %}
+      <div class="bmi-result">
+        <span>Your BMI</span>
+        <strong>{{ bmi }}</strong>
+        <p>Category: {{ category }}</p>
+        <p>{{ quote }}</p>
+      </div>
+      {% endif %}
+    </div>
   </div>
-  {% endif %}
-</div>
+</section>
 
 <script>
   const showProfileForm = document.getElementById("showProfileForm");
@@ -107,7 +142,8 @@ endblock %} {% block content %}
 
   if (showProfileForm && profilePanel) {
     showProfileForm.addEventListener("click", () => {
-      profilePanel.style.display = "block";
+      profilePanel.classList.add("is-open");
+      profilePanel.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 </script>

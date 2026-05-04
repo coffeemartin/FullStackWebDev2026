@@ -97,3 +97,170 @@ html {
     width: 100%;
   }
 }
+
+/* Login and new-profile page styles. */
+.login-page {
+  background:
+    linear-gradient(135deg, rgba(8, 18, 20, 0.98), rgba(17, 30, 34, 0.96));
+  border-radius: 8px;
+  min-height: calc(100vh - 110px);
+  padding: 1rem;
+}
+
+.login-shell {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(280px, 1.05fr) minmax(280px, 0.95fr);
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.login-hero {
+  align-items: end;
+  background:
+    linear-gradient(180deg, rgba(5, 12, 14, 0.08), rgba(5, 12, 14, 0.86)),
+    url("https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80");
+  background-position: center;
+  background-size: cover;
+  border-radius: 8px;
+  display: flex;
+  min-height: 520px;
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.login-hero-content {
+  max-width: 560px;
+}
+
+.login-kicker {
+  color: #74d99f;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+
+.login-hero h1,
+.login-card h2,
+.signup-heading h2 {
+  font-weight: 800;
+  line-height: 1.08;
+}
+
+.login-hero h1 {
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.login-hero p,
+.login-card p,
+.signup-prompt span {
+  color: #d7e4dc;
+}
+
+.login-card,
+.signup-panel {
+  background: rgba(14, 24, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  padding: 1.5rem;
+}
+
+.login-card {
+  align-self: start;
+}
+
+.login-card .form-control,
+.signup-panel .form-control {
+  min-height: 46px;
+}
+
+.login-error {
+  color: rgba(255, 99, 71, 0.95);
+  display: inline-block;
+  margin-top: 0.3rem;
+}
+
+.signup-prompt {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding: 1rem;
+}
+
+.signup-prompt strong,
+.signup-prompt span {
+  display: block;
+}
+
+.signup-panel {
+  display: none;
+  grid-column: 1 / -1;
+}
+
+.signup-panel.is-open {
+  display: block;
+}
+
+.signup-heading {
+  margin-bottom: 1rem;
+}
+
+.bmi-result {
+  background: rgba(46, 125, 50, 0.28);
+  border: 1px solid rgba(116, 217, 159, 0.35);
+  border-radius: 8px;
+  margin-top: 1.25rem;
+  padding: 1rem;
+}
+
+.bmi-result span {
+  color: #b8c7be;
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bmi-result strong {
+  color: #ffffff;
+  display: block;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.bmi-result p {
+  color: #dce8df;
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 991.98px) {
+  .login-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .login-hero {
+    min-height: 360px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .login-page,
+  .login-card,
+  .signup-panel,
+  .login-hero {
+    padding: 1rem;
+  }
+
+  .signup-prompt {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
