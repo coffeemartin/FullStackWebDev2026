@@ -1,2 +1,40 @@
 {% extends "base.html" %} {% block title %}Nutrition{% endblock %} {% block
-content %}{% endblock %}
+content %}
+
+<div class="page-header mb-4">
+  <p class="page-kicker mb-2">Food log</p>
+  <h1 class="display-6 mb-2">Nutrition Log</h1>
+  <p class="text-body-secondary mb-0">
+    Your latest saved nutrition entries from the database.
+  </p>
+</div>
+
+{% if nutrition_logs %}
+<div class="table-responsive">
+  <table class="table table-sm table-striped">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Food</th>
+        <th>Meal Type</th>
+        <th>Quantity (g)</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for log in nutrition_logs %}
+      <tr>
+        <td>{{ log.log_date }}</td>
+        <td>{{ log.food.name if log.food else '' }}</td>
+        <td>{{ log.meal_type or '' }}</td>
+        <td>{{ log.quantity_g or '' }}</td>
+        <td>{{ log.notes or '' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p>No nutrition logs yet. Once you add meals, they will appear here.</p>
+{% endif %} {% endblock %}

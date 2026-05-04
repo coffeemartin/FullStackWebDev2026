@@ -3,9 +3,12 @@ Stack Web Development {% else %} Full Stack Web Development {% endif %} {%
 endblock %} {% block content %}
 
 <h1>Sign In</h1>
+
 <form action="{{ url_for('login') }}" method="post" novalidate>
   {{ form.hidden_tag() }}
+  <!-- CSRF token: works with SECRET_KEY and Flask-WTF -->
   <input type="hidden" name="form_type" value="login">
+
   <p>
     <label for="{{ form.username.id }}">Login ID</label><br />
     {{ form.username(size=32) }}<br />
@@ -13,6 +16,7 @@ endblock %} {% block content %}
     <span style="color: rgba(255, 67, 20, 0.459)">[{{ error }}]</span>
     {% endfor %}
   </p>
+
   <p>
     {{ form.password.label }}<br />
     {{ form.password(size=32) }}<br />
@@ -20,7 +24,9 @@ endblock %} {% block content %}
     <span style="color: rgba(255, 67, 20, 0.459)">[{{ error }}]</span>
     {% endfor %}
   </p>
+
   <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
+
   <p>{{ form.submit() }}</p>
 </form>
 
