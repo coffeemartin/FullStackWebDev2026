@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
+
 from app import app, db
-from flask import render_template, flash, redirect, url_for, session, request
+from flask import jsonify, render_template, flash, redirect, url_for, session, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
@@ -167,20 +168,150 @@ def login():
     )
 
 
+# Nutrion page route
 @app.route("/nutrition")
 @login_required
 def nutrition():
+    initial_water = 0
+    food_entries = []
+
+    water_log = (
+        NutritionLog.query
+        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
+        .order_by(NutritionLog.id.desc())
+        .first()
+    )
+    if water_log and water_log.water_glasses:
+        initial_water = water_log.water_glasses
+
     nutrition_logs = (
-        NutritionLog.query.filter_by(user_id=current_user.id)
+        NutritionLog.query
+        .filter(NutritionLog.user_id == current_user.id)
+        .filter(NutritionLog.log_date == date.today())
+        .filter(NutritionLog.meal_type != "Water")
         .join(Food)
-        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .order_by(NutritionLog.id.asc())
         .all()
     )
+    food_entries = [
+        {
+            "mealType": log.meal_type or "",
+            "foodName": log.food.name if log.food else "",
+            "quantity": log.quantity_g or 0,
+            "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
+            "feedback": "",
+            "comments": log.notes or "",
+        }
+        for log in nutrition_logs
+    ]
+
     return render_template(
         'nutrition.html',
         title='Nutrition',
+        initial_water=initial_water,
+        food_entries=food_entries,
         nutrition_logs=nutrition_logs,
     )
+
+
+@app.route("/nutrition/log", methods=["POST"])
+@login_required
+def save_nutrition_log():
+    data = request.get_json() or {}
+    meal_type = (data.get("meal_type") or "").strip()
+    food_name = (data.get("food_name") or "").strip()
+    quantity_g = data.get("quantity_g")
+    notes = (data.get("notes") or "").strip()
+    calories_per_100g = data.get("calories_per_100g")
+
+    try:
+        quantity_g = float(quantity_g)
+        calories_per_100g = float(calories_per_100g)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Quantity and calories must be valid numbers."}), 400
+
+    if not meal_type or not food_name or quantity_g <= 0 or calories_per_100g < 0:
+        return jsonify({"error": "Meal type, food name, and quantity are required."}), 400
+
+    food = Food.query.filter(db.func.lower(Food.name) == food_name.lower()).first()
+    if food is None:
+        food = Food(name=food_name)
+        db.session.add(food)
+
+    food.calories_per_100g = calories_per_100g
+
+    nutrition_log = NutritionLog(
+        user_id=current_user.id,
+        food=food,
+        meal_type=meal_type,
+        quantity_g=quantity_g,
+        notes=notes,
+    )
+    db.session.add(nutrition_log)
+    db.session.commit()
+
+    return jsonify({
+        "food_id": food.id,
+        "log_id": nutrition_log.id,
+        "food_name": food.name,
+        "quantity_g": nutrition_log.quantity_g,
+        "calories": round((quantity_g / 100) * calories_per_100g),
+    })
+
+
+@app.route("/nutrition/water", methods=["POST"])
+@login_required
+def save_water_log():
+    data = request.get_json() or {}
+    water_glasses = data.get("water_glasses")
+
+    try:
+        water_glasses = int(water_glasses)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Water glasses must be a valid number."}), 400
+
+    if water_glasses < 0:
+        return jsonify({"error": "Water glasses cannot be negative."}), 400
+
+    water_food = Food.query.filter(db.func.lower(Food.name) == "water").first()
+    if water_food is None:
+        water_food = Food(
+            name="Water",
+            calories_per_100g=0,
+            protein_per_100g=0,
+            carbs_per_100g=0,
+            fat_per_100g=0,
+        )
+        db.session.add(water_food)
+
+    water_log = (
+        NutritionLog.query
+        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
+        .order_by(NutritionLog.id.desc())
+        .first()
+    )
+
+    if water_log is None:
+        water_log = NutritionLog(
+            user_id=current_user.id,
+            food=water_food,
+            log_date=date.today(),
+            meal_type="Water",
+        )
+        db.session.add(water_log)
+
+    water_log.food = water_food
+    water_log.quantity_g = water_glasses * 250
+    water_log.water_glasses = water_glasses
+    water_log.notes = "Daily water intake"
+    db.session.commit()
+
+    return jsonify({
+        "log_id": water_log.id,
+        "water_glasses": water_log.water_glasses,
+        "quantity_g": water_log.quantity_g,
+    })
+# Nutrition Page end
 
 
 @app.route("/exercise", methods=['GET', 'POST'])
