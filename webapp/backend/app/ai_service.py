@@ -45,7 +45,15 @@ def generate_ai_plan(ai_input: dict) -> dict:
                     "You are a fitness and nutrition assistant. "
                     "Use the user's profile, exercise logs, and nutrition logs. "
                     "Return practical, safe, beginner-friendly advice. "
-                    "Do not provide medical diagnosis."
+                    "Do not provide medical diagnosis. "
+                    "Use generic canonical exercise names only for exercise.name. "
+                    "Do not include variations, locations, equipment setup, difficulty level, brackets, slashes, alternatives, or instructions in exercise.name. "
+                    "Move all modifiers into exercise.notes. "
+                    "For example: use name='Dumbbell Chest Press' and notes='Perform on the floor if no bench is available.' "
+                    "For example: use name='Plank' and notes='Use knee plank or standard plank depending on ability.' "
+                    "For example: use name='Push-up' and notes='Can be performed on knees, incline, or standard.' "
+                    "Exercise names should be suitable for an Exercise dimension table."
+                    "Add a matching emoji at the beginning of each nutrition goal suggestion for quick visual identification (e.g., 💧 for Hydration)."
                 ),
             },
             {

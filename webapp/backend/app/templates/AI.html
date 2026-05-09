@@ -154,59 +154,25 @@
   </form>
 </section>
 
-<div class="mb-4 d-flex gap-2 align-items-start">
-  <form method="post">
-    {{ csrf_form.hidden_tag() if csrf_form }}
-    <input type="hidden" name="form_action" value="generate" />
-    <button type="submit" class="btn btn-primary">Generate A Plan</button>
-  </form>
+ <div class="flex-grow-1"></div>
 
-  {% if latest_recommendation %}
-  <div class="ms-auto d-flex align-items-center">
-    <form
-      method="post"
-      action="{{ url_for('save_ai_all') }}"
-      id="training-save-all-form"
-      class="m-0"
-    >
+  <!-- Center button -->
+  <div class="text-center">
+    <form method="post">
       {{ csrf_form.hidden_tag() if csrf_form }}
-      <input
-        type="hidden"
-        name="recommendation_id"
-        value="{{ latest_recommendation.id }}"
-      />
-      <input
-        type="hidden"
-        name="training_plan_json"
-        id="training-plan-json-input"
-      />
-      <input type="hidden" name="mark_saved" value="1" />
-      <button
-        type="button"
-        id="training-save-all-btn"
-        class="btn btn-success d-none"
-      >
-        Save plan and add to my profile
+      <input type="hidden" name="form_action" value="generate" />
+
+      <button type="submit" class="btn ai-generate-btn">
+        Generate A New Plan
       </button>
     </form>
-    <button
-      type="button"
-      class="btn btn-outline-secondary ms-2"
-      id="training-global-edit"
-    >
-      Edit plan
-    </button>
   </div>
-  <!-- Single save button below handles saving edits and marking plan as saved -->
-  {% else %}
-  <button type="button" class="btn btn-outline-success ms-auto" disabled>
-    Save plan and add to my profile
-  </button>
-  {% endif %}
-</div>
+
+  <div class="flex-grow-1" style="min-height: 1.5rem;"></div>
+
 
 {% if latest_recommendation %}
-<section class="mb-4 ai-section-panel">
+<section class="mb-4 ai-section-panel ai-generated-panel">
   <h2 class="text-center">Summary</h2>
   <p>{{ latest_recommendation.llm_comments }}</p>
 </section>
@@ -219,8 +185,59 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
 >
 
 {% if training_plan %}
-<section class="mb-4 ai-section-panel">
-  <h2 class="text-center">Recommended Weekly Training Plan</h2>
+<section class="mb-4 ai-section-panel ai-generated-panel">
+  <div class="ai-generated-section-header">
+    <h2 class="text-center mb-0">Recommended Weekly Training Plan</h2>
+    <div class="ai-generated-actions">
+      {% if latest_recommendation %}
+      <form
+        method="post"
+        action="{{ url_for('save_ai_all') }}"
+        id="training-save-all-form"
+        class="m-0"
+      >
+        {{ csrf_form.hidden_tag() if csrf_form }}
+
+        <input
+          type="hidden"
+          name="recommendation_id"
+          value="{{ latest_recommendation.id }}"
+        />
+
+        <input
+          type="hidden"
+          name="training_plan_json"
+          id="training-plan-json-input"
+        />
+
+        <input type="hidden" name="mark_saved" value="1" />
+
+        <button
+          type="button"
+          id="training-save-all-btn"
+          class="btn btn-success d-none"
+        >
+          Save plan and add to my profile
+        </button>
+      </form>
+      {% endif %}
+
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm"
+        id="training-global-edit"
+      >
+        Manual Update
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-danger btn-sm d-none"
+        id="training-global-cancel"
+        >
+        Cancel</button>
+    </div>
+  </div>
 
   <div
     class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 training-plan-grid"
@@ -303,7 +320,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
                   endif %} {% if exercise.reps %}<span
                     >Reps: {{ exercise.reps }}</span
                   >{% endif %} {% if exercise.duration_minutes %}<span
-                    >Duration: {{ exercise.duration_minutes }}</span
+                    >Duration: {{ exercise.duration_minutes }} minutes</span
                   >{% endif %}
                 </div>
 
@@ -365,10 +382,10 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
   </div>
 </section>
 {% endif %} {% if nutrition_plan %}
-<section class="mb-4 ai-section-panel">
+<section class="mb-4 ai-section-panel ai-generated-panel">
   <h2 class="text-center">Recommended Nutrition</h2>
 
-  <ul class="list-group">
+  <ul class="list-group nutrition-list">
     {% for item in nutrition_plan %}
     <li class="list-group-item">
       <strong>{{ item.goal }}</strong><br />
@@ -379,6 +396,38 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
 </section>
 {% endif %} {% else %}
 <p>No AI plan generated yet. Click the button above to create one.</p>
-{% endif %} {% endblock %} {% block scripts %}
+{% endif %}
+
+{% if saved_recommendations %}
+<section class="mb-4 ai-section-panel ai-generated-panel">
+  <h2 class="text-center">Saved Recommendation History</h2>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Created</th>
+          <th scope="col">Saved</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for recommendation in saved_recommendations %}
+        <tr>
+          <td>#{{ recommendation.id }}</td>
+          <td>
+            {{ recommendation.created_at.strftime('%Y-%m-%d %H:%M') if recommendation.created_at else 'Unknown' }}
+          </td>
+          <td>
+            <span class="badge text-bg-success">True</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+{% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
 {% endblock %}

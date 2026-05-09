@@ -77,13 +77,58 @@ function createExerciseForm(dayIndex, exercise = {}) {
   return li;
 }
 
+// Give the main AI button a short "charging" phase before submitting.
+const generateMagicBtn = document.querySelector(".ai-generate-btn");
+if (generateMagicBtn) {
+  const generateForm = generateMagicBtn.closest("form");
+  let isCharging = false;
+  const bodyEl = document.body;
+
+  // Recover cleanly if browser restores this page from cache.
+  window.addEventListener("pageshow", () => {
+    isCharging = false;
+    bodyEl?.classList.remove("ai-page-loading");
+    generateMagicBtn.classList.remove("is-charging");
+    generateMagicBtn.disabled = false;
+    generateMagicBtn.removeAttribute("aria-busy");
+  });
+
+  const startChargingAndSubmit = (event) => {
+    if (!generateForm || isCharging) return;
+
+    event.preventDefault();
+    isCharging = true;
+    bodyEl?.classList.add("ai-page-loading");
+    generateMagicBtn.classList.add("is-charging");
+    generateMagicBtn.disabled = true;
+    generateMagicBtn.setAttribute("aria-busy", "true");
+    generateMagicBtn.textContent = "Forging Your Plan...";
+
+    window.setTimeout(() => {
+      if (typeof generateForm.requestSubmit === "function") {
+        generateForm.requestSubmit();
+      } else {
+        generateForm.submit();
+      }
+    }, 420);
+  };
+
+  if (generateForm) {
+    generateForm.addEventListener("submit", (event) => {
+      if (!isCharging) {
+        startChargingAndSubmit(event);
+      }
+    });
+  }
+}
+
 // Global edit toggle: show edit fields across all exercise forms
 const globalEditBtn = document.getElementById("training-global-edit");
 if (globalEditBtn) {
   let globalEditing = false;
   globalEditBtn.addEventListener("click", () => {
     globalEditing = !globalEditing;
-    globalEditBtn.textContent = globalEditing ? "Cancel" : "Edit plan";
+    globalEditBtn.textContent = globalEditing ? "Cancel" : "Manual Update";
     const topSaveBtn = document.getElementById("training-save-all-btn");
     document.querySelectorAll("[data-training-day-card]").forEach((card) => {
       const addBtn = card.querySelector("[data-training-add-exercise]");
@@ -117,7 +162,7 @@ if (profileEditBtn && profileForm) {
     }
     profileEditBtn.textContent = editing
       ? "Save profile updates"
-      : "Edit profile";
+      : "Update profile";
     profileEditBtn.classList.toggle("btn-outline-secondary", !editing);
     profileEditBtn.classList.toggle("btn-success", editing);
   };

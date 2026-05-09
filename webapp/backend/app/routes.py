@@ -1,8 +1,8 @@
-from datetime import date, datetime, timezone
+from datetime import date, timezone
 from zoneinfo import ZoneInfo
 
 from app import app, db
-from flask import jsonify, render_template, flash, redirect, url_for, session, request
+from flask import jsonify, render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
@@ -420,9 +420,18 @@ def AI():
         .first()
     )
 
+    saved_recommendations = (
+        LLMRecommendation.query
+        .filter_by(user_id=current_user.id, user_saved=True)
+        .order_by(LLMRecommendation.created_at.desc())
+        .limit(3)
+        .all()
+    )
+
     return render_template(
         "AI.html",
         latest_recommendation=latest_recommendation,
+        saved_recommendations=saved_recommendations,
         csrf_form=csrf_form,
     )
 
