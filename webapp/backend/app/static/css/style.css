@@ -70,6 +70,146 @@ html {
   background: linear-gradient(135deg, #546e7a, #90a4ae);
 }
 
+/* AI page: weekly training cards use a responsive 3/2/1 grid. */
+.training-plan-grid .training-day-card {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 26, 34, 0.98),
+    rgba(11, 17, 24, 0.98)
+  );
+  border: 1px solid rgba(66, 165, 245, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.training-plan-grid .training-day-label {
+  color: #90caf9;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.training-plan-grid .training-day-label--sm {
+  font-size: 1.05rem;
+}
+
+.training-plan-grid .training-day-focus {
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.training-plan-grid .training-exercise-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.training-plan-grid .training-exercise-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.training-plan-grid .training-exercise-item {
+  position: relative;
+}
+
+.training-plan-grid .training-exercise-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.training-plan-grid .training-exercise-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.training-plan-grid .training-view-value {
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-view-meta {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.training-plan-grid .training-edit-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.training-plan-grid .training-edit-grid .form-label {
+  font-size: 0.78rem;
+  margin-bottom: 0.25rem;
+}
+
+.training-plan-grid .training-edit-field[readonly] {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-edit-field:not([readonly]) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(66, 165, 245, 0.4);
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.training-plan-grid .training-exercise-item:last-child {
+  margin-bottom: 0;
+}
+
+.training-plan-grid .training-exercise-meta {
+  color: rgba(255, 255, 255, 0.72);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.92rem;
+  margin-top: 0.3rem;
+}
+
+.training-plan-grid .training-exercise-notes {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+
+.ai-section-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  padding: 1rem 1.1rem;
+}
+
+.ai-section-panel h2 {
+  margin-bottom: 0.85rem;
+}
+
+@media (max-width: 991.98px) {
+  .training-plan-grid .training-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .training-plan-grid .training-card-actions {
+    position: static;
+    margin-top: 0.5rem;
+    justify-content: flex-start;
+  }
+}
+
 /* Mobile navbar: keep toggler and collapsed links balanced and separated. */
 @media (max-width: 991.98px) {
   .navbar-toggler {
@@ -110,7 +250,11 @@ html {
   --fit-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
   color: #f4fff8;
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.12), transparent 28%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.12),
+      transparent 28%
+    ),
     linear-gradient(135deg, var(--fit-bg-2), var(--fit-bg-1));
   border-radius: 28px;
   min-height: calc(100vh - 110px);
@@ -183,7 +327,11 @@ html {
 .login-card,
 .signup-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid var(--fit-border);
   border-radius: 24px;
@@ -330,7 +478,11 @@ html {
 }
 
 .bmi-result {
-  background: linear-gradient(180deg, rgba(18, 35, 26, 0.96), rgba(7, 16, 12, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(18, 35, 26, 0.96),
+    rgba(7, 16, 12, 0.96)
+  );
   border: 1px solid var(--fit-border);
   border-radius: 24px;
   margin-top: 1.25rem;
@@ -451,7 +603,11 @@ html {
 .profile-card,
 .profile-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid var(--fit-border);
   border-radius: 24px;
@@ -500,7 +656,11 @@ html {
 
 .profile-photo {
   align-items: center;
-  background: linear-gradient(135deg, rgba(114, 255, 183, 0.92), rgba(17, 131, 68, 0.96));
+  background: linear-gradient(
+    135deg,
+    rgba(114, 255, 183, 0.92),
+    rgba(17, 131, 68, 0.96)
+  );
   border: 2px solid rgba(244, 255, 248, 0.75);
   border-radius: 999px;
   box-shadow: 0 12px 28px rgba(66, 226, 138, 0.22);
@@ -698,7 +858,11 @@ html {
 .friend-card,
 .add-friend-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid rgba(114, 255, 183, 0.16);
   border-radius: 18px;

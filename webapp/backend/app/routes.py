@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from app import app, db
 from flask import jsonify, render_template, flash, redirect, url_for, session, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.forms import LoginForm, ExerciseLogForm
+from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
 from sqlalchemy.exc import SQLAlchemyError
@@ -376,7 +376,13 @@ def exercise():
 @app.route("/AI", methods=["GET", "POST"])
 @login_required
 def AI():
+    csrf_form = CSRFOnlyForm()
+
     if request.method == "POST":
+        if not csrf_form.validate_on_submit():
+            flash("Your session expired. Please try again.")
+            return redirect(url_for("AI"))
+
         ai_input = build_ai_input(current_user)
         ai_response = generate_ai_plan(ai_input)
 
@@ -405,7 +411,88 @@ def AI():
     return render_template(
         "AI.html",
         latest_recommendation=latest_recommendation,
+        csrf_form=csrf_form,
     )
+
+
+@app.route("/AI/save-exercise", methods=["POST"])
+@login_required
+def save_ai_exercise():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        flash("Your edit session expired. Please try again.")
+        return redirect(url_for("AI"))
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    day_index = request.form.get("day_index", type=int)
+    exercise_index = request.form.get("exercise_index", type=int)
+
+    if recommendation_id is None or day_index is None or exercise_index is None:
+        flash("Could not save that exercise update.")
+        return redirect(url_for("AI"))
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        flash("Could not find that AI plan.")
+        return redirect(url_for("AI"))
+
+    training_plan = recommendation.get_training_plan() or []
+
+    try:
+        exercise = training_plan[day_index]["exercises"][exercise_index]
+    except (IndexError, KeyError, TypeError):
+        flash("That exercise could not be updated.")
+        return redirect(url_for("AI"))
+
+    exercise["name"] = request.form.get("name", "").strip()
+    exercise["sets"] = request.form.get("sets", "").strip()
+    exercise["reps"] = request.form.get("reps", "").strip()
+    exercise["duration_minutes"] = request.form.get("duration_minutes", "").strip()
+
+    recommendation.set_training_plan(training_plan)
+    db.session.commit()
+
+    flash("Exercise updated successfully.")
+    return redirect(url_for("AI"))
+
+
+@app.route("/AI/save-plan", methods=["POST"])
+@login_required
+def save_ai_plan():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        flash("Your session expired. Please try again.")
+        return redirect(url_for("AI"))
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        flash("Could not save that plan.")
+        return redirect(url_for("AI"))
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        flash("Could not find that AI plan.")
+        return redirect(url_for("AI"))
+
+    # Unset user_saved on other recommendations for this user, then set the chosen one
+    LLMRecommendation.query.filter(
+        LLMRecommendation.user_id == current_user.id,
+        LLMRecommendation.id != recommendation.id,
+    ).update({"user_saved": False})
+
+    recommendation.user_saved = True
+    db.session.commit()
+
+    flash("Plan saved. Other AI plans have been unmarked.")
+    return redirect(url_for("AI"))
 
 @app.route("/myprofile", methods=['GET', 'POST'])
 @login_required

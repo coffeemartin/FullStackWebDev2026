@@ -2,13 +2,35 @@
 
 <h1>AI Training Plan</h1>
 
-<form method="post" class="mb-4">
-  {{ form.hidden_tag() if form }}
-  <button type="submit" class="btn btn-primary">Generate AI Plan</button>
-</form>
+<div class="mb-4 d-flex gap-2 align-items-start">
+  <form method="post">
+    {{ csrf_form.hidden_tag() if csrf_form }}
+    <button type="submit" class="btn btn-primary">Generate AI Plan</button>
+  </form>
+
+  {% if latest_recommendation %}
+  <form method="post" action="{{ url_for('save_ai_plan') }}">
+    {{ csrf_form.hidden_tag() if csrf_form }}
+    <input
+      type="hidden"
+      name="recommendation_id"
+      value="{{ latest_recommendation.id }}"
+    />
+    {% if latest_recommendation.user_saved %}
+    <button type="button" class="btn btn-success" disabled>Saved</button>
+    {% else %}
+    <button type="submit" class="btn btn-outline-success">Save my plan</button>
+    {% endif %}
+  </form>
+  {% else %}
+  <button type="button" class="btn btn-outline-success" disabled>
+    Save my plan
+  </button>
+  {% endif %}
+</div>
 
 {% if latest_recommendation %}
-<section class="mb-4">
+<section class="mb-4 ai-section-panel">
   <h2>AI Comment</h2>
   <p>{{ latest_recommendation.llm_comments }}</p>
 </section>
@@ -16,32 +38,133 @@
 {% set training_plan = latest_recommendation.get_training_plan() %} {% set
 nutrition_plan = latest_recommendation.get_nutrition_plan() %} {% if
 training_plan %}
-<section class="mb-4">
+<section class="mb-4 ai-section-panel">
   <h2>Weekly Training Plan</h2>
 
-  {% for day in training_plan %}
-  <div class="card mb-3">
-    <div class="card-body">
-      <h3>{{ day.day }} - {{ day.focus }}</h3>
+  <div
+    class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 training-plan-grid"
+  >
+    {% for day in training_plan %} {% set day_index = loop.index0 %}
+    <div class="col">
+      <div class="card h-100 training-day-card">
+        <div class="card-body d-flex flex-column">
+          <div class="mb-3">
+            <div class="training-day-label training-day-label--sm">
+              {{ day.day }}
+            </div>
+            <h3 class="h5 mb-1 training-day-focus">{{ day.focus }}</h3>
+          </div>
 
-      <ul>
-        {% for exercise in day.exercises %}
-        <li>
-          <strong>{{ exercise.name }}</strong>
-          {% if exercise.sets %} — Sets: {{ exercise.sets }}{% endif %} {% if
-          exercise.reps %}, Reps: {{ exercise.reps }}{% endif %} {% if
-          exercise.duration_minutes %}, Duration: {{ exercise.duration_minutes
-          }}{% endif %} {% if exercise.notes %}<br />{{ exercise.notes }}{%
-          endif %}
-        </li>
-        {% endfor %}
-      </ul>
+          <ul class="training-exercise-list mb-0">
+            {% for exercise in day.exercises %}
+            <li class="training-exercise-item">
+              <form
+                method="post"
+                action="{{ url_for('save_ai_exercise') }}"
+                class="training-exercise-form"
+                data-training-exercise-form
+              >
+                {{ csrf_form.hidden_tag() if csrf_form }}
+                <input
+                  type="hidden"
+                  name="recommendation_id"
+                  value="{{ latest_recommendation.id }}"
+                />
+                <input type="hidden" name="day_index" value="{{ day_index }}" />
+                <input
+                  type="hidden"
+                  name="exercise_index"
+                  value="{{ loop.index0 }}"
+                />
+
+                <div class="training-exercise-title-row">
+                  <strong class="training-view-value" data-training-view="name"
+                    >{{ exercise.name }}</strong
+                  >
+                  <input
+                    type="text"
+                    class="form-control form-control-sm training-edit-field d-none"
+                    name="name"
+                    value="{{ exercise.name }}"
+                    readonly
+                  />
+                  <div class="training-card-actions">
+                    <button
+                      type="button"
+                      class="btn btn-outline-info btn-sm training-edit-btn"
+                      data-training-edit
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="submit"
+                      class="btn btn-primary btn-sm d-none training-save-btn"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  class="training-exercise-meta training-view-meta"
+                  data-training-view="meta"
+                >
+                  {% if exercise.sets %}<span>Sets: {{ exercise.sets }}</span>{%
+                  endif %} {% if exercise.reps %}<span
+                    >Reps: {{ exercise.reps }}</span
+                  >{% endif %} {% if exercise.duration_minutes %}<span
+                    >Duration: {{ exercise.duration_minutes }}</span
+                  >{% endif %}
+                </div>
+
+                <div class="training-edit-grid d-none">
+                  <div>
+                    <label class="form-label form-label-sm">Sets</label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm training-edit-field"
+                      name="sets"
+                      value="{{ exercise.sets or '' }}"
+                      readonly
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label form-label-sm">Reps</label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm training-edit-field"
+                      name="reps"
+                      value="{{ exercise.reps or '' }}"
+                      readonly
+                    />
+                  </div>
+                  <div>
+                    <label class="form-label form-label-sm">Duration</label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm training-edit-field"
+                      name="duration_minutes"
+                      value="{{ exercise.duration_minutes or '' }}"
+                      readonly
+                    />
+                  </div>
+                </div>
+
+                {% if exercise.notes %}
+                <div class="training-exercise-notes">{{ exercise.notes }}</div>
+                {% endif %}
+              </form>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
     </div>
+    {% endfor %}
   </div>
-  {% endfor %}
 </section>
 {% endif %} {% if nutrition_plan %}
-<section class="mb-4">
+<section class="mb-4 ai-section-panel">
   <h2>Nutrition Plan</h2>
 
   <ul class="list-group">
@@ -55,4 +178,6 @@ training_plan %}
 </section>
 {% endif %} {% else %}
 <p>No AI plan generated yet. Click the button above to create one.</p>
-{% endif %} {% endblock %}
+{% endif %} {% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/ai.js') }}"></script>
+{% endblock %}
