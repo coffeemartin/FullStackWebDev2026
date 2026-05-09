@@ -1,66 +1,261 @@
-{% extends "base.html" %} {% block title %}AI{% endblock %} {% block content %}
+{% extends "base.html" %} {% block title %}AI{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/AI.css') }}" />
+{% endblock %}
+{% block content %}
 
-<h1>AI Training Plan</h1>
+<section class="mb-3 ai-section-panel ai-profile-panel">
+  <div class="d-flex justify-content-end gap-2 mb-2">
+    <button
+      type="button"
+      class="btn btn-outline-secondary"
+      id="profile-edit-toggle"
+    >
+      Edit profile
+    </button>
+    <button
+      type="button"
+      class="btn btn-outline-danger d-none"
+      id="profile-edit-cancel"
+    >
+      Cancel
+    </button>
+  </div>
+  <form
+    method="post"
+    class="row g-2"
+    id="profile-update-form"
+    data-profile-form
+  >
+    {{ csrf_form.hidden_tag() if csrf_form }}
+    <input type="hidden" name="form_action" value="update_profile" />
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="ai-age">Age</label>
+      <div
+        class="form-control-plaintext"
+        data-profile-view
+        data-profile-view-field="age"
+      >
+        {{ current_user.age if current_user.age is not none else 'Not set' }}
+      </div>
+      <input
+        type="number"
+        class="form-control d-none"
+        id="ai-age"
+        name="age"
+        value="{{ current_user.age or '' }}"
+        min="0"
+        data-profile-field
+      />
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="ai-height">Height (cm)</label>
+      <div
+        class="form-control-plaintext"
+        data-profile-view
+        data-profile-view-field="height_cm"
+      >
+        {{ current_user.height_cm if current_user.height_cm is not none else
+        'Not set' }}
+      </div>
+      <input
+        type="number"
+        class="form-control d-none"
+        id="ai-height"
+        name="height_cm"
+        value="{{ current_user.height_cm or '' }}"
+        min="0"
+        step="0.1"
+        data-profile-field
+      />
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="ai-weight">Weight (kg)</label>
+      <div
+        class="form-control-plaintext"
+        data-profile-view
+        data-profile-view-field="weight_kg"
+      >
+        {{ current_user.weight_kg if current_user.weight_kg is not none else
+        'Not set' }}
+      </div>
+      <input
+        type="number"
+        class="form-control d-none"
+        id="ai-weight"
+        name="weight_kg"
+        value="{{ current_user.weight_kg or '' }}"
+        min="0"
+        step="0.1"
+        data-profile-field
+      />
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label" for="ai-goal">Goal</label>
+      <div
+        class="form-control-plaintext"
+        data-profile-view
+        data-profile-view-field="goal"
+      >
+        {{ current_user.goal or 'Not set' }}
+      </div>
+      <select
+        class="form-select d-none"
+        id="ai-goal"
+        name="goal"
+        data-profile-field
+      >
+        {% set selected_goal = current_user.goal or '' %}
+        
+        <option value="" {{ 'selected' if not selected_goal else '' }}>
+          Choose goal
+        </option>
+
+        <option value="Lose weight" {{ 'selected' if selected_goal == 'Lose weight' else '' }}>
+          Lose weight
+        </option>
+
+        <option value="Build muscle" {{ 'selected' if selected_goal == 'Build muscle' else '' }}>
+          Build muscle
+        </option>
+
+        <option value="Improve stamina" {{ 'selected' if selected_goal == 'Improve stamina' else '' }}>
+          Improve stamina
+        </option>
+
+        <option value="Maintain fitness" {{ 'selected' if selected_goal == 'Maintain fitness' else '' }}>
+          Maintain fitness
+        </option>
+
+        <option value="Improve flexibility" {{ 'selected' if selected_goal == 'Improve flexibility' else '' }}>
+          Improve flexibility
+        </option>
+      </select>
+    </div>
+    <div class="col-12">
+      <label class="form-label" for="ai-injury-notes">Injury notes</label>
+      <div
+        class="form-control-plaintext"
+        data-profile-view
+        data-profile-view-field="injury_notes"
+      >
+        {{ current_user.injury_notes or 'Not set' }}
+      </div>
+      <textarea
+        class="form-control d-none"
+        id="ai-injury-notes"
+        name="injury_notes"
+        rows="3"
+        data-profile-field
+      >
+{{ current_user.injury_notes or '' }}</textarea
+      >
+    </div>
+  </form>
+</section>
 
 <div class="mb-4 d-flex gap-2 align-items-start">
   <form method="post">
     {{ csrf_form.hidden_tag() if csrf_form }}
-    <button type="submit" class="btn btn-primary">Generate AI Plan</button>
+    <input type="hidden" name="form_action" value="generate" />
+    <button type="submit" class="btn btn-primary">Generate A Plan</button>
   </form>
 
   {% if latest_recommendation %}
-  <form method="post" action="{{ url_for('save_ai_plan') }}">
-    {{ csrf_form.hidden_tag() if csrf_form }}
-    <input
-      type="hidden"
-      name="recommendation_id"
-      value="{{ latest_recommendation.id }}"
-    />
-    {% if latest_recommendation.user_saved %}
-    <button type="button" class="btn btn-success" disabled>Saved</button>
-    {% else %}
-    <button type="submit" class="btn btn-outline-success">Save my plan</button>
-    {% endif %}
-  </form>
+  <div class="ms-auto d-flex align-items-center">
+    <form
+      method="post"
+      action="{{ url_for('save_ai_all') }}"
+      id="training-save-all-form"
+      class="m-0"
+    >
+      {{ csrf_form.hidden_tag() if csrf_form }}
+      <input
+        type="hidden"
+        name="recommendation_id"
+        value="{{ latest_recommendation.id }}"
+      />
+      <input
+        type="hidden"
+        name="training_plan_json"
+        id="training-plan-json-input"
+      />
+      <input type="hidden" name="mark_saved" value="1" />
+      <button
+        type="button"
+        id="training-save-all-btn"
+        class="btn btn-success d-none"
+      >
+        Save plan and add to my profile
+      </button>
+    </form>
+    <button
+      type="button"
+      class="btn btn-outline-secondary ms-2"
+      id="training-global-edit"
+    >
+      Edit plan
+    </button>
+  </div>
+  <!-- Single save button below handles saving edits and marking plan as saved -->
   {% else %}
-  <button type="button" class="btn btn-outline-success" disabled>
-    Save my plan
+  <button type="button" class="btn btn-outline-success ms-auto" disabled>
+    Save plan and add to my profile
   </button>
   {% endif %}
 </div>
 
 {% if latest_recommendation %}
 <section class="mb-4 ai-section-panel">
-  <h2>AI Comment</h2>
+  <h2 class="text-center">Summary</h2>
   <p>{{ latest_recommendation.llm_comments }}</p>
 </section>
 
 {% set training_plan = latest_recommendation.get_training_plan() %} {% set
-nutrition_plan = latest_recommendation.get_nutrition_plan() %} {% if
-training_plan %}
+nutrition_plan = latest_recommendation.get_nutrition_plan() %}
+
+<textarea id="initial-training-plan-json" class="d-none">
+{{ training_plan|tojson }}</textarea
+>
+
+{% if training_plan %}
 <section class="mb-4 ai-section-panel">
-  <h2>Weekly Training Plan</h2>
+  <h2 class="text-center">Recommended Weekly Training Plan</h2>
 
   <div
     class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 training-plan-grid"
   >
     {% for day in training_plan %} {% set day_index = loop.index0 %}
     <div class="col">
-      <div class="card h-100 training-day-card">
+      <div class="card h-100 training-day-card" data-training-day-card>
         <div class="card-body d-flex flex-column">
-          <div class="mb-3">
-            <div class="training-day-label training-day-label--sm">
-              {{ day.day }}
+          <div class="mb-3 d-flex align-items-start gap-2 training-day-header">
+            <div class="flex-grow-1 text-center">
+              <div
+                class="training-day-label training-day-label--sm"
+                data-training-day-name
+              >
+                {{ day.day }}
+              </div>
+              <h3 class="h5 mb-1 training-day-focus" data-training-day-focus>
+                {{ day.focus }}
+              </h3>
             </div>
-            <h3 class="h5 mb-1 training-day-focus">{{ day.focus }}</h3>
+            <button
+              type="button"
+              class="btn btn-outline-success btn-sm training-day-add-btn d-none"
+              data-training-add-exercise
+              aria-label="Add exercise to this day"
+            >
+              +
+            </button>
           </div>
 
-          <ul class="training-exercise-list mb-0">
+          <ul class="training-exercise-list mb-0" data-training-exercise-list>
             {% for exercise in day.exercises %}
             <li class="training-exercise-item">
               <form
                 method="post"
-                action="{{ url_for('save_ai_exercise') }}"
                 class="training-exercise-form"
                 data-training-exercise-form
               >
@@ -91,16 +286,11 @@ training_plan %}
                   <div class="training-card-actions">
                     <button
                       type="button"
-                      class="btn btn-outline-info btn-sm training-edit-btn"
-                      data-training-edit
+                      class="btn btn-outline-danger btn-sm d-none training-remove-exercise-btn"
+                      data-training-remove-exercise
+                      aria-label="Remove exercise"
                     >
-                      Edit
-                    </button>
-                    <button
-                      type="submit"
-                      class="btn btn-primary btn-sm d-none training-save-btn"
-                    >
-                      Save
+                      -
                     </button>
                   </div>
                 </div>
@@ -148,11 +338,22 @@ training_plan %}
                       readonly
                     />
                   </div>
+                  <div class="training-notes-edit">
+                    <label class="form-label form-label-sm">Notes</label>
+                    <textarea
+                      class="form-control form-control-sm training-edit-field w-100"
+                      name="notes"
+                      rows="2"
+                      readonly
+                    >
+{{ exercise.notes or '' }}</textarea
+                    >
+                  </div>
                 </div>
 
-                {% if exercise.notes %}
-                <div class="training-exercise-notes">{{ exercise.notes }}</div>
-                {% endif %}
+                <div class="training-exercise-notes" data-training-view="notes">
+                  {{ exercise.notes or '' }}
+                </div>
               </form>
             </li>
             {% endfor %}
@@ -165,7 +366,7 @@ training_plan %}
 </section>
 {% endif %} {% if nutrition_plan %}
 <section class="mb-4 ai-section-panel">
-  <h2>Nutrition Plan</h2>
+  <h2 class="text-center">Recommended Nutrition</h2>
 
   <ul class="list-group">
     {% for item in nutrition_plan %}

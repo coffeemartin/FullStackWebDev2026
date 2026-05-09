@@ -383,6 +383,18 @@ def AI():
             flash("Your session expired. Please try again.")
             return redirect(url_for("AI"))
 
+        form_action = request.form.get("form_action", "generate")
+        if form_action == "update_profile":
+            current_user.age = _coerce_int(request.form.get("age"))
+            current_user.height_cm = _coerce_float(request.form.get("height_cm"))
+            current_user.weight_kg = _coerce_float(request.form.get("weight_kg"))
+            current_user.goal = request.form.get("goal", "").strip() or None
+            current_user.injury_notes = request.form.get("injury_notes", "").strip() or None
+
+            db.session.commit()
+            flash("Your profile has been updated.")
+            return redirect(url_for("AI"))
+
         ai_input = build_ai_input(current_user)
         ai_response = generate_ai_plan(ai_input)
 
@@ -398,7 +410,7 @@ def AI():
         db.session.add(recommendation)
         db.session.commit()
 
-        flash("AI plan generated successfully.")
+        flash("Customised plan generated successfully.")
         return redirect(url_for("AI"))
 
     latest_recommendation = (
@@ -415,61 +427,31 @@ def AI():
     )
 
 
-@app.route("/AI/save-exercise", methods=["POST"])
+def _coerce_int(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    return int(value)
+
+
+def _coerce_float(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    return float(value)
+
+@app.route("/AI/save-all", methods=["POST"]) 
 @login_required
-def save_ai_exercise():
+def save_ai_all():
     csrf_form = CSRFOnlyForm()
     if not csrf_form.validate_on_submit():
         flash("Your edit session expired. Please try again.")
         return redirect(url_for("AI"))
 
     recommendation_id = request.form.get("recommendation_id", type=int)
-    day_index = request.form.get("day_index", type=int)
-    exercise_index = request.form.get("exercise_index", type=int)
+    training_plan_json = request.form.get("training_plan_json", "")
 
-    if recommendation_id is None or day_index is None or exercise_index is None:
-        flash("Could not save that exercise update.")
-        return redirect(url_for("AI"))
-
-    recommendation = LLMRecommendation.query.filter_by(
-        id=recommendation_id,
-        user_id=current_user.id,
-    ).first()
-
-    if recommendation is None:
-        flash("Could not find that AI plan.")
-        return redirect(url_for("AI"))
-
-    training_plan = recommendation.get_training_plan() or []
-
-    try:
-        exercise = training_plan[day_index]["exercises"][exercise_index]
-    except (IndexError, KeyError, TypeError):
-        flash("That exercise could not be updated.")
-        return redirect(url_for("AI"))
-
-    exercise["name"] = request.form.get("name", "").strip()
-    exercise["sets"] = request.form.get("sets", "").strip()
-    exercise["reps"] = request.form.get("reps", "").strip()
-    exercise["duration_minutes"] = request.form.get("duration_minutes", "").strip()
-
-    recommendation.set_training_plan(training_plan)
-    db.session.commit()
-
-    flash("Exercise updated successfully.")
-    return redirect(url_for("AI"))
-
-
-@app.route("/AI/save-plan", methods=["POST"])
-@login_required
-def save_ai_plan():
-    csrf_form = CSRFOnlyForm()
-    if not csrf_form.validate_on_submit():
-        flash("Your session expired. Please try again.")
-        return redirect(url_for("AI"))
-
-    recommendation_id = request.form.get("recommendation_id", type=int)
-    if recommendation_id is None:
+    if recommendation_id is None or not training_plan_json:
         flash("Could not save that plan.")
         return redirect(url_for("AI"))
 
@@ -482,16 +464,45 @@ def save_ai_plan():
         flash("Could not find that AI plan.")
         return redirect(url_for("AI"))
 
-    # Unset user_saved on other recommendations for this user, then set the chosen one
-    LLMRecommendation.query.filter(
-        LLMRecommendation.user_id == current_user.id,
-        LLMRecommendation.id != recommendation.id,
-    ).update({"user_saved": False})
+    try:
+        training_plan = json.loads(training_plan_json)
+    except Exception:
+        flash("Invalid plan data.")
+        return redirect(url_for("AI"))
 
-    recommendation.user_saved = True
+    recommendation.set_training_plan(training_plan)
+
+    # Extract exercise names from the training plan and add to Exercise table if needed
+    try:
+        for day in training_plan:
+            for exercise in day.get("exercises", []):
+                exercise_name = exercise.get("name", "").strip()
+
+                if exercise_name:
+                    existing_exercise = Exercise.query.filter(
+                        db.func.lower(Exercise.name) == exercise_name.lower()
+                    ).first()
+
+                    if existing_exercise is None:
+                        new_exercise = Exercise(
+                            name=exercise_name,
+                            category=None,
+                            muscle_group=None,
+                            equipment=None,
+                        )
+                        db.session.add(new_exercise)
+    except Exception as e:
+        # Log the error but don't fail the save
+        flash(f"Warning: Could not add some exercises to your exercise library: {str(e)}")
+
+    # If request included mark_saved, mark this recommendation as saved
+    mark_saved = request.form.get("mark_saved")
+    if mark_saved:
+        recommendation.user_saved = True
+
     db.session.commit()
 
-    flash("Plan saved. Other AI plans have been unmarked.")
+    flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
     return redirect(url_for("AI"))
 
 @app.route("/myprofile", methods=['GET', 'POST'])

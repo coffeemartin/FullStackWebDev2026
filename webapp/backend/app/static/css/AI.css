@@ -1,0 +1,189 @@
+/* AI page styles */
+
+.training-notes-edit {
+  grid-column: 1 / -1;
+}
+
+.training-plan-grid .training-day-card {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 26, 34, 0.98),
+    rgba(11, 17, 24, 0.98)
+  );
+  border: 1px solid rgba(66, 165, 245, 0.18);
+  border-radius: 1rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.training-plan-grid .training-day-label {
+  color: #90caf9;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.training-plan-grid .training-day-label--sm {
+  font-size: 1.05rem;
+}
+
+.training-plan-grid .training-day-focus {
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.training-plan-grid .training-day-header > div:first-child {
+  min-width: 0;
+}
+
+.training-plan-grid .training-day-header .training-day-label,
+.training-plan-grid .training-day-header .training-day-focus {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.training-plan-grid .training-exercise-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.training-plan-grid .training-exercise-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.training-plan-grid .training-exercise-item {
+  position: relative;
+}
+
+.training-plan-grid .training-exercise-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.training-plan-grid .training-exercise-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.training-plan-grid .training-view-value {
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-view-meta {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.training-plan-grid .training-edit-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.training-plan-grid .training-edit-grid .form-label {
+  font-size: 0.78rem;
+  margin-bottom: 0.25rem;
+}
+
+.training-plan-grid .training-edit-field[readonly] {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-edit-field:not([readonly]) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(66, 165, 245, 0.4);
+  color: #f6fbff;
+}
+
+.training-plan-grid .training-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.training-plan-grid .training-exercise-item:last-child {
+  margin-bottom: 0;
+}
+
+.training-plan-grid .training-exercise-meta {
+  color: rgba(255, 255, 255, 0.72);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.92rem;
+  margin-top: 0.3rem;
+}
+
+.training-plan-grid .training-exercise-notes {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+
+.ai-section-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  padding: 1rem 1.1rem;
+}
+
+.ai-section-panel h2 {
+  margin-bottom: 0.85rem;
+}
+
+.ai-profile-panel {
+  padding: 0.8rem 1rem;
+}
+
+.ai-profile-panel .form-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.86rem;
+}
+
+.ai-profile-panel .form-control-plaintext {
+  min-height: 1.4rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  margin-bottom: 0;
+}
+
+.ai-profile-panel .form-control,
+.ai-profile-panel .form-select {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+@media (max-width: 991.98px) {
+  .training-plan-grid .training-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .training-plan-grid .training-card-actions {
+    position: static;
+    margin-top: 0.5rem;
+    justify-content: flex-start;
+  }
+}
+
+/* Style the top-level "Edit plan" button when it becomes the Cancel button */
+#training-global-edit.is-cancel {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+#training-global-edit.is-cancel:hover,
+#training-global-edit.is-cancel:focus {
+  background-color: rgba(108, 117, 125, 0.08);
+  color: #6c757d;
+  border-color: #6c757d;
+}
