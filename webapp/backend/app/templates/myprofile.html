@@ -1,25 +1,144 @@
-{% extends "base.html" %} {% block title %}My Profile{% endblock %} {% block
-content %}
-<h1>My Profile</h1>
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block content %}
+<section class="profile-page">
+  <section class="profile-hero profile-hero--bmi">
+    <div>
+      <span class="profile-kicker">BMI Profile</span>
+      <h1 class="profile-title">Welcome, {{ user.name or user.username }}</h1>
+      <p class="profile-subtitle">{{ bmi_quote }}</p>
+    </div>
 
-<section>
-  <h2>Account Details</h2>
-  <p>Username: {{ user.username }}</p>
-  <p>Email: {{ user.email }}</p>
-  <p>User ID: {{ user.id }}</p>
-  <p>Created At: {{ user.created_at | default('Not set', true) }}</p>
-  <p>Most Recent Login At: {{ latest_login_at | default('Not set', true) }}</p>
-</section>
+    <div class="profile-bmi-card">
+      <div class="profile-photo-wrap">
+        <div class="profile-photo">
+          {{ (user.name or user.username)[:1] }}
+        </div>
+        <div>
+          <span>Profile</span>
+          <strong>{{ user.name or user.username }}</strong>
+        </div>
+      </div>
 
-<section>
-  <h2>Personal Information</h2>
-  <p>Name: {{ user.name | default('Not set', true) }}</p>
-  <p>Age: {{ user.age | default('Not set', true) }}</p>
-  <p>Gender: {{ user.gender | default('Not set', true) }}</p>
-  <p>Height (cm): {{ user.height_cm | default('Not set', true) }}</p>
-  <p>Weight (kg): {{ user.weight_kg | default('Not set', true) }}</p>
-  <p>Goal: {{ user.goal | default('Not set', true) }}</p>
-  <p>Activity Level: {{ user.activity_level | default('Not set', true) }}</p>
-  <p>Injury Notes: {{ user.injury_notes | default('Not set', true) }}</p>
+      <p class="profile-card-label">Current BMI</p>
+      {% if bmi %}
+        <div class="profile-bmi-value">{{ bmi }}</div>
+        <strong>{{ bmi_category }}</strong>
+      {% else %}
+        <div class="profile-bmi-value">--</div>
+        <strong>Profile details needed</strong>
+      {% endif %}
+      <span>{{ user.username }}</span>
+    </div>
+  </section>
+
+  <section class="profile-two-column">
+    <div class="profile-panel">
+      <div class="section-heading section-heading--left">
+        <h2>Personal Information</h2>
+        <p>Your saved details for BMI and exercise guidance.</p>
+      </div>
+
+      <div class="profile-info-list">
+        <div><span>Name</span><strong>{{ user.name | default('Not set', true) }}</strong></div>
+        <div><span>Age</span><strong>{{ user.age | default('Not set', true) }}</strong></div>
+        <div><span>Gender</span><strong>{{ user.gender | default('Not set', true) }}</strong></div>
+        <div><span>Height</span><strong>{% if user.height_cm %}{{ user.height_cm }} cm{% else %}Not set{% endif %}</strong></div>
+        <div><span>Weight</span><strong>{% if user.weight_kg %}{{ user.weight_kg }} kg{% else %}Not set{% endif %}</strong></div>
+        <div><span>Activity</span><strong>{{ user.activity_level | default('Not set', true) }}</strong></div>
+        <div><span>Goal</span><strong>{{ user.goal | default('Not set', true) }}</strong></div>
+        <div><span>Injury Notes</span><strong>{{ user.injury_notes | default('Not set', true) }}</strong></div>
+      </div>
+    </div>
+
+    <div class="profile-panel">
+      <div class="section-heading section-heading--left">
+        <h2>Fitness Focus</h2>
+        <p>Five general points based on your BMI category.</p>
+      </div>
+
+      <ol class="fitness-point-list">
+        {% for point in fitness_points %}
+          <li>{{ point }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </section>
+
+  <section class="profile-section">
+    <div class="section-heading">
+      <h2>Account Details</h2>
+      <p>Your saved sign-in information.</p>
+    </div>
+
+    <div class="profile-grid">
+      <article class="profile-card">
+        <span>Username</span>
+        <strong>{{ user.username }}</strong>
+      </article>
+      <article class="profile-card">
+        <span>Email</span>
+        <strong>{{ user.email }}</strong>
+      </article>
+      <article class="profile-card">
+        <span>User ID</span>
+        <strong>{{ user.id }}</strong>
+      </article>
+      <article class="profile-card">
+        <span>Created at</span>
+        <strong>{{ user.created_at | default('Not set', true) }}</strong>
+      </article>
+      <article class="profile-card">
+        <span>Most recent login</span>
+        <strong>{{ latest_login_at | default('Not set', true) }}</strong>
+      </article>
+    </div>
+  </section>
+
+  <section class="profile-section friends-section">
+    <div class="section-heading">
+      <h2>Friends Using This App</h2>
+      <p>Connect with classmates who are building healthy habits too.</p>
+    </div>
+
+    <div class="friends-layout">
+      <div class="friends-list">
+        {% if app_friends %}
+          {% for friend in app_friends %}
+            <article class="friend-card">
+              <div class="friend-avatar">{{ (friend.name or friend.username)[:1] }}</div>
+              <div class="friend-details">
+                <h3>{{ friend.name or friend.username }}</h3>
+                <p>@{{ friend.username }}</p>
+                <span>{{ friend.goal or 'Fitness journey in progress' }}</span>
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <article class="friend-card friend-card--empty">
+            <div class="friend-details">
+              <h3>No friends to show yet</h3>
+              <p>Register or seed more users to see them here.</p>
+            </div>
+          </article>
+        {% endif %}
+      </div>
+
+      <form class="add-friend-panel" action="{{ url_for('myprofile') }}" method="post">
+        <input type="hidden" name="form_type" value="add_friend">
+        <div>
+          <span class="profile-card-label">Network</span>
+          <label for="friend_username">Add Friend</label>
+        </div>
+        <select id="friend_username" name="friend_username">
+          <option value="">Choose a user</option>
+          {% for friend in app_friends %}
+            <option value="{{ friend.username }}">{{ friend.name or friend.username }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" {% if not app_friends %}disabled{% endif %}>Add Friend</button>
+      </form>
+    </div>
+  </section>
 </section>
 {% endblock %}

@@ -110,6 +110,7 @@ class NutritionLog(db.Model):
     log_date: so.Mapped[date] = so.mapped_column(default=date.today)
     meal_type: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50))
     quantity_g: so.Mapped[Optional[float]]
+    water_glasses: so.Mapped[Optional[int]]
     notes: so.Mapped[Optional[str]] = so.mapped_column(sa.Text)
 
     user: so.Mapped["User"] = so.relationship(back_populates="nutrition_logs")
@@ -158,4 +159,3 @@ class UserEmbedding(db.Model):
     embedding_json: so.Mapped[str] = so.mapped_column(sa.Text)
 
     created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
-    
