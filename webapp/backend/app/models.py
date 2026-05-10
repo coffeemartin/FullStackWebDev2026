@@ -127,6 +127,7 @@ class LLMRecommendation(db.Model):
 
     training_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
     nutrition_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
+    user_saved: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False, server_default=sa.false())
 
     user: so.Mapped["User"] = so.relationship(back_populates="recommendations")
 

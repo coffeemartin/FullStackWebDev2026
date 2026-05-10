@@ -47,3 +47,7 @@ class ExerciseLogForm(FlaskForm):
     )
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=250)])
     submit = SubmitField('Save Workout')
+
+
+class CSRFOnlyForm(FlaskForm):
+    pass
