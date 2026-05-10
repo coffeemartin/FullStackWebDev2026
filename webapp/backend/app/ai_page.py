@@ -6,7 +6,7 @@ from app.models import ExerciseLog, NutritionLog
 def remove_none_values(data):
     return {key: value for key, value in data.items() if value is not None}
 
-def build_ai_input(user, days=7):
+def build_ai_input(user, days=30):
     today = date.today()
     # days is the number of previous days to include (exclude today)
     start_date = today - timedelta(days=days)

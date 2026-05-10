@@ -29,6 +29,11 @@
   >
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="update_profile" />
+    <!-- # The form fields are duplicated in both view and edit mode, with the edit fields hidden by default.
+    # name attributes on the input fields are used to identify which data is being updated when the form is submitted, 
+    # and data-profile-view-field attributes are used to link the view fields to the corresponding data fields for easy
+    # toggling between view and edit modes. -->
+
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-age">Age</label>
       <div
@@ -157,6 +162,11 @@
  <div class="flex-grow-1"></div>
 
   <div class="text-center">
+  <!-- This is a post form that triggers generation of a new plan using the LLM. 
+   It includes an input for how many days of history to include in the LLM input, 
+   which is sent to the backend and used to determine how many days of recent exercise logs to include in the data sent to the LLM. 
+   -->
+
   <form method="post" class="mb-0 d-inline-block">
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="generate" />
@@ -167,9 +177,9 @@
         id="history-days"
         name="history_days"
         class="form-control form-control-sm"
-        value="14"
+        value="30"
         min="1"
-        max="30"
+        max="90"
         style="width:5.5rem;"
         aria-label="Days of history to use"
       />

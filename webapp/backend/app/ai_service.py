@@ -34,7 +34,11 @@ def normalize_training_plan(plan: dict) -> dict:
                 exercise["name"] = normalize_exercise_name(exercise["name"])
     return plan
 
-
+# use the OpenAI client to generate a training and nutrition plan based on the user's profile and recent logs. 
+# The system prompt instructs the model to provide practical, safe, beginner-friendly advice and to format exercise
+# I have also particularly emphasized the need to use generic exercise names for the exercise.name field, 
+# and to move any modifiers into the exercise.notes field.
+# Given clear examples in the propmt, the model should learn to output exercise names that are suitable for matching against an Exercise dimension table in the database,
 def generate_ai_plan(ai_input: dict) -> dict:
     response = client.responses.create(
         model="gpt-4.1-mini",

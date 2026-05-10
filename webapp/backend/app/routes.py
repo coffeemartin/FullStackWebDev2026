@@ -373,7 +373,9 @@ def exercise():
         recommendation=recommendation,
     )
 
-
+# this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
+# all in one flow. If user want to update the generated plan, that will be handled by a separate route /AI/save-all 
+# which only updates the training plan of the latest recommendation.
 @app.route("/AI", methods=["GET", "POST"])
 @login_required
 def AI():
@@ -385,8 +387,11 @@ def AI():
         if not csrf_form.validate_on_submit():
             flash("Your session expired. Please try again.")
             return redirect(url_for("AI"))
-
+       
         form_action = request.form.get("form_action", "generate")
+        # If user submitted the profile update form, update the user's profile and return without generating new plan
+        # This form_action is corresponding to the hidden input field in the profile edit form, 
+        # which allows me to use the same route for both profile updates and plan generation.
         if form_action == "update_profile":
             current_user.age = _coerce_int(request.form.get("age"))
             current_user.height_cm = _coerce_float(request.form.get("height_cm"))
@@ -398,11 +403,14 @@ def AI():
             flash("Your profile has been updated.")
             return redirect(url_for("AI"))
 
-        # allow user to specify number of days of history (client caps to 14)
+
+        # Ifg form_action is not profile update, proceed to generate new plan. 
+        # This allows user to update their profile and immediately see the impact of their changes on the generated plan in one seamless flow.
+        # allow user to specify number of days of history (cap to 90, default to 30) to include in LLM input when generating plan
         try:
-            days = int(request.form.get("history_days", 7))
+            days = int(request.form.get("history_days", 30))
         except (TypeError, ValueError):
-            days = 7
+            days = 30
 
         if days < 1:
             days = 1
@@ -427,13 +435,26 @@ def AI():
         flash("Customised plan generated successfully.")
         return redirect(url_for("AI"))
 
+
+    # On GET, query the database and show the latest recommendation (even if not saved) so user can continue editing if they want
+    # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
     latest_recommendation = (
         LLMRecommendation.query
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=current_user.id, user_saved=True)
         .order_by(LLMRecommendation.created_at.desc())
         .first()
     )
 
+    # If user has not saved any, fall back to the most recent recommendation.
+    if latest_recommendation is None:
+        latest_recommendation = (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        )
+ 
+    # On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query
         .filter_by(user_id=current_user.id, user_saved=True)
