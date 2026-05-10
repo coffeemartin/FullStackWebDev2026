@@ -128,7 +128,7 @@ if (globalEditBtn) {
   let globalEditing = false;
   globalEditBtn.addEventListener("click", () => {
     globalEditing = !globalEditing;
-    globalEditBtn.textContent = globalEditing ? "Cancel" : "Manual Update";
+    globalEditBtn.textContent = globalEditing ? "Cancel" : "Save Plan";
     const topSaveBtn = document.getElementById("training-save-all-btn");
     document.querySelectorAll("[data-training-day-card]").forEach((card) => {
       const addBtn = card.querySelector("[data-training-add-exercise]");
@@ -277,3 +277,137 @@ if (saveAllBtn && saveAllForm) {
     saveAllForm.submit();
   });
 }
+
+/* Recommendation details rendering moved from inline template to JS */
+function renderTraining(plan) {
+  if (!plan || !plan.length) return "<p>No training plan.</p>";
+  var html = [
+    '<div class="table-responsive"><table class="table table-sm table-borderless text-white mb-0"><thead><tr><th>Day</th><th>Focus</th><th>Exercises</th></tr></thead><tbody>',
+  ];
+  plan.forEach(function (day) {
+    var exercises = (day.exercises || [])
+      .map(function (ex) {
+        var meta = [];
+        if (ex.sets) meta.push("Sets: " + ex.sets);
+        if (ex.reps) meta.push("Reps: " + ex.reps);
+        if (ex.duration_minutes)
+          meta.push("Duration: " + ex.duration_minutes + "m");
+        var notes = ex.notes
+          ? '<div class="text-muted small">' + ex.notes + "</div>"
+          : "";
+        return (
+          "<div><strong>" +
+          (ex.name || "") +
+          "</strong><div>" +
+          meta.join(" · ") +
+          "</div>" +
+          notes +
+          "</div>"
+        );
+      })
+      .join('<hr class="my-2"/>');
+    html.push(
+      "<tr><td>" +
+        (day.day || "") +
+        "</td><td>" +
+        (day.focus || "") +
+        "</td><td>" +
+        exercises +
+        "</td></tr>",
+    );
+  });
+  html.push("</tbody></table></div>");
+  return html.join("");
+}
+
+function renderNutrition(nutrition) {
+  if (!nutrition || !nutrition.length)
+    return "<p>No nutrition recommendations.</p>";
+  var html = ['<ul class="list-group list-group-flush">'];
+  nutrition.forEach(function (item) {
+    html.push(
+      '<li class="list-group-item bg-transparent text-white"><strong>' +
+        (item.goal || "") +
+        '</strong><div class="text-muted">' +
+        (item.suggestion || "") +
+        "</div></li>",
+    );
+  });
+  html.push("</ul>");
+  return html.join("");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  var detailsPanel = document.getElementById("recommendation-details");
+  document.querySelectorAll(".view-reco-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      var tr = e.target.closest("tr");
+      if (!tr) return;
+      var training = tr.getAttribute("data-reco-training");
+      var nutrition = tr.getAttribute("data-reco-nutrition");
+      var summary = tr.getAttribute("data-reco-summary");
+      try {
+        training = JSON.parse(training);
+      } catch (err) {
+        training = null;
+      }
+      try {
+        nutrition = JSON.parse(nutrition);
+      } catch (err) {
+        nutrition = null;
+      }
+
+      var detailsExercise = document.getElementById("details-exercise");
+      var detailsNutrition = document.getElementById("details-nutrition");
+      if (detailsExercise) detailsExercise.innerHTML = renderTraining(training);
+      if (detailsNutrition)
+        detailsNutrition.innerHTML = renderNutrition(nutrition);
+      if (detailsPanel) {
+        detailsPanel.classList.remove("d-none");
+        detailsPanel.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+
+  // Delete recommendation handler
+  document.querySelectorAll(".delete-reco-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      var tr = e.target.closest("tr");
+      if (!tr) return;
+      var recoId = tr.getAttribute("data-reco-id");
+      if (!recoId) return;
+
+      if (!confirm("Delete this saved plan? This cannot be undone.")) return;
+
+      var csrfInput = document.querySelector('input[name="csrf_token"]');
+      var token = csrfInput ? csrfInput.value : null;
+
+      var fd = new FormData();
+      if (token) fd.append("csrf_token", token);
+      fd.append("recommendation_id", recoId);
+
+      fetch("/AI/delete-reco", { method: "POST", body: fd })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("Request failed");
+          return resp.json();
+        })
+        .then(function (data) {
+          if (data && data.success) {
+            // remove the row
+            tr.remove();
+            // hide details panel if it was showing this reco
+            var detailsPanel = document.getElementById("recommendation-details");
+            if (detailsPanel && detailsPanel.classList.contains("d-none") === false) {
+              detailsPanel.classList.add("d-none");
+            }
+          } else {
+            alert((data && data.error) || "Could not delete recommendation.");
+          }
+        })
+        .catch(function (err) {
+          console.error(err);
+          alert("Could not delete recommendation.");
+        });
+    });
+  });
+});

@@ -601,3 +601,65 @@ body.ai-page-loading .ai-generate-btn.is-charging {
     font-size: 1rem;
   }
 }
+
+/* Shared action button used for profile update and plan update */
+.ai-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #fff !important;
+  background: rgba(230, 233, 237, 0.06); /* subtle grey translucent */
+  backdrop-filter: blur(2px) saturate(0.9);
+  border: 1px solid rgba(59, 130, 246, 0.9); /* blue border */
+  border-radius: 0.6rem;
+  box-shadow:
+    0 8px 22px rgba(7, 10, 14, 0.36),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+.btn.ai-action-btn:hover,
+.ai-action-btn:hover,
+button.ai-action-btn:hover {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.08) saturate(1.03) !important;
+  box-shadow:
+    0 14px 34px rgba(59, 130, 246, 0.16),
+    0 8px 22px rgba(7, 10, 14, 0.36) !important;
+  border-color: rgba(59, 130, 246, 1) !important;
+  background: rgba(
+    230,
+    233,
+    237,
+    0.12
+  ) !important; /* enforce same grey hover */
+  background-image: none !important;
+}
+
+.btn.ai-action-btn:active,
+.ai-action-btn:active,
+button.ai-action-btn:active {
+  transform: translateY(0) scale(0.995) !important;
+}
+
+.btn.ai-action-btn:focus,
+.btn.ai-action-btn:focus-visible,
+button.ai-action-btn:focus,
+button.ai-action-btn:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 0.18rem rgba(59, 130, 246, 0.18) !important;
+}
+
+@media (max-width: 575.98px) {
+  .ai-action-btn {
+    padding: 0.48rem 0.7rem;
+    font-size: 0.92rem;
+  }
+}

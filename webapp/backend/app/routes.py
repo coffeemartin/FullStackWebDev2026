@@ -71,6 +71,7 @@ from app.ai_page import *
 from app.ai_service import generate_ai_plan
 from app.models import LLMRecommendation
 import json
+from werkzeug.datastructures import MultiDict
 
 
 
@@ -377,6 +378,8 @@ def exercise():
 @login_required
 def AI():
     csrf_form = CSRFOnlyForm()
+    # maximum days of history allowed to include in LLM input
+    MAX_HISTORY_DAYS = 90
 
     if request.method == "POST":
         if not csrf_form.validate_on_submit():
@@ -395,7 +398,18 @@ def AI():
             flash("Your profile has been updated.")
             return redirect(url_for("AI"))
 
-        ai_input = build_ai_input(current_user)
+        # allow user to specify number of days of history (client caps to 14)
+        try:
+            days = int(request.form.get("history_days", 7))
+        except (TypeError, ValueError):
+            days = 7
+
+        if days < 1:
+            days = 1
+        if days > MAX_HISTORY_DAYS:
+            days = MAX_HISTORY_DAYS
+
+        ai_input = build_ai_input(current_user, days=days)
         ai_response = generate_ai_plan(ai_input)
 
         recommendation = LLMRecommendation(
@@ -424,7 +438,7 @@ def AI():
         LLMRecommendation.query
         .filter_by(user_id=current_user.id, user_saved=True)
         .order_by(LLMRecommendation.created_at.desc())
-        .limit(3)
+        .limit(5)
         .all()
     )
 
@@ -513,6 +527,34 @@ def save_ai_all():
 
     flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
     return redirect(url_for("AI"))
+
+
+@app.route("/AI/delete-reco", methods=["POST"])
+@login_required
+def delete_reco():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        return jsonify({"success": False, "error": "Session expired."}), 400
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        return jsonify({"success": False, "error": "Missing recommendation id."}), 400
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        return jsonify({"success": False, "error": "Recommendation not found."}), 404
+
+    try:
+        db.session.delete(recommendation)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/myprofile", methods=['GET', 'POST'])
 @login_required
