@@ -189,6 +189,23 @@
         Generate A New Plan
       </button>
     </div>
+
+    <div class="d-flex justify-content-center align-items-center gap-2 mt-2">
+      <label class="mb-0" for="temperature-slider">Creativity</label>
+      <input
+        type="range"
+        id="temperature-slider"
+        name="temperature"
+        class="form-range"
+        min="0"
+        max="1"
+        step="0.01"
+        value="0"
+        style="width: 10rem;"
+        aria-label="LLM creativity slider"
+      />
+      <span id="temperature-value" class="small text-white">0.00</span>
+    </div>
   </form>
   </div>
 

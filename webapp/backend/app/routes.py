@@ -417,8 +417,19 @@ def AI():
         if days > MAX_HISTORY_DAYS:
             days = MAX_HISTORY_DAYS
 
+        # allow user to control creativity, clamp to [0, 1], default 0
+        try:
+            temperature = float(request.form.get("temperature", 0))
+        except (TypeError, ValueError):
+            temperature = 0.0
+
+        if temperature < 0:
+            temperature = 0.0
+        if temperature > 1:
+            temperature = 1.0
+
         ai_input = build_ai_input(current_user, days=days)
-        ai_response = generate_ai_plan(ai_input)
+        ai_response = generate_ai_plan(ai_input, temperature=temperature)
 
         recommendation = LLMRecommendation(
             user_id=current_user.id,
@@ -440,20 +451,10 @@ def AI():
     # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
     latest_recommendation = (
         LLMRecommendation.query
-        .filter_by(user_id=current_user.id, user_saved=True)
+        .filter_by(user_id=current_user.id)
         .order_by(LLMRecommendation.created_at.desc())
         .first()
     )
-
-    # If user has not saved any, fall back to the most recent recommendation.
-    if latest_recommendation is None:
-        latest_recommendation = (
-            LLMRecommendation.query
-            .filter_by(user_id=current_user.id)
-            .order_by(LLMRecommendation.created_at.desc())
-            .first()
-        )
- 
     # On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query

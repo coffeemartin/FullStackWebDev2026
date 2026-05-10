@@ -347,6 +347,18 @@ function renderNutrition(nutrition) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  var tempSlider = document.getElementById("temperature-slider");
+  var tempValue = document.getElementById("temperature-value");
+  if (tempSlider && tempValue) {
+    var formatTemp = function (v) {
+      return parseFloat(v).toFixed(2);
+    };
+    tempValue.textContent = formatTemp(tempSlider.value || 0);
+    tempSlider.addEventListener("input", function (e) {
+      tempValue.textContent = formatTemp(e.target.value || 0);
+    });
+  }
+
   var detailsPanel = document.getElementById("recommendation-details");
   document.querySelectorAll(".view-reco-btn").forEach(function (btn) {
     btn.addEventListener("click", function (e) {

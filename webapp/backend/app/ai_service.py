@@ -39,9 +39,21 @@ def normalize_training_plan(plan: dict) -> dict:
 # I have also particularly emphasized the need to use generic exercise names for the exercise.name field, 
 # and to move any modifiers into the exercise.notes field.
 # Given clear examples in the propmt, the model should learn to output exercise names that are suitable for matching against an Exercise dimension table in the database,
-def generate_ai_plan(ai_input: dict) -> dict:
+def generate_ai_plan(ai_input: dict, temperature: float = 0.0) -> dict:
+    # Bound model temperature to the supported UI range [0, 1].
+    try:
+        temperature = float(temperature)
+    except (TypeError, ValueError):
+        temperature = 0.0
+
+    if temperature < 0:
+        temperature = 0.0
+    if temperature > 1:
+        temperature = 1.0
+
     response = client.responses.create(
         model="gpt-4.1-mini",
+        temperature=temperature,
         input=[
             {
                 "role": "system",
