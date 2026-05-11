@@ -7,6 +7,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -581,12 +582,15 @@ def delete_reco():
 @app.route("/myprofile", methods=['GET', 'POST'])
 @login_required
 def myprofile():
+    friend_search = request.values.get('friend_search', '').strip()
+
     if request.method == 'POST' and request.form.get('form_type') == 'add_friend':
         friend_username = request.form.get('friend_username', '').strip()
         if friend_username:
             flash(f"Friend request ready for {friend_username}.")
         else:
             flash("Please choose a friend to add.")
+        return redirect(url_for('myprofile', friend_search=friend_search))
 
     bmi = None
     bmi_category = None
@@ -614,13 +618,21 @@ def myprofile():
         perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
         latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    app_friends = (
-        User.query
-        .filter(User.id != current_user.id)
-        .order_by(User.username)
-        .limit(6)
-        .all()
-    )
+    app_friends = []
+    if friend_search:
+        search_pattern = f"%{friend_search}%"
+        app_friends = (
+            User.query
+            .filter(User.id != current_user.id)
+            .filter(or_(
+                User.name.ilike(search_pattern),
+                User.username.ilike(search_pattern),
+                User.email.ilike(search_pattern)
+            ))
+            .order_by(User.username)
+            .limit(8)
+            .all()
+        )
 
     return render_template(
         "myprofile.html",
@@ -631,7 +643,8 @@ def myprofile():
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
         fitness_points=fitness_points,
-        app_friends=app_friends
+        app_friends=app_friends,
+        friend_search=friend_search
     )
 
 
