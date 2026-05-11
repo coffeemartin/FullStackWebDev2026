@@ -97,13 +97,31 @@
 
   <section class="profile-section friends-section">
     <div class="section-heading">
-      <h2>Friends Using This App</h2>
-      <p>Connect with classmates who are building healthy habits too.</p>
+      <h2>Find Friends</h2>
+      <p>Search by name, login ID, or email instead of browsing every user.</p>
     </div>
+
+    <form class="friend-search-panel" action="{{ url_for('myprofile') }}" method="get">
+      <label for="friend_search">Search app users</label>
+      <div class="friend-search-row">
+        <input
+          id="friend_search"
+          name="friend_search"
+          type="search"
+          value="{{ friend_search }}"
+          placeholder="Type a name or login ID"
+          autocomplete="off"
+        >
+        <button type="submit">Search</button>
+        {% if friend_search %}
+          <a href="{{ url_for('myprofile') }}">Clear</a>
+        {% endif %}
+      </div>
+    </form>
 
     <div class="friends-layout">
       <div class="friends-list">
-        {% if app_friends %}
+        {% if friend_search and app_friends %}
           {% for friend in app_friends %}
             <article class="friend-card">
               <div class="friend-avatar">{{ (friend.name or friend.username)[:1] }}</div>
@@ -112,13 +130,26 @@
                 <p>@{{ friend.username }}</p>
                 <span>{{ friend.goal or 'Fitness journey in progress' }}</span>
               </div>
+              <form class="friend-card-action" action="{{ url_for('myprofile') }}" method="post">
+                <input type="hidden" name="form_type" value="add_friend">
+                <input type="hidden" name="friend_username" value="{{ friend.username }}">
+                <input type="hidden" name="friend_search" value="{{ friend_search }}">
+                <button type="submit">Add</button>
+              </form>
             </article>
           {% endfor %}
+        {% elif friend_search %}
+          <article class="friend-card friend-card--empty">
+            <div class="friend-details">
+              <h3>No matching users found</h3>
+              <p>Try a different name, login ID, or email.</p>
+            </div>
+          </article>
         {% else %}
           <article class="friend-card friend-card--empty">
             <div class="friend-details">
-              <h3>No friends to show yet</h3>
-              <p>Register or seed more users to see them here.</p>
+              <h3>Search for friends</h3>
+              <p>Use the search bar above to find classmates using this app.</p>
             </div>
           </article>
         {% endif %}
@@ -128,10 +159,11 @@
         <input type="hidden" name="form_type" value="add_friend">
         <div>
           <span class="profile-card-label">Network</span>
-          <label for="friend_username">Add Friend</label>
+          <label for="friend_username">Quick Add</label>
         </div>
-        <select id="friend_username" name="friend_username">
-          <option value="">Choose a user</option>
+        <input type="hidden" name="friend_search" value="{{ friend_search }}">
+        <select id="friend_username" name="friend_username" {% if not app_friends %}disabled{% endif %}>
+          <option value="">Choose from search results</option>
           {% for friend in app_friends %}
             <option value="{{ friend.username }}">{{ friend.name or friend.username }}</option>
           {% endfor %}

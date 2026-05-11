@@ -817,6 +817,78 @@ html {
   margin-bottom: 0;
 }
 
+.friend-search-panel {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
+    linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
+  border: 1px solid rgba(114, 255, 183, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.22);
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.friend-search-panel label {
+  color: #f4fff8;
+  display: block;
+  font-weight: 800;
+  margin-bottom: 0.7rem;
+}
+
+.friend-search-row {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.friend-search-row input {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(114, 255, 183, 0.2);
+  border-radius: 12px;
+  color: #f4fff8;
+  min-height: 46px;
+  padding: 0.8rem 0.9rem;
+}
+
+.friend-search-row input::placeholder {
+  color: rgba(244, 255, 248, 0.48);
+}
+
+.friend-search-row input:focus {
+  border-color: rgba(114, 255, 183, 0.6);
+  box-shadow: 0 0 0 0.25rem rgba(114, 255, 183, 0.15);
+  outline: 0;
+}
+
+.friend-search-row button,
+.friend-search-row a,
+.friend-card-action button {
+  align-items: center;
+  border-radius: 12px;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+}
+
+.friend-search-row button,
+.friend-card-action button {
+  background: linear-gradient(135deg, #118344, #42e28a);
+  border: 0;
+  color: #06150d;
+}
+
+.friend-search-row a {
+  border: 1px solid rgba(114, 255, 183, 0.28);
+  color: #f4fff8;
+}
+
 .friends-layout {
   display: grid;
   gap: 1rem;
@@ -890,6 +962,10 @@ html {
   min-height: 6rem;
 }
 
+.friend-card-action {
+  margin-left: auto;
+}
+
 .add-friend-panel {
   align-self: start;
   display: grid;
@@ -911,6 +987,11 @@ html {
   border-radius: 12px;
   color: #f4fff8;
   padding: 0.8rem 0.9rem;
+}
+
+.add-friend-panel select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .add-friend-panel select option {
@@ -957,5 +1038,23 @@ html {
 
   .friends-layout {
     grid-template-columns: 1fr;
+  }
+
+  .friend-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .friend-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .friend-card-action {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .friend-card-action button {
+    width: 100%;
   }
 }
