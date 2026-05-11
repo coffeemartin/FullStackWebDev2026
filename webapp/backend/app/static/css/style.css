@@ -63,7 +63,121 @@ html {
 }
 
 .custom-nav-links .nav-link-ai {
-  background: linear-gradient(135deg, #1565c0, #42a5f5);
+  background: linear-gradient(130deg, #0ea5e9, #3b82f6, #7c3aed, #22d3ee);
+  background-size: 180% 180%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 10px 20px rgba(59, 130, 246, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  isolation: isolate;
+  overflow: hidden;
+  position: relative;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.26);
+  animation: nav-ai-gradient-drift 6s ease infinite;
+}
+
+.custom-nav-links .nav-link-ai::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.62),
+    rgba(34, 211, 238, 0.32),
+    rgba(124, 58, 237, 0.34),
+    rgba(255, 255, 255, 0.62)
+  );
+  filter: blur(6px);
+  opacity: 0.55;
+  animation: nav-ai-ring-spin 8s linear infinite;
+}
+
+.custom-nav-links .nav-link-ai::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 16% 30%,
+      rgba(255, 255, 255, 0.45) 0 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      circle at 78% 24%,
+      rgba(255, 255, 255, 0.38) 0 1px,
+      transparent 2px
+    ),
+    linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.28) 45%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  background-size:
+    100% 100%,
+    100% 100%,
+    240% 100%;
+  background-position:
+    center,
+    center,
+    120% 0;
+  animation:
+    nav-ai-sparkle 3.5s ease-in-out infinite,
+    nav-ai-sheen 5s ease-in-out infinite;
+}
+
+@keyframes nav-ai-gradient-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes nav-ai-ring-spin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes nav-ai-sheen {
+  0% {
+    background-position:
+      center,
+      center,
+      120% 0;
+  }
+
+  100% {
+    background-position:
+      center,
+      center,
+      -130% 0;
+  }
+}
+
+@keyframes nav-ai-sparkle {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.88;
+  }
 }
 
 .custom-nav-links .nav-link-myprofile {
@@ -110,7 +224,11 @@ html {
   --fit-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
   color: #f4fff8;
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.12), transparent 28%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.12),
+      transparent 28%
+    ),
     linear-gradient(135deg, var(--fit-bg-2), var(--fit-bg-1));
   border-radius: 28px;
   min-height: calc(100vh - 110px);
@@ -183,7 +301,11 @@ html {
 .login-card,
 .signup-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid var(--fit-border);
   border-radius: 24px;
@@ -330,7 +452,11 @@ html {
 }
 
 .bmi-result {
-  background: linear-gradient(180deg, rgba(18, 35, 26, 0.96), rgba(7, 16, 12, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(18, 35, 26, 0.96),
+    rgba(7, 16, 12, 0.96)
+  );
   border: 1px solid var(--fit-border);
   border-radius: 24px;
   margin-top: 1.25rem;
@@ -451,7 +577,11 @@ html {
 .profile-card,
 .profile-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid var(--fit-border);
   border-radius: 24px;
@@ -500,7 +630,11 @@ html {
 
 .profile-photo {
   align-items: center;
-  background: linear-gradient(135deg, rgba(114, 255, 183, 0.92), rgba(17, 131, 68, 0.96));
+  background: linear-gradient(
+    135deg,
+    rgba(114, 255, 183, 0.92),
+    rgba(17, 131, 68, 0.96)
+  );
   border: 2px solid rgba(244, 255, 248, 0.75);
   border-radius: 999px;
   box-shadow: 0 12px 28px rgba(66, 226, 138, 0.22);
@@ -698,7 +832,11 @@ html {
 .friend-card,
 .add-friend-panel {
   background:
-    radial-gradient(circle at top right, rgba(114, 255, 183, 0.08), transparent 25%),
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
     linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
   border: 1px solid rgba(114, 255, 183, 0.16);
   border-radius: 18px;

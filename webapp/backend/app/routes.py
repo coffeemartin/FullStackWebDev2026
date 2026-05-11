@@ -1,10 +1,10 @@
-from datetime import date, datetime, timezone
+from datetime import date, timezone
 from zoneinfo import ZoneInfo
 
 from app import app, db
-from flask import jsonify, render_template, flash, redirect, url_for, session, request
+from flask import jsonify, render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
-from app.forms import LoginForm, ExerciseLogForm
+from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
 from sqlalchemy.exc import SQLAlchemyError
@@ -66,6 +66,13 @@ def get_bmi_fitness_points(category):
         "Avoid comparing your progress with someone else's journey.",
         "Small improvements each week can become lasting habits."
     ])
+
+from app.ai_page import * 
+from app.ai_service import generate_ai_plan
+from app.models import LLMRecommendation
+import json
+from werkzeug.datastructures import MultiDict
+
 
 
 @app.route("/", methods=['GET', 'POST'])
@@ -366,11 +373,210 @@ def exercise():
         recommendation=recommendation,
     )
 
-
-@app.route("/AI")
+# this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
+# all in one flow. If user want to update the generated plan, that will be handled by a separate route /AI/save-all 
+# which only updates the training plan of the latest recommendation.
+@app.route("/AI", methods=["GET", "POST"])
+@login_required
 def AI():
-    return render_template('AI.html', title='AI')
+    csrf_form = CSRFOnlyForm()
+    # maximum days of history allowed to include in LLM input
+    MAX_HISTORY_DAYS = 90
 
+    if request.method == "POST":
+        if not csrf_form.validate_on_submit():
+            flash("Your session expired. Please try again.")
+            return redirect(url_for("AI"))
+       
+        form_action = request.form.get("form_action", "generate")
+        # If user submitted the profile update form, update the user's profile and return without generating new plan
+        # This form_action is corresponding to the hidden input field in the profile edit form, 
+        # which allows me to use the same route for both profile updates and plan generation.
+        if form_action == "update_profile":
+            current_user.age = _coerce_int(request.form.get("age"))
+            current_user.height_cm = _coerce_float(request.form.get("height_cm"))
+            current_user.weight_kg = _coerce_float(request.form.get("weight_kg"))
+            current_user.goal = request.form.get("goal", "").strip() or None
+            current_user.injury_notes = request.form.get("injury_notes", "").strip() or None
+
+            db.session.commit()
+            flash("Your profile has been updated.")
+            return redirect(url_for("AI"))
+
+
+        # Ifg form_action is not profile update, proceed to generate new plan. 
+        # This allows user to update their profile and immediately see the impact of their changes on the generated plan in one seamless flow.
+        # allow user to specify number of days of history (cap to 90, default to 30) to include in LLM input when generating plan
+        try:
+            days = int(request.form.get("history_days", 30))
+        except (TypeError, ValueError):
+            days = 30
+
+        if days < 1:
+            days = 1
+        if days > MAX_HISTORY_DAYS:
+            days = MAX_HISTORY_DAYS
+
+        # allow user to control creativity, clamp to [0, 1], default 0
+        try:
+            temperature = float(request.form.get("temperature", 0))
+        except (TypeError, ValueError):
+            temperature = 0.0
+
+        if temperature < 0:
+            temperature = 0.0
+        if temperature > 1:
+            temperature = 1.0
+
+        ai_input = build_ai_input(current_user, days=days)
+        ai_response = generate_ai_plan(ai_input, temperature=temperature)
+
+        recommendation = LLMRecommendation(
+            user_id=current_user.id,
+            input_summary=json.dumps(ai_input),
+            llm_comments=ai_response["summary_comment"],
+        )
+
+        recommendation.set_training_plan(ai_response["weekly_training_plan"])
+        recommendation.set_nutrition_plan(ai_response["nutrition_plan"])
+
+        db.session.add(recommendation)
+        db.session.commit()
+
+        flash("Customised plan generated successfully.")
+        return redirect(url_for("AI"))
+
+
+    # On GET, query the database and show the latest recommendation (even if not saved) so user can continue editing if they want
+    # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
+    latest_recommendation = (
+        LLMRecommendation.query
+        .filter_by(user_id=current_user.id)
+        .order_by(LLMRecommendation.created_at.desc())
+        .first()
+    )
+    # On GET, show the recent 5 saved recommendations from the database
+    saved_recommendations = (
+        LLMRecommendation.query
+        .filter_by(user_id=current_user.id, user_saved=True)
+        .order_by(LLMRecommendation.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return render_template(
+        "AI.html",
+        latest_recommendation=latest_recommendation,
+        saved_recommendations=saved_recommendations,
+        csrf_form=csrf_form,
+    )
+
+
+def _coerce_int(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    return int(value)
+
+
+def _coerce_float(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    return float(value)
+
+@app.route("/AI/save-all", methods=["POST"]) 
+@login_required
+def save_ai_all():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        flash("Your edit session expired. Please try again.")
+        return redirect(url_for("AI"))
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    training_plan_json = request.form.get("training_plan_json", "")
+
+    if recommendation_id is None or not training_plan_json:
+        flash("Could not save that plan.")
+        return redirect(url_for("AI"))
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        flash("Could not find that AI plan.")
+        return redirect(url_for("AI"))
+
+    try:
+        training_plan = json.loads(training_plan_json)
+    except Exception:
+        flash("Invalid plan data.")
+        return redirect(url_for("AI"))
+
+    recommendation.set_training_plan(training_plan)
+
+    # Extract exercise names from the training plan and add to Exercise table if needed
+    try:
+        for day in training_plan:
+            for exercise in day.get("exercises", []):
+                exercise_name = exercise.get("name", "").strip()
+
+                if exercise_name:
+                    existing_exercise = Exercise.query.filter(
+                        db.func.lower(Exercise.name) == exercise_name.lower()
+                    ).first()
+
+                    if existing_exercise is None:
+                        new_exercise = Exercise(
+                            name=exercise_name,
+                            category=None,
+                            muscle_group=None,
+                            equipment=None,
+                        )
+                        db.session.add(new_exercise)
+    except Exception as e:
+        # Log the error but don't fail the save
+        flash(f"Warning: Could not add some exercises to your exercise library: {str(e)}")
+
+    # If request included mark_saved, mark this recommendation as saved
+    mark_saved = request.form.get("mark_saved")
+    if mark_saved:
+        recommendation.user_saved = True
+
+    db.session.commit()
+
+    flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
+    return redirect(url_for("AI"))
+
+
+@app.route("/AI/delete-reco", methods=["POST"])
+@login_required
+def delete_reco():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        return jsonify({"success": False, "error": "Session expired."}), 400
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        return jsonify({"success": False, "error": "Missing recommendation id."}), 400
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        return jsonify({"success": False, "error": "Recommendation not found."}), 404
+
+    try:
+        db.session.delete(recommendation)
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/myprofile", methods=['GET', 'POST'])
 @login_required
