@@ -239,22 +239,28 @@
 
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label">{{ form.exercise_id.label.text }}</label>
-            <select
-              class="form-select exercise-input"
-              id="{{ form.exercise_id.id }}"
-              name="{{ form.exercise_id.name }}"
-            >
-              {% for exercise in exercise_options %}
-                <option
-                  value="{{ exercise.id }}"
-                  data-category="{{ exercise.category or '' }}"
-                  {% if form.exercise_id.data == exercise.id %}selected{% endif %}
-                >
-                  {{ exercise.name }}
-                </option>
-              {% endfor %}
-            </select>
+            <label class="form-label" for="exercise-search">{{ form.exercise_id.label.text }}</label>
+            <div class="exercise-autocomplete-wrap" style="position:relative;">
+              <input
+                type="text"
+                id="exercise-search"
+                class="form-control exercise-input"
+                placeholder="Click or type to search exercises..."
+                autocomplete="off"
+              />
+              <ul
+                id="exercise-dropdown"
+                style="display:none; position:absolute; z-index:1000; width:100%; max-height:220px;
+                       overflow-y:auto; background:#1e1e1e; border:1px solid #3a3a3a;
+                       border-radius:8px; margin:0; padding:0; list-style:none; top:100%;"
+              ></ul>
+              <input
+                type="hidden"
+                id="{{ form.exercise_id.id }}"
+                name="{{ form.exercise_id.name }}"
+                value="{{ form.exercise_id.data or '' }}"
+              />
+            </div>
             {{ render_errors(form.exercise_id) }}
             <p class="exercise-field-help mb-0 mt-2">
               Choose the workout you completed. The form will adapt to strength or cardio-style exercises.
@@ -412,7 +418,9 @@
 {% block scripts %}
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const exerciseSelect = document.getElementById("exercise_id");
+    const exerciseHidden = document.getElementById("exercise_id");
+    const exerciseSearch = document.getElementById("exercise-search");
+    const dropdown = document.getElementById("exercise-dropdown");
     const logSection = document.getElementById("workout-log-section");
     const guidanceBox = document.getElementById("exercise-log-guidance");
     const strengthFieldGroups = document.querySelectorAll("[data-strength-field]");
@@ -420,6 +428,12 @@
       document.querySelectorAll("[data-strength-field] input, [data-strength-field] select, [data-strength-field] textarea")
     );
     const notesField = document.getElementById("notes");
+
+    const allExercises = [
+      {% for exercise in exercise_options %}
+        { id: "{{ exercise.id }}", name: {{ exercise.name | tojson }}, category: {{ (exercise.category or '') | tojson }} },
+      {% endfor %}
+    ];
 
     const getExerciseMode = (categoryText) => {
       const category = (categoryText || "").toLowerCase();
@@ -457,60 +471,81 @@
       };
     };
 
-    const updateWorkoutFields = () => {
-      if (!exerciseSelect) {
-        return;
-      }
-
-      const selectedOption = exerciseSelect.options[exerciseSelect.selectedIndex];
-      const mode = getExerciseMode(selectedOption ? selectedOption.dataset.category : "");
-
-      strengthFieldGroups.forEach((group) => {
-        group.classList.toggle("d-none", !mode.showStrengthFields);
-      });
-
-      strengthInputs.forEach((input) => {
-        input.disabled = !mode.showStrengthFields;
-      });
-
-      if (guidanceBox) {
-        guidanceBox.textContent = mode.message;
-      }
-
-      if (notesField) {
-        notesField.placeholder = mode.showStrengthFields
-          ? "How did the workout feel today?"
-          : "Add pace, distance, intervals, or how the session felt.";
-      }
+    const applyMode = (category) => {
+      const mode = getExerciseMode(category);
+      strengthFieldGroups.forEach((g) => g.classList.toggle("d-none", !mode.showStrengthFields));
+      strengthInputs.forEach((i) => { i.disabled = !mode.showStrengthFields; });
+      if (guidanceBox) guidanceBox.textContent = mode.message;
+      if (notesField) notesField.placeholder = mode.showStrengthFields
+        ? "How did the workout feel today?"
+        : "Add pace, distance, intervals, or how the session felt.";
     };
 
-    if (exerciseSelect) {
-      exerciseSelect.addEventListener("change", updateWorkoutFields);
-      updateWorkoutFields();
+    const showDropdown = (filtered) => {
+      dropdown.innerHTML = "";
+      if (!filtered.length) {
+        dropdown.style.display = "none";
+        return;
+      }
+      filtered.forEach((ex) => {
+        const li = document.createElement("li");
+        li.textContent = ex.name;
+        li.dataset.id = ex.id;
+        li.dataset.category = ex.category;
+        li.style.cssText = "padding:10px 14px; cursor:pointer; color:#fff; font-size:0.95rem;";
+        li.addEventListener("mouseenter", () => { li.style.background = "#2e2e2e"; });
+        li.addEventListener("mouseleave", () => { li.style.background = ""; });
+        li.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          exerciseSearch.value = ex.name;
+          exerciseHidden.value = ex.id;
+          dropdown.style.display = "none";
+          applyMode(ex.category);
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.style.display = "block";
+    };
+
+    // Set initial display value if form already has a selection
+    const preselected = allExercises.find((e) => e.id == exerciseHidden.value);
+    if (preselected) {
+      exerciseSearch.value = preselected.name;
+      applyMode(preselected.category);
+    } else if (allExercises.length) {
+      exerciseHidden.value = allExercises[0].id;
+      exerciseSearch.value = allExercises[0].name;
+      applyMode(allExercises[0].category);
     }
 
+    exerciseSearch.addEventListener("focus", () => {
+      const q = exerciseSearch.value.toLowerCase();
+      showDropdown(q ? allExercises.filter((e) => e.name.toLowerCase().includes(q)) : allExercises);
+    });
+
+    exerciseSearch.addEventListener("input", () => {
+      const q = exerciseSearch.value.toLowerCase();
+      showDropdown(q ? allExercises.filter((e) => e.name.toLowerCase().includes(q)) : allExercises);
+    });
+
+    exerciseSearch.addEventListener("blur", () => {
+      setTimeout(() => { dropdown.style.display = "none"; }, 150);
+    });
+
+    // Log This Exercise shortcut buttons from modals
     document.querySelectorAll(".exercise-log-shortcut").forEach((button) => {
       button.addEventListener("click", () => {
-        if (!exerciseSelect) {
-          return;
-        }
-
         const targetName = button.dataset.exerciseName;
-        const matchingOption = Array.from(exerciseSelect.options).find(
-          (option) => option.text.trim() === targetName
-        );
-
-        if (matchingOption) {
-          exerciseSelect.value = matchingOption.value;
+        const match = allExercises.find((e) => e.name.trim() === targetName);
+        if (match) {
+          exerciseSearch.value = match.name;
+          exerciseHidden.value = match.id;
+          applyMode(match.category);
         }
-
-        updateWorkoutFields();
-
         if (logSection) {
           logSection.scrollIntoView({ behavior: "smooth", block: "start" });
         }
-
-        exerciseSelect.focus();
+        exerciseSearch.focus();
       });
     });
 
