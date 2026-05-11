@@ -5,9 +5,9 @@ from app import app, db
 from flask import jsonify, render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
-from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
+from app.models import User, Exercise, ExerciseLog, Food, Friendship, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -67,6 +67,18 @@ def get_bmi_fitness_points(category):
         "Avoid comparing your progress with someone else's journey.",
         "Small improvements each week can become lasting habits."
     ])
+
+
+def find_friendship_between(user_id, other_user_id):
+    return Friendship.query.filter(or_(
+        and_(Friendship.requester_id == user_id, Friendship.receiver_id == other_user_id),
+        and_(Friendship.requester_id == other_user_id, Friendship.receiver_id == user_id)
+    )).first()
+
+
+def users_are_friends(user_id, other_user_id):
+    friendship = find_friendship_between(user_id, other_user_id)
+    return bool(friendship and friendship.status == "accepted")
 
 from app.ai_page import * 
 from app.ai_service import generate_ai_plan
@@ -586,10 +598,41 @@ def myprofile():
 
     if request.method == 'POST' and request.form.get('form_type') == 'add_friend':
         friend_username = request.form.get('friend_username', '').strip()
-        if friend_username:
-            flash(f"Friend request ready for {friend_username}.")
-        else:
+        friend = User.query.filter_by(username=friend_username).first()
+        if not friend:
             flash("Please choose a friend to add.")
+        elif friend.id == current_user.id:
+            flash("You cannot send a friend request to yourself.")
+        elif find_friendship_between(current_user.id, friend.id):
+            flash("A friend request or friendship already exists with this user.")
+        else:
+            db.session.add(Friendship(
+                requester_id=current_user.id,
+                receiver_id=friend.id,
+                status="pending"
+            ))
+            db.session.commit()
+            flash(f"Friend request sent to {friend.name or friend.username}.")
+        return redirect(url_for('myprofile', friend_search=friend_search))
+
+    if request.method == 'POST' and request.form.get('form_type') in {"accept_friend", "decline_friend"}:
+        friendship_id = request.form.get('friendship_id')
+        friendship = Friendship.query.filter_by(
+            id=friendship_id,
+            receiver_id=current_user.id,
+            status="pending"
+        ).first()
+
+        if not friendship:
+            flash("Friend request could not be found.")
+        elif request.form.get('form_type') == "accept_friend":
+            friendship.status = "accepted"
+            db.session.commit()
+            flash(f"You are now friends with {friendship.requester.name or friendship.requester.username}.")
+        else:
+            friendship.status = "declined"
+            db.session.commit()
+            flash(f"Friend request from {friendship.requester.name or friendship.requester.username} declined.")
         return redirect(url_for('myprofile', friend_search=friend_search))
 
     bmi = None
@@ -618,12 +661,54 @@ def myprofile():
         perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
         latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
+    connected_friendships = Friendship.query.filter(
+        or_(
+            Friendship.requester_id == current_user.id,
+            Friendship.receiver_id == current_user.id
+        ),
+        Friendship.status.in_(["pending", "accepted"])
+    ).all()
+    connected_user_ids = {
+        item.receiver_id if item.requester_id == current_user.id else item.requester_id
+        for item in connected_friendships
+    }
+
+    incoming_requests = (
+        Friendship.query
+        .filter_by(receiver_id=current_user.id, status="pending")
+        .order_by(Friendship.created_at.desc())
+        .all()
+    )
+    outgoing_requests = (
+        Friendship.query
+        .filter_by(requester_id=current_user.id, status="pending")
+        .order_by(Friendship.created_at.desc())
+        .all()
+    )
+    accepted_friendships = (
+        Friendship.query
+        .filter(
+            or_(
+                Friendship.requester_id == current_user.id,
+                Friendship.receiver_id == current_user.id
+            ),
+            Friendship.status == "accepted"
+        )
+        .order_by(Friendship.updated_at.desc())
+        .all()
+    )
+    accepted_friends = [
+        item.receiver if item.requester_id == current_user.id else item.requester
+        for item in accepted_friendships
+    ]
+
     app_friends = []
     if friend_search:
         search_pattern = f"%{friend_search}%"
         app_friends = (
             User.query
             .filter(User.id != current_user.id)
+            .filter(~User.id.in_(connected_user_ids) if connected_user_ids else True)
             .filter(or_(
                 User.name.ilike(search_pattern),
                 User.username.ilike(search_pattern),
@@ -644,7 +729,44 @@ def myprofile():
         bmi_quote=bmi_quote,
         fitness_points=fitness_points,
         app_friends=app_friends,
-        friend_search=friend_search
+        friend_search=friend_search,
+        incoming_requests=incoming_requests,
+        outgoing_requests=outgoing_requests,
+        accepted_friends=accepted_friends
+    )
+
+
+@app.route("/profile/<int:user_id>")
+@login_required
+def friend_profile(user_id):
+    friend = db.session.get(User, user_id)
+    if not friend:
+        flash("Profile could not be found.")
+        return redirect(url_for("myprofile"))
+
+    if friend.id != current_user.id and not users_are_friends(current_user.id, friend.id):
+        flash("You can view this profile after the friend request is accepted.")
+        return redirect(url_for("myprofile"))
+
+    bmi = None
+    bmi_category = None
+    bmi_quote = "This user has not added height and weight yet."
+    fitness_points = get_bmi_fitness_points(None)
+    if friend.height_cm and friend.weight_kg:
+        try:
+            bmi, bmi_category, bmi_quote = calculate_bmi_result(friend.height_cm, friend.weight_kg)
+            fitness_points = get_bmi_fitness_points(bmi_category)
+        except ValueError:
+            pass
+
+    return render_template(
+        "friend_profile.html",
+        title=f"{friend.name or friend.username} Profile",
+        friend=friend,
+        bmi=bmi,
+        bmi_category=bmi_category,
+        bmi_quote=bmi_quote,
+        fitness_points=fitness_points
     )
 
 

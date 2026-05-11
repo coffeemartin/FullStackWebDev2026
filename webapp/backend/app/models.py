@@ -36,6 +36,16 @@ class User(UserMixin, db.Model):
     recommendations: so.Mapped[list["LLMRecommendation"]] = so.relationship(back_populates="user")
     login_events: so.Mapped[list["LoginEvent"]] = so.relationship(back_populates="user")
     embeddings: so.Mapped[list["UserEmbedding"]] = so.relationship(back_populates="user")
+    sent_friendships: so.Mapped[list["Friendship"]] = so.relationship(
+        foreign_keys="Friendship.requester_id",
+        back_populates="requester",
+        cascade="all, delete-orphan",
+    )
+    received_friendships: so.Mapped[list["Friendship"]] = so.relationship(
+        foreign_keys="Friendship.receiver_id",
+        back_populates="receiver",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -61,6 +71,33 @@ class LoginEvent(db.Model):
     success: so.Mapped[bool] = so.mapped_column(default=True)
 
     user: so.Mapped["User"] = so.relationship(back_populates="login_events")
+
+
+class Friendship(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    requester_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    receiver_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    status: so.Mapped[str] = so.mapped_column(sa.String(20), default="pending", server_default="pending", index=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    requester: so.Mapped["User"] = so.relationship(
+        foreign_keys=[requester_id],
+        back_populates="sent_friendships",
+    )
+    receiver: so.Mapped["User"] = so.relationship(
+        foreign_keys=[receiver_id],
+        back_populates="received_friendships",
+    )
+
+    __table_args__ = (
+        sa.UniqueConstraint("requester_id", "receiver_id", name="uq_friendship_request_pair"),
+        sa.CheckConstraint("requester_id != receiver_id", name="ck_friendship_not_self"),
+    )
+
+    def __repr__(self):
+        return f"<Friendship {self.requester_id}->{self.receiver_id} {self.status}>"
+
 
 class Exercise(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)

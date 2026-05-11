@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="profile-page">
+  <section class="profile-hero profile-hero--bmi">
+    <div>
+      <span class="profile-kicker">Friend Profile</span>
+      <h1 class="profile-title">{{ friend.name or friend.username }}</h1>
+      <p class="profile-subtitle">{{ bmi_quote }}</p>
+      <a class="friend-profile-link friend-profile-link--back" href="{{ url_for('myprofile') }}">Back to My Profile</a>
+    </div>
+
+    <div class="profile-bmi-card">
+      <div class="profile-photo-wrap">
+        <div class="profile-photo">{{ (friend.name or friend.username)[:1] }}</div>
+        <div>
+          <span>Connected Friend</span>
+          <strong>@{{ friend.username }}</strong>
+        </div>
+      </div>
+
+      <p class="profile-card-label">Current BMI</p>
+      {% if bmi %}
+        <div class="profile-bmi-value">{{ bmi }}</div>
+        <strong>{{ bmi_category }}</strong>
+      {% else %}
+        <div class="profile-bmi-value">--</div>
+        <strong>Profile details needed</strong>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="profile-two-column">
+    <div class="profile-panel">
+      <div class="section-heading section-heading--left">
+        <h2>Friend Details</h2>
+        <p>Basic profile information shared after accepting a friend request.</p>
+      </div>
+
+      <div class="profile-info-list">
+        <div><span>Name</span><strong>{{ friend.name | default('Not set', true) }}</strong></div>
+        <div><span>Gender</span><strong>{{ friend.gender | default('Not set', true) }}</strong></div>
+        <div><span>Activity</span><strong>{{ friend.activity_level | default('Not set', true) }}</strong></div>
+        <div><span>Goal</span><strong>{{ friend.goal | default('Not set', true) }}</strong></div>
+      </div>
+    </div>
+
+    <div class="profile-panel">
+      <div class="section-heading section-heading--left">
+        <h2>Fitness Focus</h2>
+        <p>General points based on this friend's BMI category.</p>
+      </div>
+
+      <ol class="fitness-point-list">
+        {% for point in fitness_points %}
+          <li>{{ point }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+  </section>
+</section>
+{% endblock %}
