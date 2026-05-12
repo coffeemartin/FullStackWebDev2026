@@ -457,17 +457,32 @@ def AI():
         db.session.commit()
 
         flash("Customised plan generated successfully.")
-        return redirect(url_for("AI"))
+        return redirect(url_for("AI", recommendation_id=recommendation.id))
 
 
-    # On GET, query the database and show the latest recommendation (even if not saved) so user can continue editing if they want
-    # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
-    latest_recommendation = (
-        LLMRecommendation.query
-        .filter_by(user_id=current_user.id)
-        .order_by(LLMRecommendation.created_at.desc())
-        .first()
-    )
+    recommendation_id = request.args.get("recommendation_id", type=int)
+    latest_recommendation = None
+
+    if recommendation_id is not None:
+        latest_recommendation = LLMRecommendation.query.filter_by(
+            id=recommendation_id,
+            user_id=current_user.id,
+        ).first()
+
+    if latest_recommendation is None:
+        # On GET, prefer the user's current plan. If they have not marked one yet,
+        # fall back to the most recent recommendation so the page still has a plan to show.
+        latest_recommendation = (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id, is_current=True)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        ) or (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        )
     # On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query
@@ -562,6 +577,38 @@ def save_ai_all():
 
     flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
     return redirect(url_for("AI"))
+
+
+@app.route("/AI/set-current", methods=["POST"])
+@login_required
+def set_current_reco():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        return jsonify({"success": False, "error": "Session expired."}), 400
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        return jsonify({"success": False, "error": "Missing recommendation id."}), 400
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        return jsonify({"success": False, "error": "Recommendation not found."}), 404
+
+    try:
+        LLMRecommendation.query.filter_by(
+            user_id=current_user.id,
+            is_current=True,
+        ).update({"is_current": None})
+        recommendation.is_current = True
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/AI/delete-reco", methods=["POST"])

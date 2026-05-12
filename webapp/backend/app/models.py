@@ -165,6 +165,17 @@ class LLMRecommendation(db.Model):
     training_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
     nutrition_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
     user_saved: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False, server_default=sa.false())
+    is_current: so.Mapped[Optional[bool]] = so.mapped_column(sa.Boolean, nullable=True, default=None)
+
+    __table_args__ = (
+        sa.Index(
+            "uq_llm_recommendation_one_current_per_user",
+            "user_id",
+            unique=True,
+            sqlite_where=sa.text("is_current = 1"),
+            postgresql_where=sa.text("is_current IS TRUE"),
+        ),
+    )
 
     user: so.Mapped["User"] = so.relationship(back_populates="recommendations")
 

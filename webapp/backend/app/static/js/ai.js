@@ -391,6 +391,39 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Delete recommendation handler
+  document.querySelectorAll(".set-current-btn").forEach(function (btn) {
+    btn.addEventListener("click", function (e) {
+      var tr = e.target.closest("tr");
+      if (!tr) return;
+      var recoId = tr.getAttribute("data-reco-id");
+      if (!recoId) return;
+
+      var csrfInput = document.querySelector('input[name="csrf_token"]');
+      var token = csrfInput ? csrfInput.value : null;
+
+      var fd = new FormData();
+      if (token) fd.append("csrf_token", token);
+      fd.append("recommendation_id", recoId);
+
+      fetch("/AI/set-current", { method: "POST", body: fd })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("Request failed");
+          return resp.json();
+        })
+        .then(function (data) {
+          if (data && data.success) {
+            window.location.reload();
+          } else {
+            alert((data && data.error) || "Could not set current plan.");
+          }
+        })
+        .catch(function (err) {
+          console.error(err);
+          alert("Could not set current plan.");
+        });
+    });
+  });
+
   document.querySelectorAll(".delete-reco-btn").forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       var tr = e.target.closest("tr");
