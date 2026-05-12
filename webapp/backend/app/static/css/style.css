@@ -817,6 +817,113 @@ html {
   margin-bottom: 0;
 }
 
+.friend-status-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.friend-status-panel,
+.friend-request-panel {
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(114, 255, 183, 0.08),
+      transparent 25%
+    ),
+    linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
+  border: 1px solid rgba(114, 255, 183, 0.16);
+  border-radius: 18px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.22);
+}
+
+.friend-status-panel {
+  padding: 1rem;
+}
+
+.friend-status-panel strong {
+  color: var(--fit-accent);
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.friend-status-panel p {
+  color: var(--fit-text-soft);
+  margin: 0.35rem 0 0;
+}
+
+.friend-request-panel {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.friend-request-panel h3 {
+  color: #f4fff8;
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.friend-request-card {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(114, 255, 183, 0.12);
+  border-radius: 16px;
+  display: flex;
+  gap: 1rem;
+  padding: 0.9rem;
+}
+
+.friend-request-card h4 {
+  color: #f4fff8;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.friend-request-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.friend-request-actions button,
+.friend-profile-link {
+  align-items: center;
+  border-radius: 12px;
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+}
+
+.friend-request-actions button,
+.friend-profile-link {
+  background: linear-gradient(135deg, #118344, #42e28a);
+  border: 0;
+  color: #06150d;
+}
+
+.friend-request-actions .friend-decline-button {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #f4fff8;
+}
+
+.friend-profile-link {
+  margin-left: auto;
+}
+
+.friend-profile-link--back {
+  margin-left: 0;
+  margin-top: 1rem;
+}
+
 .friend-search-panel {
   background:
     radial-gradient(
@@ -1047,6 +1154,23 @@ html {
   .friend-card {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .friend-request-card,
+  .friend-request-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .friend-request-actions,
+  .friend-profile-link {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .friend-request-actions form,
+  .friend-request-actions button {
+    width: 100%;
   }
 
   .friend-card-action {

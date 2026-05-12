@@ -3,6 +3,7 @@
 
 # database files
 *.db
+*.db-journal
 
 # virtual environment
 application-env/
