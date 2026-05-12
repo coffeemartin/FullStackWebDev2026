@@ -457,18 +457,25 @@ def AI():
         db.session.commit()
 
         flash("Customised plan generated successfully.")
+        ## Updated this to inlcude the new recommendation id as query param,
+        ## so that after generation, the page will show the newly generated plan 
+        # instead of defaulting back to the most recent saved plan.
         return redirect(url_for("AI", recommendation_id=recommendation.id))
 
 
     recommendation_id = request.args.get("recommendation_id", type=int)
     latest_recommendation = None
 
+    # firstly try to find the recommendation based on the recommendation_id query param, 
+    # which is set after a new plan generation or when user clicks on a past plan to view details. 
+    # This allows the page to show the generated plan right after generation.
     if recommendation_id is not None:
         latest_recommendation = LLMRecommendation.query.filter_by(
             id=recommendation_id,
             user_id=current_user.id,
         ).first()
 
+    # If no recommendation found based on the query param, then try to find the user's current plan.
     if latest_recommendation is None:
         # On GET, prefer the user's current plan. If they have not marked one yet,
         # fall back to the most recent recommendation so the page still has a plan to show.
@@ -477,6 +484,7 @@ def AI():
             .filter_by(user_id=current_user.id, is_current=True)
             .order_by(LLMRecommendation.created_at.desc())
             .first()
+        # if current plan not found, fall back to most recent recommendation to show on the page 
         ) or (
             LLMRecommendation.query
             .filter_by(user_id=current_user.id)
@@ -799,6 +807,11 @@ def friend_profile(user_id):
     bmi_category = None
     bmi_quote = "This user has not added height and weight yet."
     fitness_points = get_bmi_fitness_points(None)
+    current_recommendation = (
+        LLMRecommendation.query
+        .filter_by(user_id=friend.id, is_current=True)
+        .first()
+    )
     if friend.height_cm and friend.weight_kg:
         try:
             bmi, bmi_category, bmi_quote = calculate_bmi_result(friend.height_cm, friend.weight_kg)
@@ -814,6 +827,7 @@ def friend_profile(user_id):
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
         fitness_points=fitness_points
+        ,current_recommendation=current_recommendation
     )
 
 

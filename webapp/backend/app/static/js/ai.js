@@ -110,7 +110,7 @@ if (generateMagicBtn) {
       } else {
         generateForm.submit();
       }
-    }, 420);
+    }, 220);
   };
 
   if (generateForm) {

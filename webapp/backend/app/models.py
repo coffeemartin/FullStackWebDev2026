@@ -167,6 +167,12 @@ class LLMRecommendation(db.Model):
     user_saved: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False, server_default=sa.false())
     is_current: so.Mapped[Optional[bool]] = so.mapped_column(sa.Boolean, nullable=True, default=None)
 
+
+# The frontend will handle the logic to set is_current=True for the selected plan and is_current=False for all other plans of the user when they mark a plan as current.
+# The route handler will also ensure that when a new plan is generated and marked as current, all other plans for that user are automatically updated to is_current=False, so the user doesn't have to manually unmark the previous current plan.
+# But below is database level validation, Not just frontend!!!! Not just Flask backend validation !!!!
+# this is the safety net to ensure data integrity at the database level.
+# Add a unique partial index to enforce that each user can only have one recommendation marked as current.
     __table_args__ = (
         sa.Index(
             "uq_llm_recommendation_one_current_per_user",
