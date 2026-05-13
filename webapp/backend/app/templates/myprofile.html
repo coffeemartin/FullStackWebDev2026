@@ -65,36 +65,6 @@
     </div>
   </section>
 
-  <section class="profile-section">
-    <div class="section-heading">
-      <h2>Account Details</h2>
-      <p>Your saved sign-in information.</p>
-    </div>
-
-    <div class="profile-grid">
-      <article class="profile-card">
-        <span>Username</span>
-        <strong>{{ user.username }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Email</span>
-        <strong>{{ user.email }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>User ID</span>
-        <strong>{{ user.id }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Created at</span>
-        <strong>{{ user.created_at | default('Not set', true) }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Most recent login</span>
-        <strong>{{ latest_login_at | default('Not set', true) }}</strong>
-      </article>
-    </div>
-  </section>
-
   <section class="profile-section friends-section">
     <div class="section-heading">
       <h2>Friends Network</h2>
@@ -117,6 +87,47 @@
         <strong>{{ outgoing_requests|length }}</strong>
         <p>Requests waiting for reply</p>
       </article>
+    </div>
+
+    <div class="profile-circle-panel">
+      <div class="profile-circle-heading">
+        <div>
+          <span class="profile-card-label">People</span>
+          <h3>Connect with app users</h3>
+        </div>
+        <p>Tap the plus to search, or view a connected friend.</p>
+      </div>
+
+      <div class="profile-circle-row">
+        <button class="profile-circle-add" id="openFriendSearch" type="button" aria-label="Search and add friends">
+          <span>+</span>
+          <small>Add</small>
+        </button>
+
+        {% set visible_accepted = accepted_friends[:6] %}
+        {% set suggestion_slots = 6 - (visible_accepted|length) %}
+
+        {% for friend in visible_accepted %}
+          <a class="profile-circle-link" href="{{ url_for('friend_profile', user_id=friend.id) }}">
+            <span class="profile-circle-avatar">{{ (friend.name or friend.username)[:1] }}</span>
+            <small>{{ friend.name or friend.username }}</small>
+          </a>
+        {% endfor %}
+
+        {% for person in suggested_friends[:suggestion_slots] %}
+          <form class="profile-circle-form" action="{{ url_for('myprofile') }}" method="post">
+            <input type="hidden" name="form_type" value="add_friend">
+            <input type="hidden" name="friend_username" value="{{ person.username }}">
+            <button class="profile-circle-link profile-circle-link--suggested" type="submit">
+            <span class="profile-circle-avatar">
+              {{ (person.name or person.username)[:1] }}
+              <span class="profile-circle-plus">+</span>
+            </span>
+            <small>{{ person.name or person.username }}</small>
+            </button>
+          </form>
+        {% endfor %}
+      </div>
     </div>
 
     {% if incoming_requests %}
@@ -178,20 +189,23 @@
           placeholder="Type a name or login ID"
           autocomplete="off"
         >
-        <button type="submit">Search</button>
         {% if friend_search %}
           <a href="{{ url_for('myprofile') }}">Clear</a>
         {% endif %}
       </div>
+      <p class="friend-live-status" id="friendSearchStatus">
+        Start typing to find people who are not already connected with you.
+      </p>
     </form>
 
     <div class="friends-layout">
-      <div class="friends-list">
+      <div class="friends-list" id="friendSearchResults">
         {% if friend_search and app_friends %}
           {% for friend in app_friends %}
-            <article class="friend-card">
-              <div class="friend-avatar">{{ (friend.name or friend.username)[:1] }}</div>
+            <article class="friend-card friend-card--discover">
+              <div class="friend-avatar friend-avatar--discover">{{ (friend.name or friend.username)[:1] }}</div>
               <div class="friend-details">
+                <span class="friend-card-kicker">Suggested friend</span>
                 <h3>{{ friend.name or friend.username }}</h3>
                 <p>@{{ friend.username }}</p>
                 <span>{{ friend.goal or 'Fitness journey in progress' }}</span>
@@ -200,7 +214,10 @@
                 <input type="hidden" name="form_type" value="add_friend">
                 <input type="hidden" name="friend_username" value="{{ friend.username }}">
                 <input type="hidden" name="friend_search" value="{{ friend_search }}">
-                <button type="submit">Request</button>
+                <button class="friend-add-button" type="submit">
+                  <span>+</span>
+                  Add Friend
+                </button>
               </form>
             </article>
           {% endfor %}
@@ -220,23 +237,107 @@
           </article>
         {% endif %}
       </div>
-
-      <form class="add-friend-panel" action="{{ url_for('myprofile') }}" method="post">
-        <input type="hidden" name="form_type" value="add_friend">
-        <div>
-          <span class="profile-card-label">Network</span>
-          <label for="friend_username">Quick Add</label>
-        </div>
-        <input type="hidden" name="friend_search" value="{{ friend_search }}">
-        <select id="friend_username" name="friend_username" {% if not app_friends %}disabled{% endif %}>
-          <option value="">Choose from search results</option>
-          {% for friend in app_friends %}
-            <option value="{{ friend.username }}">{{ friend.name or friend.username }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit" {% if not app_friends %}disabled{% endif %}>Send Request</button>
-      </form>
     </div>
   </section>
 </section>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const searchInput = document.getElementById("friend_search");
+    const resultsContainer = document.getElementById("friendSearchResults");
+    const statusText = document.getElementById("friendSearchStatus");
+    const openFriendSearch = document.getElementById("openFriendSearch");
+
+    if (!searchInput || !resultsContainer || !statusText) {
+      return;
+    }
+
+    const escapeHtml = (value) => value.replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char]));
+
+    const renderEmpty = (title, message) => {
+      resultsContainer.innerHTML = `
+        <article class="friend-card friend-card--empty">
+          <div class="friend-details">
+            <h3>${title}</h3>
+            <p>${message}</p>
+          </div>
+        </article>
+      `;
+    };
+
+    const renderResults = (users, query) => {
+      if (!query) {
+        renderEmpty("Search for friends", "Use the search bar above to find classmates who are not already connected with you.");
+        statusText.textContent = "Start typing to find people who are not already connected with you.";
+        return;
+      }
+
+      if (!users.length) {
+        renderEmpty("No matching users found", "Try a different name, login ID, or email.");
+        statusText.textContent = "No users found for this search.";
+        return;
+      }
+
+      resultsContainer.innerHTML = users.map((user) => `
+        <article class="friend-card friend-card--discover">
+          <div class="friend-avatar friend-avatar--discover">${escapeHtml(user.initial)}</div>
+          <div class="friend-details">
+            <span class="friend-card-kicker">Suggested friend</span>
+            <h3>${escapeHtml(user.name)}</h3>
+            <p>@${escapeHtml(user.username)}</p>
+            <span>${escapeHtml(user.goal)}</span>
+          </div>
+          <form class="friend-card-action" action="{{ url_for('myprofile') }}" method="post">
+            <input type="hidden" name="form_type" value="add_friend">
+            <input type="hidden" name="friend_username" value="${escapeHtml(user.username)}">
+            <input type="hidden" name="friend_search" value="${escapeHtml(query)}">
+            <button class="friend-add-button" type="submit">
+              <span>+</span>
+              Add Friend
+            </button>
+          </form>
+        </article>
+      `).join("");
+      statusText.textContent = `${users.length} result${users.length === 1 ? "" : "s"} found.`;
+    };
+
+    let searchTimer;
+    const runLiveSearch = () => {
+      const query = searchInput.value.trim();
+      window.clearTimeout(searchTimer);
+
+      searchTimer = window.setTimeout(async () => {
+        if (!query) {
+          renderResults([], "");
+          return;
+        }
+
+        try {
+          statusText.textContent = "Searching...";
+          const response = await fetch(`{{ url_for('search_friends') }}?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+          renderResults(data.results || [], query);
+        } catch {
+          renderEmpty("Search is unavailable", "Please refresh the page and try again.");
+          statusText.textContent = "Friend search could not load right now.";
+        }
+      }, 250);
+    };
+
+    searchInput.addEventListener("input", runLiveSearch);
+
+    if (openFriendSearch) {
+      openFriendSearch.addEventListener("click", () => {
+        searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        searchInput.focus();
+      });
+    }
+  });
+</script>
 {% endblock %}
