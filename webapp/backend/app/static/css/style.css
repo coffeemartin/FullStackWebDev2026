@@ -854,6 +854,144 @@ html {
   margin: 0.35rem 0 0;
 }
 
+.profile-circle-panel {
+  background:
+    radial-gradient(circle at top left, rgba(114, 255, 183, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
+  border: 1px solid rgba(114, 255, 183, 0.16);
+  border-radius: 22px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.22);
+  margin-bottom: 1rem;
+  overflow: hidden;
+  padding: 1rem;
+}
+
+.profile-circle-heading {
+  align-items: end;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.profile-circle-heading h3 {
+  color: #f4fff8;
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin: 0;
+}
+
+.profile-circle-heading p {
+  color: var(--fit-text-soft);
+  margin: 0;
+}
+
+.profile-circle-row {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding: 0.2rem 0.1rem 0.4rem;
+  scrollbar-width: thin;
+}
+
+.profile-circle-add,
+.profile-circle-form,
+.profile-circle-link {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #f4fff8;
+  display: inline-flex;
+  flex: 0 0 82px;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 82px;
+  padding: 0;
+  text-align: center;
+  text-decoration: none;
+}
+
+.profile-circle-form {
+  margin: 0;
+}
+
+.profile-circle-add span,
+.profile-circle-avatar {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 1.35rem;
+  font-weight: 900;
+  height: 4.4rem;
+  justify-content: center;
+  width: 4.4rem;
+}
+
+.profile-circle-add span {
+  background:
+    linear-gradient(135deg, #72ffb7, #25c56d);
+  box-shadow:
+    0 0 0 5px rgba(114, 255, 183, 0.14),
+    0 16px 34px rgba(66, 226, 138, 0.22);
+  color: #06150d;
+  font-size: 2.1rem;
+}
+
+.profile-circle-avatar {
+  background:
+    linear-gradient(135deg, rgba(18, 131, 68, 0.94), rgba(66, 226, 138, 0.86));
+  border: 3px solid rgba(244, 255, 248, 0.82);
+  box-shadow:
+    0 0 0 4px rgba(114, 255, 183, 0.14),
+    0 14px 30px rgba(0, 0, 0, 0.28);
+  color: #06150d;
+  position: relative;
+  text-transform: uppercase;
+}
+
+.profile-circle-link--suggested .profile-circle-avatar {
+  border-style: dashed;
+}
+
+.profile-circle-plus {
+  align-items: center;
+  background: #f4fff8;
+  border: 2px solid #06150d;
+  border-radius: 999px;
+  bottom: -0.2rem;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  color: #118344;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 900;
+  height: 1.45rem;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: -0.15rem;
+  width: 1.45rem;
+}
+
+.profile-circle-add small,
+.profile-circle-link small {
+  color: var(--fit-text-soft);
+  display: -webkit-box;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.15;
+  max-width: 82px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.profile-circle-add:hover span,
+.profile-circle-link:hover .profile-circle-avatar,
+.profile-circle-link:focus .profile-circle-avatar {
+  transform: translateY(-3px) scale(1.03);
+  transition: transform 0.2s ease;
+}
+
 .friend-request-panel {
   display: grid;
   gap: 0.85rem;
@@ -949,7 +1087,7 @@ html {
 .friend-search-row {
   display: grid;
   gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .friend-search-row input {
@@ -996,10 +1134,14 @@ html {
   color: #f4fff8;
 }
 
+.friend-live-status {
+  color: var(--fit-text-soft);
+  font-size: 0.92rem;
+  margin: 0.75rem 0 0;
+}
+
 .friends-layout {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: minmax(0, 2fr) minmax(260px, 0.8fr);
+  display: block;
 }
 
 .friends-list {
@@ -1008,8 +1150,7 @@ html {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
 }
 
-.friend-card,
-.add-friend-panel {
+.friend-card {
   background:
     radial-gradient(
       circle at top right,
@@ -1030,6 +1171,19 @@ html {
   padding: 1rem;
 }
 
+.friend-card--discover {
+  overflow: hidden;
+  position: relative;
+}
+
+.friend-card--discover::before {
+  background: linear-gradient(180deg, #72ffb7, #118344);
+  content: "";
+  inset: 0 auto 0 0;
+  position: absolute;
+  width: 5px;
+}
+
 .friend-avatar {
   align-items: center;
   background: linear-gradient(135deg, #118344, #42e28a);
@@ -1043,6 +1197,25 @@ html {
   justify-content: center;
   text-transform: uppercase;
   width: 3rem;
+}
+
+.friend-avatar--discover {
+  border: 3px solid rgba(244, 255, 248, 0.72);
+  box-shadow:
+    0 0 0 4px rgba(114, 255, 183, 0.18),
+    0 12px 26px rgba(66, 226, 138, 0.22);
+  height: 3.6rem;
+  width: 3.6rem;
+}
+
+.friend-card-kicker {
+  color: var(--fit-accent);
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
 }
 
 .friend-details h3 {
@@ -1073,56 +1246,22 @@ html {
   margin-left: auto;
 }
 
-.add-friend-panel {
-  align-self: start;
-  display: grid;
-  gap: 0.75rem;
-  padding: 1.2rem;
+.friend-add-button {
+  gap: 0.45rem;
+  white-space: nowrap;
 }
 
-.add-friend-panel label {
-  color: #f4fff8;
-  display: block;
-  font-size: 1.2rem;
-  font-weight: 800;
-  margin: 0;
-}
-
-.add-friend-panel select {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(114, 255, 183, 0.2);
-  border-radius: 12px;
-  color: #f4fff8;
-  padding: 0.8rem 0.9rem;
-}
-
-.add-friend-panel select:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.add-friend-panel select option {
-  background: #101d17;
-  color: #f4fff8;
-}
-
-.add-friend-panel button {
-  background: linear-gradient(135deg, #118344, #42e28a);
-  border: 0;
-  border-radius: 12px;
-  color: #06150d;
+.friend-add-button span {
+  align-items: center;
+  background: rgba(6, 21, 13, 0.2);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 1.1rem;
   font-weight: 900;
-  padding: 0.85rem 1rem;
-}
-
-.add-friend-panel button:hover {
-  filter: brightness(1.06);
-}
-
-.add-friend-panel button:disabled {
-  cursor: not-allowed;
-  filter: grayscale(0.45);
-  opacity: 0.65;
+  height: 1.35rem;
+  justify-content: center;
+  line-height: 1;
+  width: 1.35rem;
 }
 
 @media (max-width: 768px) {
@@ -1143,12 +1282,13 @@ html {
     grid-template-columns: 1fr;
   }
 
-  .friends-layout {
+  .friend-search-row {
     grid-template-columns: 1fr;
   }
 
-  .friend-search-row {
-    grid-template-columns: 1fr;
+  .profile-circle-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .friend-card {
