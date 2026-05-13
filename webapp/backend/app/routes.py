@@ -457,17 +457,40 @@ def AI():
         db.session.commit()
 
         flash("Customised plan generated successfully.")
-        return redirect(url_for("AI"))
+        ## Updated this to inlcude the new recommendation id as query param,
+        ## so that after generation, the page will show the newly generated plan 
+        # instead of defaulting back to the most recent saved plan.
+        return redirect(url_for("AI", recommendation_id=recommendation.id))
 
 
-    # On GET, query the database and show the latest recommendation (even if not saved) so user can continue editing if they want
-    # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
-    latest_recommendation = (
-        LLMRecommendation.query
-        .filter_by(user_id=current_user.id)
-        .order_by(LLMRecommendation.created_at.desc())
-        .first()
-    )
+    recommendation_id = request.args.get("recommendation_id", type=int)
+    latest_recommendation = None
+
+    # firstly try to find the recommendation based on the recommendation_id query param, 
+    # which is set after a new plan generation or when user clicks on a past plan to view details. 
+    # This allows the page to show the generated plan right after generation.
+    if recommendation_id is not None:
+        latest_recommendation = LLMRecommendation.query.filter_by(
+            id=recommendation_id,
+            user_id=current_user.id,
+        ).first()
+
+    # If no recommendation found based on the query param, then try to find the user's current plan.
+    if latest_recommendation is None:
+        # On GET, prefer the user's current plan. If they have not marked one yet,
+        # fall back to the most recent recommendation so the page still has a plan to show.
+        latest_recommendation = (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id, is_current=True)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        # if current plan not found, fall back to most recent recommendation to show on the page 
+        ) or (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        )
     # On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query
@@ -562,6 +585,38 @@ def save_ai_all():
 
     flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
     return redirect(url_for("AI"))
+
+
+@app.route("/AI/set-current", methods=["POST"])
+@login_required
+def set_current_reco():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        return jsonify({"success": False, "error": "Session expired."}), 400
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        return jsonify({"success": False, "error": "Missing recommendation id."}), 400
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        return jsonify({"success": False, "error": "Recommendation not found."}), 404
+
+    try:
+        LLMRecommendation.query.filter_by(
+            user_id=current_user.id,
+            is_current=True,
+        ).update({"is_current": None})
+        recommendation.is_current = True
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/AI/delete-reco", methods=["POST"])
@@ -752,6 +807,11 @@ def friend_profile(user_id):
     bmi_category = None
     bmi_quote = "This user has not added height and weight yet."
     fitness_points = get_bmi_fitness_points(None)
+    current_recommendation = (
+        LLMRecommendation.query
+        .filter_by(user_id=friend.id, is_current=True)
+        .first()
+    )
     if friend.height_cm and friend.weight_kg:
         try:
             bmi, bmi_category, bmi_quote = calculate_bmi_result(friend.height_cm, friend.weight_kg)
@@ -767,6 +827,7 @@ def friend_profile(user_id):
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
         fitness_points=fitness_points
+        ,current_recommendation=current_recommendation
     )
 
 
