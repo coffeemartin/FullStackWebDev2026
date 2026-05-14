@@ -904,8 +904,7 @@ def friend_profile(user_id):
         latest_workout=latest_workout,
         latest_nutrition=latest_nutrition,
         hide_app_nav=True,
-        fitness_points=fitness_points,
-        ,current_recommendation=current_recommendation
+        current_recommendation=current_recommendation
     )
 
 
