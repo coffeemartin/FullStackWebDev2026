@@ -2,11 +2,10 @@
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
 <section class="profile-page">
-  <section class="profile-hero profile-hero--bmi">
+  <section class="profile-hero profile-hero--friend">
     <div>
       <span class="profile-kicker">Friend Profile</span>
       <h1 class="profile-title">{{ friend.name or friend.username }}</h1>
-      <p class="profile-subtitle">{{ bmi_quote }}</p>
       <a class="friend-profile-link friend-profile-link--back" href="{{ url_for('myprofile') }}">Back to My Profile</a>
     </div>
 
@@ -30,32 +29,70 @@
     </div>
   </section>
 
-  <section class="profile-two-column">
-    <div class="profile-panel">
-      <div class="section-heading section-heading--left">
-        <h2>Friend Details</h2>
-        <p>Basic profile information shared after accepting a friend request.</p>
-      </div>
-
-      <div class="profile-info-list">
-        <div><span>Name</span><strong>{{ friend.name | default('Not set', true) }}</strong></div>
-        <div><span>Gender</span><strong>{{ friend.gender | default('Not set', true) }}</strong></div>
-        <div><span>Activity</span><strong>{{ friend.activity_level | default('Not set', true) }}</strong></div>
-        <div><span>Goal</span><strong>{{ friend.goal | default('Not set', true) }}</strong></div>
-      </div>
+  <section class="friend-profile-focus">
+    <div class="friend-focus-card friend-focus-card--wide">
+      <span class="profile-card-label">Goal</span>
+      <strong>{{ friend.goal | default('Not set', true) }}</strong>
+      <p>{{ bmi_quote }}</p>
     </div>
 
-    <div class="profile-panel">
-      <div class="section-heading section-heading--left">
-        <h2>Fitness Focus</h2>
-        <p>General points based on this friend's BMI category.</p>
-      </div>
+    <div class="friend-focus-card">
+      <span class="profile-card-label">Activity</span>
+      <strong>{{ friend.activity_level | default('Not set', true) }}</strong>
+      <p>Current training level</p>
+    </div>
 
-      <ol class="fitness-point-list">
-        {% for point in fitness_points %}
-          <li>{{ point }}</li>
-        {% endfor %}
-      </ol>
+    <div class="friend-focus-card">
+      <span class="profile-card-label">BMI Category</span>
+      <strong>{{ bmi_category | default('Not set', true) }}</strong>
+      <p>Shared fitness marker</p>
+    </div>
+  </section>
+
+  <section class="friend-profile-summary">
+    <div class="section-heading">
+      <h2>{{ friend.name or friend.username }}'s Latest Fitness Snapshot</h2>
+    </div>
+
+    <div class="friend-summary-grid">
+      <article class="friend-summary-card friend-summary-card--featured">
+        <span class="profile-card-label">Last Workout</span>
+        {% if latest_workout %}
+          <strong>{{ latest_workout.exercise.name }}</strong>
+          <p>{{ latest_workout.log_date.strftime('%d %b %Y') }}</p>
+          <div class="friend-summary-meta">
+            {% if latest_workout.duration_minutes %}
+              <span>{{ latest_workout.duration_minutes }} min</span>
+            {% endif %}
+            {% if latest_workout.sets and latest_workout.reps %}
+              <span>{{ latest_workout.sets }} x {{ latest_workout.reps }}</span>
+            {% endif %}
+            {% if latest_workout.weight_kg %}
+              <span>{{ latest_workout.weight_kg }} kg</span>
+            {% endif %}
+          </div>
+        {% else %}
+          <strong>No workout logged</strong>
+          <p>This friend has not logged a workout yet.</p>
+        {% endif %}
+      </article>
+
+      <article class="friend-summary-card friend-summary-card--featured">
+        <span class="profile-card-label">Last Nutrition</span>
+        {% if latest_nutrition %}
+          <strong>{{ latest_nutrition.food_name }}</strong>
+          <p>{{ latest_nutrition.meal_type }} - {{ latest_nutrition.log_date.strftime('%d %b %Y') }}</p>
+          <div class="friend-macro-grid">
+            <div><span>Calories</span><strong>{{ latest_nutrition.calories }}</strong></div>
+            <div><span>Protein</span><strong>{{ latest_nutrition.protein }}g</strong></div>
+            <div><span>Carbs</span><strong>{{ latest_nutrition.carbs }}g</strong></div>
+            <div><span>Fat</span><strong>{{ latest_nutrition.fat }}g</strong></div>
+          </div>
+        {% else %}
+          <strong>No nutrition logged</strong>
+          <p>This friend has not logged nutrition yet.</p>
+        {% endif %}
+      </article>
     </div>
   </section>
 </section>
