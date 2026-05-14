@@ -1,10 +1,13 @@
 {% extends "base.html" %}
 {% block title %}My Profile{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
 {% block content %}
 <section class="profile-page">
   <section class="profile-hero profile-hero--bmi">
     <div>
-      <span class="profile-kicker">BMI Profile</span>
+      <span class="profile-kicker">Your Fitness Identity</span>
       <h1 class="profile-title">Welcome, {{ user.name or user.username }}</h1>
       <p class="profile-subtitle">{{ bmi_quote }}</p>
     </div>
@@ -28,15 +31,14 @@
         <div class="profile-bmi-value">--</div>
         <strong>Profile details needed</strong>
       {% endif %}
-      <span>{{ user.username }}</span>
     </div>
   </section>
 
   <section class="profile-two-column">
     <div class="profile-panel">
       <div class="section-heading section-heading--left">
-        <h2>Personal Information</h2>
-        <p>Your saved details for BMI and exercise guidance.</p>
+        <h2>Know Your Numbers</h2>
+        <p>The stats behind your personalised training and nutrition plan.</p>
       </div>
 
       <div class="profile-info-list">
@@ -53,8 +55,8 @@
 
     <div class="profile-panel">
       <div class="section-heading section-heading--left">
-        <h2>Fitness Focus</h2>
-        <p>Five general points based on your BMI category.</p>
+        <h2>Your Blueprint</h2>
+        <p>Five focus points built specifically around your BMI category.</p>
       </div>
 
       <ol class="fitness-point-list">
@@ -67,8 +69,8 @@
 
   <section class="profile-section">
     <div class="section-heading">
-      <h2>Account Details</h2>
-      <p>Your saved sign-in information.</p>
+      <h2>Your Account</h2>
+      <p>Your sign-in details, safe and secure.</p>
     </div>
 
     <div class="profile-grid">
@@ -97,8 +99,8 @@
 
   <section class="profile-section friends-section">
     <div class="section-heading">
-      <h2>Friends Network</h2>
-      <p>Search users, send requests, and manage accepted friends from your profile.</p>
+      <h2>Your Squad</h2>
+      <p>Find your people, send requests, and keep each other accountable.</p>
     </div>
 
     <div class="friend-status-grid">

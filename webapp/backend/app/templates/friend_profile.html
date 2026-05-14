@@ -1,5 +1,9 @@
-{% extends "base.html" %} {% block title %}{{ title }}{% endblock %} {% block
-content %}
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+{% block content %}
 <section class="profile-page">
   <section class="profile-hero profile-hero--bmi">
     <div>
@@ -86,91 +90,86 @@ content %}
       <p>This shows the plan your friend marked as current.</p>
     </div>
 
-    {% if current_recommendation %} {% set training_plan =
-    current_recommendation.get_training_plan() %} {% set nutrition_plan =
-    current_recommendation.get_nutrition_plan() %}
+    {% if current_recommendation %}
+      {% set training_plan = current_recommendation.get_training_plan() %}
+      {% set nutrition_plan = current_recommendation.get_nutrition_plan() %}
 
-    <div class="d-flex flex-wrap gap-2 mb-4">
-      <span class="badge text-bg-secondary"
-        >Plan #{{ current_recommendation.id }}</span
-      >
-      <span class="badge text-bg-secondary">
-        Created {{ current_recommendation.created_at.strftime('%Y-%m-%d %H:%M')
-        if current_recommendation.created_at else 'Unknown' }}
-      </span>
-    </div>
-
-    <div class="mb-4">
-      <h3 class="h5">Weekly Training Plan</h3>
-      {% if training_plan %}
-      <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 18%">Day</th>
-              <th scope="col" style="width: 22%">Focus</th>
-              <th scope="col">Exercise Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for day in training_plan %}
-            <tr>
-              <td class="fw-semibold">{{ day.day }}</td>
-              <td>{{ day.focus }}</td>
-              <td>
-                {% if day.exercises %}
-                <ul class="mb-0 ps-3">
-                  {% for exercise in day.exercises %}
-                  <li class="mb-2">
-                    <strong>{{ exercise.name }}</strong>
-                    <span class="text-white-50">
-                      - {{ exercise.sets or '-' }} sets, {{ exercise.reps or '-'
-                      }} reps, {{ exercise.duration_minutes or '-' }} min
-                    </span>
-                  </li>
-                  {% endfor %}
-                </ul>
-                {% else %}
-                <span class="text-white-50">No exercises listed.</span>
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="plan-meta-row">
+        <span class="plan-badge">Plan #{{ current_recommendation.id }}</span>
+        <span class="plan-badge">
+          Created {{ current_recommendation.created_at.strftime('%d %b %Y') if current_recommendation.created_at else 'Unknown' }}
+        </span>
       </div>
-      {% else %}
-      <p class="mb-0">No training plan available.</p>
-      {% endif %}
-    </div>
 
-    <div>
-      <h3 class="h5">Nutrition Plan</h3>
-      {% if nutrition_plan %}
-      <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th scope="col" style="width: 28%">Goal</th>
-              <th scope="col">Suggestion</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in nutrition_plan %}
-            <tr>
-              <td class="fw-semibold">{{ item.goal }}</td>
-              <td>{{ item.suggestion }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="plan-block">
+        <h3 class="plan-block-title">💪 Weekly Training Plan</h3>
+        {% if training_plan %}
+          <div class="plan-table-wrap">
+            <table class="plan-table">
+              <thead>
+                <tr>
+                  <th style="width:16%">Day</th>
+                  <th style="width:22%">Focus</th>
+                  <th>Exercises</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for day in training_plan %}
+                  <tr>
+                    <td class="plan-day">{{ day.day }}</td>
+                    <td class="plan-focus">{{ day.focus }}</td>
+                    <td>
+                      {% if day.exercises %}
+                        <ul class="plan-exercise-list">
+                          {% for exercise in day.exercises %}
+                            <li>
+                              <strong>{{ exercise.name }}</strong>
+                              <span>{{ exercise.sets or '—' }} sets · {{ exercise.reps or '—' }} reps · {{ exercise.duration_minutes or '—' }} min</span>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      {% else %}
+                        <span class="plan-empty">No exercises listed</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="plan-empty">No training plan available.</p>
+        {% endif %}
       </div>
-      {% else %}
-      <p class="mb-0">No nutrition plan available.</p>
-      {% endif %}
-    </div>
+
+      <div class="plan-block">
+        <h3 class="plan-block-title">🥗 Nutrition Plan</h3>
+        {% if nutrition_plan %}
+          <div class="plan-table-wrap">
+            <table class="plan-table">
+              <thead>
+                <tr>
+                  <th style="width:30%">Goal</th>
+                  <th>Suggestion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in nutrition_plan %}
+                  <tr>
+                    <td class="plan-day">{{ item.goal }}</td>
+                    <td>{{ item.suggestion }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="plan-empty">No nutrition plan available.</p>
+        {% endif %}
+      </div>
+
     {% else %}
-    <p class="mb-0">This friend has not set a current plan yet.</p>
+      <p class="plan-empty">This friend has not set a current plan yet.</p>
     {% endif %}
   </section>
 </section>

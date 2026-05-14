@@ -1,0 +1,1088 @@
+/* ============================================================
+   PROFILE PAGE — DARK FITNESS THEME (matches exercise page)
+   ============================================================ */
+
+.profile-page {
+  --pr-bg:          #05090f;
+  --pr-surface:     #0d1520;
+  --pr-surface-2:   #111d2e;
+  --pr-border:      rgba(96, 165, 250, 0.12);
+  --pr-accent:      #60a5fa;
+  --pr-glow:        rgba(96, 165, 250, 0.15);
+  --pr-text:        #ddeeff;
+  --pr-text-muted:  #5a8aaa;
+  --pr-shadow:      0 8px 32px rgba(0, 0, 0, 0.45);
+
+  color: var(--pr-text);
+  background: var(--pr-bg);
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 1.5rem 1rem 3rem;
+  /* override old green theme vars */
+  --fit-accent: #60a5fa;
+  --fit-border: rgba(96, 165, 250, 0.15);
+  --fit-text-soft: var(--pr-text-muted);
+  --fit-shadow: var(--pr-shadow);
+}
+
+/* ── Hero ───────────────────────────────────────────────── */
+.profile-page .profile-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  min-height: 24rem;
+  padding: 2.8rem 2.5rem;
+  border-radius: 28px;
+  background:
+    radial-gradient(ellipse at 78% -10%, rgba(37, 99, 235, 0.26) 0%, transparent 45%),
+    radial-gradient(ellipse at 12% 110%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 52% 48%, rgba(34, 211, 238, 0.04) 0%, transparent 70%),
+    linear-gradient(155deg, #0a1730 0%, #071220 52%, #040913 100%);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  box-shadow: var(--pr-shadow);
+  /* reset old grid */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 340px);
+  gap: 2rem;
+  align-items: center;
+}
+
+/* dot-grid overlay */
+.profile-page .profile-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(96, 165, 250, 0.13) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+/* rotating aurora sweep — calm, slow, blue-to-violet drift */
+.profile-page .profile-hero::after {
+  content: "";
+  position: absolute;
+  inset: -42% -18%;
+  background: conic-gradient(
+    from 175deg at 70% 38%,
+    rgba(96, 165, 250, 0.13) 0deg,
+    rgba(34, 211, 238, 0.08) 72deg,
+    rgba(56, 189, 248, 0.05) 120deg,
+    transparent 170deg
+  );
+  pointer-events: none;
+  animation: pr-aurora 12s linear infinite;
+}
+
+@keyframes pr-aurora {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.profile-page .profile-kicker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  color: var(--pr-accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.profile-page .profile-kicker::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--pr-accent);
+  animation: pr-pulse-dot 2.2s ease infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pr-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
+.profile-page .profile-title {
+  position: relative;
+  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #ffffff 20%, var(--pr-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-page .profile-subtitle {
+  position: relative;
+  color: var(--pr-text-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 0;
+}
+
+/* ── BMI card (inside hero) ─────────────────────────────── */
+.profile-page .profile-bmi-card {
+  position: relative;
+  align-self: stretch;
+  padding: 1.8rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.18), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(96, 165, 250, 0.07), transparent 50%),
+    linear-gradient(160deg, rgba(13, 30, 50, 0.97), rgba(7, 14, 25, 0.99));
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  box-shadow:
+    var(--pr-shadow),
+    0 0 0 1px rgba(96, 165, 250, 0.08) inset,
+    0 0 30px rgba(96, 165, 250, 0.1);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* shimmer top edge */
+.profile-page .profile-bmi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 12%; right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.65), transparent);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.profile-page .profile-bmi-card::after {
+  content: "";
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 170px; height: 170px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96,165,250,0.14), transparent 70%);
+  pointer-events: none;
+}
+
+.profile-page .profile-photo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.12);
+}
+
+.profile-page .profile-photo {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: 2px solid rgba(96, 165, 250, 0.5);
+  box-shadow: 0 8px 24px rgba(96, 165, 250, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.profile-page .profile-photo-wrap strong {
+  color: #fff;
+  font-size: 1.1rem;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.profile-page .profile-photo-wrap span {
+  color: var(--pr-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.profile-page .profile-card-label {
+  color: var(--pr-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.profile-page .profile-bmi-value {
+  font-size: 3.8rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--pr-accent) 0%, #fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.2rem;
+}
+
+.profile-page .profile-bmi-card strong {
+  color: #fff;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.profile-page .profile-bmi-card > span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  color: var(--pr-accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ── Section headings ───────────────────────────────────── */
+.profile-page .section-heading {
+  margin-bottom: 1.4rem;
+  text-align: center;
+}
+
+.profile-page .section-heading h2 {
+  margin-bottom: 0.4rem;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #ffffff, var(--pr-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.profile-page .section-heading p {
+  color: var(--pr-text-muted);
+  max-width: 520px;
+  margin: 0 auto;
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.profile-page .section-heading--left { text-align: left; }
+.profile-page .section-heading--left p { margin-left: 0; }
+
+/* ── Two-column info layout ─────────────────────────────── */
+.profile-page .profile-two-column {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-bottom: 2rem;
+}
+
+.profile-page .profile-panel {
+  padding: 1.8rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top left, rgba(96, 165, 250, 0.06), transparent 45%),
+    linear-gradient(160deg, var(--pr-surface-2), var(--pr-surface));
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+}
+
+/* Personal info rows */
+.profile-page .profile-info-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.profile-page .profile-info-list div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--pr-border);
+  border-left: 3px solid rgba(96, 165, 250, 0.3);
+  transition: border-left-color 0.2s ease, background 0.2s ease;
+}
+
+.profile-page .profile-info-list div:hover {
+  background: rgba(96, 165, 250, 0.04);
+  border-left-color: var(--pr-accent);
+}
+
+.profile-page .profile-info-list span {
+  color: var(--pr-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  align-self: center;
+}
+
+.profile-page .profile-info-list strong {
+  color: #fff;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  align-self: center;
+}
+
+/* Fitness points numbered list */
+.profile-page .fitness-point-list {
+  counter-reset: fitness-pt;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.profile-page .fitness-point-list li {
+  position: relative;
+  padding: 0.85rem 0.9rem 0.85rem 3rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--pr-border);
+  color: var(--pr-text);
+  line-height: 1.55;
+  font-size: 0.93rem;
+  counter-increment: fitness-pt;
+  transition: background 0.2s ease;
+}
+
+.profile-page .fitness-point-list li:hover {
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.profile-page .fitness-point-list li::before {
+  content: counter(fitness-pt);
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  color: var(--pr-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Account details cards ──────────────────────────────── */
+.profile-page .profile-section {
+  margin-bottom: 2.5rem;
+}
+
+.profile-page .profile-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.profile-page .profile-card {
+  padding: 1.2rem 1.3rem;
+  border-radius: 18px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-top: 3px solid rgba(96, 165, 250, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-top-color 0.22s ease;
+}
+
+.profile-page .profile-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38), 0 0 20px rgba(96, 165, 250, 0.15);
+  border-top-color: var(--pr-accent);
+}
+
+.profile-page .profile-card span {
+  display: block;
+  color: var(--pr-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+}
+
+.profile-page .profile-card strong {
+  display: block;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* ── Friends stats bar ──────────────────────────────────── */
+.profile-page .friend-status-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.profile-page .friend-status-panel {
+  position: relative;
+  padding: 1.3rem 1.4rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.07), transparent 55%),
+    var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.profile-page .friend-status-panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--pr-accent), transparent);
+}
+
+.profile-page .friend-status-panel:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+}
+
+.profile-page .friend-status-panel .profile-card-label {
+  margin-bottom: 0.5rem;
+}
+
+.profile-page .friend-status-panel strong {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--pr-accent);
+  margin-bottom: 0.3rem;
+}
+
+.profile-page .friend-status-panel p {
+  color: var(--pr-text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* ── Friend request / friends panels ───────────────────── */
+.profile-page .friend-request-panel {
+  padding: 1.4rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top left, rgba(96, 165, 250, 0.05), transparent 45%),
+    var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+  margin-bottom: 1rem;
+}
+
+.profile-page .friend-request-panel h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+
+.profile-page .friend-request-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--pr-border);
+  margin-bottom: 0.55rem;
+  transition: background 0.2s ease;
+}
+
+.profile-page .friend-request-card:last-child { margin-bottom: 0; }
+.profile-page .friend-request-card:hover { background: rgba(96, 165, 250, 0.05); }
+
+.profile-page .friend-request-card h4 {
+  color: #fff;
+  font-size: 0.95rem;
+  margin: 0 0 0.15rem;
+}
+
+/* ── Friend avatars ─────────────────────────────────────── */
+.profile-page .friend-avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: 2px solid rgba(96, 165, 250, 0.35);
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* ── Friend detail text ─────────────────────────────────── */
+.profile-page .friend-details h3,
+.profile-page .friend-details h4 {
+  color: #fff;
+  font-size: 0.95rem;
+  margin: 0 0 0.15rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-page .friend-details p {
+  color: var(--pr-text-muted);
+  font-size: 0.83rem;
+  margin: 0;
+}
+
+.profile-page .friend-details span {
+  display: block;
+  color: var(--pr-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+/* ── Friend action buttons ──────────────────────────────── */
+.profile-page .friend-request-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.profile-page .friend-request-actions button,
+.profile-page .friend-profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.83rem;
+  font-weight: 700;
+  min-height: 38px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.profile-page .friend-request-actions button {
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.28);
+}
+
+.profile-page .friend-request-actions button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(96, 165, 250, 0.38);
+}
+
+.profile-page .friend-request-actions .friend-decline-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--pr-text-muted);
+}
+
+.profile-page .friend-request-actions .friend-decline-button:hover {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
+.profile-page .friend-profile-link {
+  margin-left: auto;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.25);
+}
+
+.profile-page .friend-profile-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(96, 165, 250, 0.38);
+  color: #fff;
+}
+
+/* ── Friends list grid ──────────────────────────────────── */
+.profile-page .friends-list {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.profile-page .friend-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-radius: 14px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-left: 3px solid rgba(96, 165, 250, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-page .friend-card:hover {
+  transform: translateX(3px);
+  background: var(--pr-surface-2);
+  border-color: rgba(96, 165, 250, 0.28);
+  border-left-color: var(--pr-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.profile-page .friend-card--empty {
+  border-left: 1px solid var(--pr-border);
+  min-height: 80px;
+  opacity: 0.7;
+}
+
+/* ── Friend search ──────────────────────────────────────── */
+.profile-page .friend-search-panel {
+  padding: 1.4rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.06), transparent 45%),
+    var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+  margin-bottom: 1rem;
+}
+
+.profile-page .friend-search-panel label {
+  display: block;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.profile-page .friend-search-row {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.profile-page .friend-search-row input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(96, 165, 250, 0.15);
+  border-radius: 12px;
+  color: var(--pr-text);
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  font-size: 0.93rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-page .friend-search-row input::placeholder {
+  color: var(--pr-text-muted);
+}
+
+.profile-page .friend-search-row input:focus {
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.09);
+  outline: none;
+  color: var(--pr-text);
+}
+
+.profile-page .friend-search-row button,
+.profile-page .friend-card-action button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.2rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  min-height: 44px;
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.28);
+}
+
+.profile-page .friend-search-row button:hover,
+.profile-page .friend-card-action button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(96, 165, 250, 0.38);
+}
+
+.profile-page .friend-search-row a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  color: var(--pr-text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  min-height: 44px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.profile-page .friend-search-row a:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+  color: var(--pr-accent);
+}
+
+/* ── Friends layout ─────────────────────────────────────── */
+.profile-page .friends-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 2fr) minmax(240px, 0.8fr);
+}
+
+/* ── Quick Add panel ────────────────────────────────────── */
+.profile-page .add-friend-panel {
+  align-self: start;
+  padding: 1.3rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top left, rgba(96, 165, 250, 0.06), transparent 45%),
+    var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.profile-page .add-friend-panel label {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  display: block;
+  margin: 0;
+}
+
+.profile-page .add-friend-panel select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(96, 165, 250, 0.15);
+  border-radius: 12px;
+  color: var(--pr-text);
+  padding: 0.75rem 1rem;
+  font-size: 0.93rem;
+  transition: border-color 0.2s ease;
+}
+
+.profile-page .add-friend-panel select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.profile-page .add-friend-panel select option {
+  background: #111d2e;
+  color: var(--pr-text);
+}
+
+.profile-page .add-friend-panel button {
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.93rem;
+  padding: 0.85rem 1rem;
+  transition: all 0.22s ease;
+  box-shadow: 0 6px 18px rgba(96, 165, 250, 0.28);
+}
+
+.profile-page .add-friend-panel button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(96, 165, 250, 0.38);
+}
+
+.profile-page .add-friend-panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 991.98px) {
+  .profile-page .profile-hero {
+    grid-template-columns: 1fr;
+    min-height: 29rem;
+    padding: 1.8rem 1.5rem;
+  }
+
+  .profile-page .friends-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 0.75rem 0.5rem 2rem;
+  }
+
+  .profile-page .profile-hero {
+    min-height: 27rem;
+    padding: 1.5rem 1.2rem;
+    border-radius: 22px;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-page .profile-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page .profile-info-list div {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page .friend-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-page .friend-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page .friend-request-card,
+  .profile-page .friend-card {
+    flex-wrap: wrap;
+  }
+
+  .profile-page .friend-request-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .profile-page .friend-request-actions form,
+  .profile-page .friend-request-actions button {
+    width: 100%;
+  }
+
+  .profile-page .friend-profile-link {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .profile-page .friend-card-action {
+    width: 100%;
+  }
+
+  .profile-page .friend-card-action button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page .profile-hero {
+    min-height: 25.5rem;
+  }
+
+  .profile-page .friend-status-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .profile-page .friend-status-panel strong {
+    font-size: 1.6rem;
+  }
+
+  .profile-page .profile-title {
+    font-size: 1.7rem;
+  }
+
+  .profile-page .profile-bmi-value {
+    font-size: 3rem;
+  }
+}
+
+/* ── Friend Profile — Back button ───────────────────────── */
+.profile-page .friend-profile-link--back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.4rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  color: var(--pr-accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.22s ease;
+}
+
+.profile-page .friend-profile-link--back::before {
+  content: "←";
+  font-size: 1rem;
+}
+
+.profile-page .friend-profile-link--back:hover {
+  background: rgba(96, 165, 250, 0.18);
+  border-color: var(--pr-accent);
+  color: #fff;
+  transform: translateX(-2px);
+}
+
+/* ── Friend Plan Section ────────────────────────────────── */
+.profile-page .plan-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-page .plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  color: var(--pr-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.profile-page .plan-block {
+  margin-bottom: 1.75rem;
+}
+
+.profile-page .plan-block:last-child {
+  margin-bottom: 0;
+}
+
+.profile-page .plan-block-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--pr-border);
+}
+
+/* Themed table */
+.profile-page .plan-table-wrap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--pr-border);
+}
+
+.profile-page .plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.profile-page .plan-table thead tr {
+  background: rgba(96, 165, 250, 0.08);
+  border-bottom: 1px solid rgba(96, 165, 250, 0.18);
+}
+
+.profile-page .plan-table thead th {
+  padding: 0.75rem 1rem;
+  color: var(--pr-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.profile-page .plan-table tbody tr {
+  border-bottom: 1px solid var(--pr-border);
+  transition: background 0.15s ease;
+}
+
+.profile-page .plan-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.profile-page .plan-table tbody tr:hover {
+  background: rgba(96, 165, 250, 0.05);
+}
+
+.profile-page .plan-table tbody td {
+  padding: 0.85rem 1rem;
+  color: var(--pr-text);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.profile-page .plan-day {
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.profile-page .plan-focus {
+  color: var(--pr-accent);
+  font-weight: 600;
+}
+
+.profile-page .plan-exercise-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.profile-page .plan-exercise-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.profile-page .plan-exercise-list li strong {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.profile-page .plan-exercise-list li span {
+  color: var(--pr-text-muted);
+  font-size: 0.8rem;
+}
+
+.profile-page .plan-empty {
+  color: var(--pr-text-muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .profile-page .plan-table thead th:nth-child(2),
+  .profile-page .plan-table tbody td:nth-child(2) {
+    display: none;
+  }
+
+  .profile-page .plan-table-wrap {
+    overflow-x: auto;
+  }
+}

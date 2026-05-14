@@ -15,19 +15,12 @@
   <section class="exercise-hero">
     <div class="row g-4 align-items-center">
       <div class="col-lg-7">
-        <span class="exercise-kicker">Gym Mode</span>
-        <h1 class="exercise-title">Train With Purpose</h1>
+        <span class="exercise-kicker">Your Training Ground</span>
+        <h1 class="exercise-title">Move. Lift. Dominate.</h1>
         <p class="exercise-subtitle">
-          Log your workout, build consistency, and unlock BMI-based exercise guidance
-          once your profile details are available.
+          Your sweat is your signature. Log every rep, track your progress,
+          and unlock training tailored to your body.
         </p>
-
-        <div class="exercise-chip-row">
-          <span class="exercise-chip">Strength</span>
-          <span class="exercise-chip">Cardio</span>
-          <span class="exercise-chip">Mobility</span>
-          <span class="exercise-chip">Recovery</span>
-        </div>
       </div>
 
       <div class="col-lg-5">
@@ -41,11 +34,11 @@
           </div>
         {% else %}
           <div class="bmi-summary-card bmi-summary-card--empty">
-            <p class="bmi-label">BMI Guidance Locked</p>
-            <div class="bmi-status">Complete profile details first</div>
+            <p class="bmi-label">Your BMI Card</p>
+            <div class="bmi-status">Almost ready — finish your profile</div>
             <p class="bmi-focus">
-              Once height, weight, and exercise level are saved on the main or profile page,
-              this section can show BMI-based training guidance.
+              Save your height, weight, and activity level to unlock
+              personalised BMI-based training guidance built just for you.
             </p>
           </div>
         {% endif %}
@@ -53,23 +46,58 @@
     </div>
   </section>
 
+  <section class="exercise-stats-bar">
+    <div class="stat-card">
+      <span class="stat-label">Total Workouts</span>
+      <strong class="stat-value">{{ total_workouts }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">This Week</span>
+      <strong class="stat-value stat-value--accent">{{ workouts_this_week }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Total Minutes</span>
+      <strong class="stat-value">{{ total_minutes }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Last Workout</span>
+      {% if recent_logs %}
+        <strong class="stat-value stat-value--sm">{{ recent_logs[0].exercise.name }}</strong>
+        <span class="stat-sub">{{ recent_logs[0].log_date.strftime('%d %b') }}</span>
+      {% else %}
+        <strong class="stat-value stat-value--sm stat-value--muted">None yet</strong>
+      {% endif %}
+    </div>
+  </section>
+
   <section class="exercise-section">
     <div class="section-heading">
-      <h2>Recommended Exercise Categories</h2>
+      <h2>Built For Your Body</h2>
       <p>
         {% if recommendation %}
           {{ recommendation.message }}
         {% else %}
-          Your recommended categories will appear here after BMI and exercise level are available.
+          Your personalised categories unlock once your BMI and exercise level are set — almost there.
         {% endif %}
       </p>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-3">
       {% if recommendation %}
         {% for category in recommendation.categories %}
+          {% set cat_lower = category|lower %}
+          {% if 'strength' in cat_lower %}{% set cat_icon = '💪' %}
+          {% elif 'cardio' in cat_lower %}{% set cat_icon = '🏃' %}
+          {% elif 'mobility' in cat_lower %}{% set cat_icon = '🧘' %}
+          {% elif 'recovery' in cat_lower %}{% set cat_icon = '💧' %}
+          {% elif 'sport' in cat_lower %}{% set cat_icon = '⚽' %}
+          {% elif 'cycling' in cat_lower %}{% set cat_icon = '🚴' %}
+          {% elif 'walking' in cat_lower %}{% set cat_icon = '🚶' %}
+          {% else %}{% set cat_icon = '⚡' %}
+          {% endif %}
           <div class="col-md-6 col-xl-3">
-            <article class="category-card">
+            <article class="category-card" data-category="{{ cat_lower }}">
+              <span class="category-icon">{{ cat_icon }}</span>
               <h3>{{ category }}</h3>
             </article>
           </div>
@@ -86,48 +114,38 @@
 
   <section class="exercise-section">
     <div class="section-heading">
-      <h2>Featured Exercises</h2>
+      <h2>Your Moves, Your Way</h2>
       <p>
         {% if recommendation %}
-          These are simple exercises recommended from your BMI range and current exercise level.
+          Handpicked from your BMI range and fitness level — tap any exercise to see the full demo.
         {% else %}
-          Exercise suggestions will appear here once BMI guidance is available.
+          Your personalised exercise picks appear here once your BMI data is saved.
         {% endif %}
       </p>
     </div>
 
-    <div class="row g-4">
-      {% if recommendation %}
+    {% if recommendation %}
+      <div class="exercise-pill-grid">
         {% for item in recommendation.exercises %}
-          <div class="col-md-6 col-xl-4">
-            <article class="exercise-card exercise-card--interactive">
-              <span class="exercise-badge">{{ item.category }}</span>
-              <h3>{{ item.name }}</h3>
-              <p class="exercise-benefit">{{ item.benefit }}</p>
-              <div class="exercise-card-meta">
-                <p><strong>Targets:</strong> {{ item.target }}</p>
-                <p><strong>Equipment:</strong> {{ item.equipment }}</p>
-              </div>
-              <p class="exercise-tip">{{ item.tip }}</p>
-              <button
-                type="button"
-                class="btn exercise-card-demo-btn mt-3"
-                data-bs-toggle="modal"
-                data-bs-target="#exerciseModal{{ loop.index }}"
-              >
-                View Demo
-              </button>
-            </article>
-          </div>
+          <button
+            type="button"
+            class="exercise-pill"
+            data-category="{{ item.category|lower }}"
+            data-bs-toggle="modal"
+            data-bs-target="#exerciseModal{{ loop.index }}"
+          >
+            <span class="exercise-pill-category">{{ item.category }}</span>
+            <span class="exercise-pill-name">{{ item.name }}</span>
+            <span class="exercise-pill-hint">Tap to view demo →</span>
+          </button>
         {% endfor %}
-      {% else %}
-        <div class="col-12">
-          <div class="exercise-empty-state">
-            No exercise suggestions yet because BMI data has not been set.
-          </div>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="exercise-empty-state">
+          No exercise suggestions yet because BMI data has not been set.
         </div>
       {% endif %}
-    </div>
   </section>
 
   {% if recommendation %}
@@ -227,10 +245,10 @@
   <section class="exercise-section" id="workout-log-section">
     <div class="exercise-panel">
       <div class="section-heading">
-        <h2>Workout Log</h2>
+        <h2>Log Today's Win</h2>
         <p>
-          Pick an exercise from the dropdown, fill in the details, and hit save.
-          Your workout will be stored in the database and appear below.
+          Every session counts. Pick your exercise, fill in the details, and hit save —
+          your progress is waiting to be written.
         </p>
       </div>
 
@@ -238,6 +256,9 @@
         {{ form.hidden_tag() }}
 
         <div class="row g-3">
+          <div class="col-12">
+            <div class="form-section-label">🏋️ Choose Exercise &amp; Date</div>
+          </div>
           <div class="col-md-6">
             <label class="form-label" for="exercise-search">{{ form.exercise_id.label.text }}</label>
             <div class="exercise-autocomplete-wrap" style="position:relative;">
@@ -248,12 +269,7 @@
                 placeholder="Click or type to search exercises..."
                 autocomplete="off"
               />
-              <ul
-                id="exercise-dropdown"
-                style="display:none; position:absolute; z-index:1000; width:100%; max-height:220px;
-                       overflow-y:auto; background:#1e1e1e; border:1px solid #3a3a3a;
-                       border-radius:8px; margin:0; padding:0; list-style:none; top:100%;"
-              ></ul>
+              <ul id="exercise-dropdown" class="exercise-dropdown"></ul>
               <input
                 type="hidden"
                 id="{{ form.exercise_id.id }}"
@@ -273,6 +289,9 @@
             {{ render_errors(form.workout_date) }}
           </div>
 
+          <div class="col-12">
+            <div class="form-section-label">📊 Volume &amp; Duration</div>
+          </div>
           <div class="col-md-4">
             <label class="form-label">{{ form.duration_minutes.label.text }}</label>
             {{ form.duration_minutes(class="form-control exercise-input", placeholder="30") }}
@@ -305,6 +324,9 @@
           </div>
 
           <div class="col-12">
+            <div class="form-section-label">📝 Notes</div>
+          </div>
+          <div class="col-12">
             <label class="form-label">{{ form.notes.label.text }}</label>
             {{ form.notes(class="form-control exercise-input exercise-textarea", rows="4", placeholder="How did the workout feel today?") }}
             {{ render_errors(form.notes) }}
@@ -323,9 +345,22 @@
 
   <section class="exercise-section">
     <div class="section-heading">
-      <h2>Your Recent Workouts</h2>
-      <p>Last 10 workouts pulled live from the database.</p>
+      <h2>Your Comeback Story</h2>
+      <p>Your last 10 sessions — proof of how far you've come.</p>
     </div>
+
+    {% if recent_logs %}
+      <div class="history-filter-bar" id="history-filter-bar">
+        <button class="history-filter-btn active" data-filter="all">All</button>
+        <button class="history-filter-btn history-filter-btn--strength" data-filter="strength">💪 Strength</button>
+        <button class="history-filter-btn history-filter-btn--cardio"   data-filter="cardio">🏃 Cardio</button>
+        <button class="history-filter-btn history-filter-btn--mobility" data-filter="mobility">🧘 Mobility</button>
+        <button class="history-filter-btn history-filter-btn--recovery" data-filter="recovery">💧 Recovery</button>
+      </div>
+      <p class="history-filter-empty" id="history-filter-empty" style="display:none;">
+        No workouts found for this category.
+      </p>
+    {% endif %}
 
     {% if recent_logs %}
       <div class="history-stack">
@@ -334,7 +369,7 @@
           {% set category_lower = category|lower %}
           {% set is_strength = 'strength' in category_lower %}
           {% set is_cardio_style = 'cardio' in category_lower or 'walking' in category_lower or 'cycling' in category_lower or 'water' in category_lower or 'sport' in category_lower %}
-          <article class="history-card history-card--stacked">
+          <article class="history-card history-card--stacked" data-category="{{ category_lower }}">
             <div class="history-card-top">
               <span class="exercise-badge">{{ category }}</span>
               <span class="history-date">{{ log.log_date.strftime('%d %b %Y') }}</span>
@@ -492,9 +527,6 @@
         li.textContent = ex.name;
         li.dataset.id = ex.id;
         li.dataset.category = ex.category;
-        li.style.cssText = "padding:10px 14px; cursor:pointer; color:#fff; font-size:0.95rem;";
-        li.addEventListener("mouseenter", () => { li.style.background = "#2e2e2e"; });
-        li.addEventListener("mouseleave", () => { li.style.background = ""; });
         li.addEventListener("mousedown", (e) => {
           e.preventDefault();
           exerciseSearch.value = ex.name;
@@ -548,6 +580,28 @@
         exerciseSearch.focus();
       });
     });
+
+    // ── History category filter ──────────────────────────────
+    const filterBar = document.getElementById("history-filter-bar");
+    const filterEmpty = document.getElementById("history-filter-empty");
+    if (filterBar) {
+      filterBar.addEventListener("click", (e) => {
+        const btn = e.target.closest(".history-filter-btn");
+        if (!btn) return;
+        filterBar.querySelectorAll(".history-filter-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const filter = btn.dataset.filter;
+        const cards = document.querySelectorAll(".history-card--stacked");
+        let visible = 0;
+        cards.forEach((card) => {
+          const cat = (card.dataset.category || "").toLowerCase();
+          const show = filter === "all" || cat.includes(filter);
+          card.style.display = show ? "" : "none";
+          if (show) visible++;
+        });
+        if (filterEmpty) filterEmpty.style.display = visible === 0 ? "block" : "none";
+      });
+    }
 
     // Stop YouTube video when modal is closed
     document.querySelectorAll(".exercise-modal").forEach((modal) => {

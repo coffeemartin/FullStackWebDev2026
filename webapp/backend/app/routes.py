@@ -1,4 +1,4 @@
-from datetime import date, timezone
+from datetime import date, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from app import app, db
@@ -7,7 +7,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, Friendship, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -375,6 +375,24 @@ def exercise():
         .all()
     )
 
+    # Dashboard stats
+    total_workouts = ExerciseLog.query.filter_by(user_id=user.id).count()
+
+    week_start = date.today() - timedelta(days=date.today().weekday())
+    workouts_this_week = (
+        ExerciseLog.query
+        .filter_by(user_id=user.id)
+        .filter(ExerciseLog.log_date >= week_start)
+        .count()
+    )
+
+    total_minutes_raw = (
+        db.session.query(func.sum(ExerciseLog.duration_minutes))
+        .filter_by(user_id=user.id)
+        .scalar()
+    )
+    total_minutes = int(total_minutes_raw) if total_minutes_raw else 0
+
     return render_template(
         'exercise.html',
         title='Exercise',
@@ -384,6 +402,9 @@ def exercise():
         bmi_value=bmi_value,
         exercise_level=user.activity_level,
         recommendation=recommendation,
+        total_workouts=total_workouts,
+        workouts_this_week=workouts_this_week,
+        total_minutes=total_minutes,
     )
 
 # this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
