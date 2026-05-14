@@ -2,6 +2,8 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1] / "webapp" / "backend"
@@ -17,3 +19,8 @@ def test_calculate_bmi_result_returns_healthy_weight_category():
     assert bmi == 22.5
     assert category == "Healthy weight"
     assert quote
+
+
+def test_calculate_bmi_result_rejects_invalid_height():
+    with pytest.raises(ValueError):
+        calculate_bmi_result(0, 70)
