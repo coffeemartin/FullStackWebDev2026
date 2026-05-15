@@ -711,6 +711,38 @@ body:has(.nutrition-floating-foods) {
   font-style: italic;
 }
 
+.water-table-status {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.water-table-status strong {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.water-table-status small {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.water-table-status--low {
+  color: #f87171;
+}
+
+.water-table-status--ok {
+  color: var(--n-amber);
+}
+
+.water-table-status--sufficient {
+  color: var(--n-teal);
+}
+
 /* ── Insight section ─────────────────────────────────────────── */
 .nutrition-insight {
   position: relative;
@@ -825,12 +857,14 @@ body:has(.nutrition-floating-foods) {
     text-transform: uppercase;
   }
 
-  .nutrition-table td:nth-child(1)::before { content: "Meal"; }
-  .nutrition-table td:nth-child(2)::before { content: "Food"; }
-  .nutrition-table td:nth-child(3)::before { content: "Quantity"; }
-  .nutrition-table td:nth-child(4)::before { content: "Calories"; }
-  .nutrition-table td:nth-child(5)::before { content: "Feedback"; }
-  .nutrition-table td:nth-child(6)::before { content: "Comments"; }
+  .nutrition-table td:nth-child(1)::before { content: "Date"; }
+  .nutrition-table td:nth-child(2)::before { content: "Meal"; }
+  .nutrition-table td:nth-child(3)::before { content: "Food"; }
+  .nutrition-table td:nth-child(4)::before { content: "Quantity"; }
+  .nutrition-table td:nth-child(5)::before { content: "Calories"; }
+  .nutrition-table td:nth-child(6)::before { content: "Water"; }
+  .nutrition-table td:nth-child(7)::before { content: "Feedback"; }
+  .nutrition-table td:nth-child(8)::before { content: "Comments"; }
 
   .nutrition-table td[colspan] {
     display: block;
