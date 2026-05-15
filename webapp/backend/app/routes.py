@@ -228,12 +228,25 @@ def login():
 @app.route("/nutrition")
 @login_required
 def nutrition():
+    selected_date = request.args.get("date", "")
+    try:
+        selected_date_date = date.fromisoformat(selected_date) if selected_date else date.today()
+    except ValueError:
+        selected_date_date = date.today()
+
+    selected_date_str = selected_date_date.isoformat()
+    selected_date_label = (
+        "Today's Food Entries"
+        if selected_date_date == date.today()
+        else f"Food Entries for {selected_date_str}"
+    )
+
     initial_water = 0
     food_entries = []
 
     water_log = (
         NutritionLog.query
-        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
+        .filter_by(user_id=current_user.id, log_date=selected_date_date, meal_type="Water")
         .order_by(NutritionLog.id.desc())
         .first()
     )
@@ -243,7 +256,7 @@ def nutrition():
     nutrition_logs = (
         NutritionLog.query
         .filter(NutritionLog.user_id == current_user.id)
-        .filter(NutritionLog.log_date == date.today())
+        .filter(NutritionLog.log_date == selected_date_date)
         .filter(NutritionLog.meal_type != "Water")
         .join(Food)
         .order_by(NutritionLog.id.asc())
@@ -267,6 +280,8 @@ def nutrition():
         initial_water=initial_water,
         food_entries=food_entries,
         nutrition_logs=nutrition_logs,
+        selected_date=selected_date_str,
+        selected_date_label=selected_date_label,
     )
 
 
@@ -277,8 +292,17 @@ def save_nutrition_log():
     meal_type = (data.get("meal_type") or "").strip()
     food_name = (data.get("food_name") or "").strip()
     quantity_g = data.get("quantity_g")
+    log_date = data.get("log_date")
     notes = (data.get("notes") or "").strip()
     calories_per_100g = data.get("calories_per_100g")
+
+    if log_date:
+        try:
+            log_date = date.fromisoformat(log_date)
+        except ValueError:
+            return jsonify({"error": "Log date must be a valid ISO date."}), 400
+    else:
+        log_date = date.today()
 
     try:
         quantity_g = float(quantity_g)
@@ -301,6 +325,7 @@ def save_nutrition_log():
         food=food,
         meal_type=meal_type,
         quantity_g=quantity_g,
+        log_date=log_date,
         notes=notes,
     )
     db.session.add(nutrition_log)
@@ -320,6 +345,7 @@ def save_nutrition_log():
 def save_water_log():
     data = request.get_json() or {}
     water_glasses = data.get("water_glasses")
+    log_date = data.get("log_date")
 
     try:
         water_glasses = int(water_glasses)
@@ -328,6 +354,14 @@ def save_water_log():
 
     if water_glasses < 0:
         return jsonify({"error": "Water glasses cannot be negative."}), 400
+
+    if log_date:
+        try:
+            log_date = date.fromisoformat(log_date)
+        except ValueError:
+            return jsonify({"error": "Log date must be a valid ISO date."}), 400
+    else:
+        log_date = date.today()
 
     water_food = Food.query.filter(db.func.lower(Food.name) == "water").first()
     if water_food is None:
@@ -342,7 +376,7 @@ def save_water_log():
 
     water_log = (
         NutritionLog.query
-        .filter_by(user_id=current_user.id, log_date=date.today(), meal_type="Water")
+        .filter_by(user_id=current_user.id, log_date=log_date, meal_type="Water")
         .order_by(NutritionLog.id.desc())
         .first()
     )
@@ -351,7 +385,7 @@ def save_water_log():
         water_log = NutritionLog(
             user_id=current_user.id,
             food=water_food,
-            log_date=date.today(),
+            log_date=log_date,
             meal_type="Water",
         )
         db.session.add(water_log)

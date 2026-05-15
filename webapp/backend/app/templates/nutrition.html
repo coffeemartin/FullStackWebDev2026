@@ -106,7 +106,7 @@
 
       <form id="foodForm">
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label class="form-label" for="mealType">Meal Type</label>
             <select id="mealType" class="form-select" required>
               <option value="">Choose meal</option>
@@ -117,7 +117,12 @@
             </select>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <label class="form-label" for="logDate">Date</label>
+            <input id="logDate" class="form-control" type="date" value="{{ selected_date }}" required>
+          </div>
+
+          <div class="col-md-4">
             <label class="form-label" for="foodName">Food Name</label>
             <select id="foodName" class="form-select" required>
               <option value="">Choose food</option>
@@ -187,7 +192,7 @@
 </section>
 
 <section class="nutrition-panel mb-4">
-  <h2 class="h4 mb-3">Today's Food Entries</h2>
+  <h2 class="h4 mb-3">{{ selected_date_label }}</h2>
 
   <div class="table-responsive">
     <table class="table table-dark table-striped align-middle">
@@ -220,7 +225,8 @@
 <script id="nutritionInitialData" type="application/json">
   {{ {
     "food_entries": safe_food_entries,
-    "initial_water": safe_initial_water
+    "initial_water": safe_initial_water,
+    "selected_date": selected_date
   }|tojson }}
 </script>
 
@@ -234,6 +240,7 @@
   const waterCount = document.getElementById("waterCount");
   const waterSaveStatus = document.getElementById("waterSaveStatus");
   const foodNameInput = document.getElementById("foodName");
+  const logDateInput = document.getElementById("logDate");
   const quantityInput = document.getElementById("quantity");
   const standardQuantityGroup = document.getElementById("standardQuantityGroup");
   const otherFoodGroup = document.getElementById("otherFoodGroup");
@@ -269,6 +276,11 @@
     toggleOtherFoodFields();
     updateCalculatedCalories();
   });
+  logDateInput.addEventListener("change", function () {
+    const params = new URLSearchParams(window.location.search);
+    params.set("date", logDateInput.value);
+    window.location.search = params.toString();
+  });
   quantityInput.addEventListener("input", updateCalculatedCalories);
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
@@ -291,6 +303,12 @@
       return;
     }
 
+    const logDate = logDateInput.value;
+    if (!logDate) {
+      alert("Please select the date for this food entry.");
+      return;
+    }
+
     if (!Number.isFinite(caloriesPer100g)) {
       alert("Please choose a listed food or use Others.");
       return;
@@ -302,6 +320,7 @@
         food_name: foodName,
         quantity_g: quantity,
         calories_per_100g: caloriesPer100g,
+        log_date: logDate,
         notes: [feedback, comments].filter(Boolean).join(" - ")
       });
     } catch (error) {
@@ -473,7 +492,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ water_glasses: water })
+        body: JSON.stringify({ water_glasses: water, log_date: logDateInput.value })
       });
       const data = await response.json();
 
