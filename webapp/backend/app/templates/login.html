@@ -1,203 +1,239 @@
 {% extends "base.html" %}
 
 {% block title %}
-  {% if title %}{{ title }} - Full Stack Web Development{% else %}Full Stack Web Development{% endif %}
+  {% if title %}{{ title }} - FitTrack{% else %}FitTrack — Start Your Journey{% endif %}
 {% endblock %}
 
 {% block content %}
-<section class="login-page">
-  <div class="login-shell">
-    <div class="login-hero">
-      <div class="login-hero-content">
-        <p class="login-kicker">Fitness companion</p>
-        <h1>Build a healthier routine around your real profile.</h1>
-        <p>
-          Create your profile once, calculate your BMI, and return with your
-          login ID whenever you want to continue.
-        </p>
-      </div>
+<section class="auth-page">
+  <div class="auth-aurora" aria-hidden="true"></div>
+  <div class="auth-dots"   aria-hidden="true"></div>
+
+  <div class="auth-floaters" aria-hidden="true">
+    <div class="auth-floater af1">💪 +2.4 kg muscle</div>
+    <div class="auth-floater af2">🔥 820 kcal burned</div>
+    <div class="auth-floater af3">⚡ 7-day streak</div>
+    <div class="auth-floater af4">📊 BMI 22.5</div>
+    <div class="auth-floater af5">🥗 Calories on track</div>
+    <div class="auth-floater af6">🏋️ PR: 120 kg squat</div>
+  </div>
+
+  <div class="auth-center">
+    <div class="auth-top-brand">
+      <span class="auth-logo-box">FT</span>
+      <span class="auth-logo-name">FitTrack</span>
     </div>
+    <p class="auth-hero-line">Your fitness journey, <span>fully personalised.</span></p>
 
-    <div class="login-card">
-      <p class="login-kicker">Welcome back</p>
-      <h2>Sign in</h2>
-
-      <form action="{{ url_for('login') }}" method="post" novalidate>
-        {{ form.hidden_tag() }}
-        <input type="hidden" name="form_type" value="login">
-
-        <div class="mb-3">
-          <label class="form-label" for="{{ form.username.id }}">Login ID</label>
-          {{ form.username(class="form-control", size=32, autocomplete="username", placeholder="Enter your login ID") }}
-          {% for error in form.username.errors %}
-            <span class="login-error">[{{ error }}]</span>
-          {% endfor %}
-        </div>
-
-        <div class="mb-3">
-          {{ form.password.label(class="form-label") }}
-          <div class="password-field">
-            {{ form.password(class="form-control", size=32, autocomplete="current-password", placeholder="Enter your password") }}
-            <button class="password-toggle" type="button" data-password-toggle="password" aria-label="Show password">
-              Show
-            </button>
-          </div>
-          {% for error in form.password.errors %}
-            <span class="login-error">[{{ error }}]</span>
-          {% endfor %}
-        </div>
-
-        <div class="form-check mb-3">
-          {{ form.remember_me(class="form-check-input") }}
-          {{ form.remember_me.label(class="form-check-label") }}
-        </div>
-
-        {{ form.submit(class="btn btn-warning w-100") }}
-      </form>
-
-      <div class="signup-prompt">
-        <div>
-          <strong>Are you a new user?</strong>
-          <span>Create your profile before entering the app.</span>
-        </div>
-        <button class="btn btn-outline-light" id="showProfileForm" type="button">
-          Create your profile
-        </button>
-      </div>
-    </div>
-
-    <div class="signup-panel {% if show_signup %}is-open{% endif %}" id="profileCreatePanel">
-      <div class="signup-heading">
-        <p class="login-kicker">New user setup</p>
-        <h2>Create your profile</h2>
+    <div class="auth-card" id="authCard">
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" id="tabSignIn" data-panel="panelSignIn" role="tab" aria-selected="true" type="button">Sign In</button>
+        <button class="auth-tab"        id="tabSignUp" data-panel="panelSignUp" role="tab" aria-selected="false" type="button">Get Started</button>
       </div>
 
-      <form action="{{ url_for('login') }}" method="post">
-        <input type="hidden" name="form_type" value="new_user">
+      <div class="auth-panel" id="panelSignIn" role="tabpanel">
+        <p class="auth-panel-sub">Welcome back — let's pick up where you left off.</p>
 
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label" for="new_username">Login ID</label>
-            <input class="form-control" id="new_username" name="new_username" type="text" value="{{ form_data.get('username', '') }}" autocomplete="username" placeholder="Choose a login ID" required>
+        <form action="{{ url_for('login') }}" method="post" novalidate>
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="form_type" value="login">
+
+          <div class="auth-field">
+            <label class="auth-label" for="{{ form.username.id }}">Login ID</label>
+            {{ form.username(class="auth-input", autocomplete="username", placeholder="Your login ID") }}
+            {% for error in form.username.errors %}
+              <span class="auth-error">{{ error }}</span>
+            {% endfor %}
           </div>
-          <div class="col-md-4">
-            <label class="form-label" for="email">Email</label>
-            <input class="form-control" id="email" name="email" type="email" value="{{ form_data.get('email', '') }}" autocomplete="email" placeholder="name@example.com" required>
-          </div>
-          <div class="col-md-4">
-            <label class="form-label" for="new_password">Password</label>
-            <div class="password-field">
-              <input class="form-control" id="new_password" name="new_password" type="password" autocomplete="new-password" placeholder="Create a password" required>
-              <button class="password-toggle" type="button" data-password-toggle="new_password" aria-label="Show password">
-                Show
-              </button>
+
+          <div class="auth-field">
+            {{ form.password.label(class="auth-label") }}
+            <div class="auth-pw-wrap">
+              {{ form.password(class="auth-input", autocomplete="current-password", placeholder="Your password") }}
+              <button class="auth-eye-btn" type="button" data-password-toggle="password">Show</button>
             </div>
+            {% for error in form.password.errors %}
+              <span class="auth-error">{{ error }}</span>
+            {% endfor %}
           </div>
-          <div class="col-md-6">
-            <label class="form-label" for="confirm_password">Confirm password</label>
-            <div class="password-field">
-              <input class="form-control" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" placeholder="Confirm password" required>
-              <button class="password-toggle" type="button" data-password-toggle="confirm_password" aria-label="Show password">
-                Show
-              </button>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label" for="name">Name</label>
-            <input class="form-control" id="name" name="name" type="text" value="{{ form_data.get('name', '') }}" autocomplete="name" placeholder="Your full name" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label" for="age">Age</label>
-            <input class="form-control" id="age" name="age" type="number" min="13" max="100" value="{{ form_data.get('age', '') }}" placeholder="Age" required>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label" for="gender">Gender</label>
-            {% set selected_gender = form_data.get('gender', '') %}
-            <select class="form-select" id="gender" name="gender" required>
-              <option value="" {% if not selected_gender %}selected{% endif %}>Choose gender</option>
-              <option value="Female" {% if selected_gender == 'Female' %}selected{% endif %}>Female</option>
-              <option value="Male" {% if selected_gender == 'Male' %}selected{% endif %}>Male</option>
-              <option value="Non-binary" {% if selected_gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
-              <option value="Prefer not to say" {% if selected_gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label class="form-label" for="height_cm">Height (cm)</label>
-            <input class="form-control" id="height_cm" name="height_cm" type="number" min="80" max="250" step="0.1" value="{{ form_data.get('height_cm', '') }}" placeholder="175">
-          </div>
-          <div class="col-md-3">
-            <label class="form-label" for="weight_kg">Weight (kg)</label>
-            <input class="form-control" id="weight_kg" name="weight_kg" type="number" min="25" max="300" step="0.1" value="{{ form_data.get('weight_kg', '') }}" placeholder="70">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label" for="goal">Fitness goal</label>
-            {% set selected_goal = form_data.get('goal', '') %}
-            <select class="form-select" id="goal" name="goal">
-              <option value="" {% if not selected_goal %}selected{% endif %}>Choose goal</option>
-              <option value="Lose weight" {% if selected_goal == 'Lose weight' %}selected{% endif %}>Lose weight</option>
-              <option value="Build muscle" {% if selected_goal == 'Build muscle' %}selected{% endif %}>Build muscle</option>
-              <option value="Improve stamina" {% if selected_goal == 'Improve stamina' %}selected{% endif %}>Improve stamina</option>
-              <option value="Maintain fitness" {% if selected_goal == 'Maintain fitness' %}selected{% endif %}>Maintain fitness</option>
-              <option value="Improve flexibility" {% if selected_goal == 'Improve flexibility' %}selected{% endif %}>Improve flexibility</option>
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label" for="activity_level">Activity level</label>
-            {% set selected_activity = form_data.get('activity_level', '') %}
-            <select class="form-select" id="activity_level" name="activity_level">
-              <option value="" {% if not selected_activity %}selected{% endif %}>Choose activity level</option>
-              <option value="Beginner" {% if selected_activity == 'Beginner' %}selected{% endif %}>Beginner</option>
-              <option value="Lightly active" {% if selected_activity == 'Lightly active' %}selected{% endif %}>Lightly active</option>
-              <option value="Active" {% if selected_activity == 'Active' %}selected{% endif %}>Active</option>
-              <option value="Very active" {% if selected_activity == 'Very active' %}selected{% endif %}>Very active</option>
-            </select>
-          </div>
-          <div class="col-12">
-            <label class="form-label" for="injury_notes">Injury notes</label>
-            <input class="form-control" id="injury_notes" name="injury_notes" type="text" value="{{ form_data.get('injury_notes', '') }}" placeholder="Example: knee pain, shoulder injury, or none">
-          </div>
-        </div>
 
-        <button class="btn btn-success w-100 mt-4" type="submit">Create profile</button>
-      </form>
+          <div class="auth-remember">
+            {{ form.remember_me(class="auth-checkbox") }}
+            {{ form.remember_me.label(class="auth-checkbox-label") }}
+          </div>
 
-      {% if bmi %}
-      <div class="bmi-result">
-        <span>Your BMI</span>
-        <strong>{{ bmi }}</strong>
-        <p>Category: {{ category }}</p>
-        <p>{{ quote }}</p>
+          {{ form.submit(class="auth-btn auth-btn--primary") }}
+        </form>
       </div>
-      {% endif %}
+
+      <div class="auth-panel auth-panel--hidden" id="panelSignUp" role="tabpanel">
+        <p class="auth-panel-sub">Set up your profile once — FitTrack does the rest.</p>
+
+        <form action="{{ url_for('login') }}" method="post" novalidate>
+          <input type="hidden" name="form_type" value="new_user">
+
+          <div class="auth-signup-grid">
+
+            <div class="auth-field">
+              <label class="auth-label" for="new_username">Login ID</label>
+              <input class="auth-input" id="new_username" name="new_username" type="text"
+                     value="{{ form_data.get('username', '') }}" autocomplete="username"
+                     placeholder="Choose a login ID" required>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="email">Email</label>
+              <input class="auth-input" id="email" name="email" type="email"
+                     value="{{ form_data.get('email', '') }}" autocomplete="email"
+                     placeholder="name@example.com" required>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="new_password">Password</label>
+              <div class="auth-pw-wrap">
+                <input class="auth-input" id="new_password" name="new_password" type="password"
+                       autocomplete="new-password" placeholder="Create a password" required>
+                <button class="auth-eye-btn" type="button" data-password-toggle="new_password">Show</button>
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="confirm_password">Confirm Password</label>
+              <div class="auth-pw-wrap">
+                <input class="auth-input" id="confirm_password" name="confirm_password" type="password"
+                       autocomplete="new-password" placeholder="Repeat password" required>
+                <button class="auth-eye-btn" type="button" data-password-toggle="confirm_password">Show</button>
+              </div>
+            </div>
+
+            <div class="auth-field auth-field--full">
+              <label class="auth-label" for="name">Full Name</label>
+              <input class="auth-input" id="name" name="name" type="text"
+                     value="{{ form_data.get('name', '') }}" autocomplete="name"
+                     placeholder="Your full name" required>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="age">Age</label>
+              <input class="auth-input" id="age" name="age" type="number"
+                     min="13" max="100" value="{{ form_data.get('age', '') }}"
+                     placeholder="Age" required>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="gender">Gender</label>
+              {% set selected_gender = form_data.get('gender', '') %}
+              <select class="auth-input" id="gender" name="gender" required>
+                <option value="" {% if not selected_gender %}selected{% endif %}>Choose gender</option>
+                <option value="Female"           {% if selected_gender == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Male"             {% if selected_gender == 'Male' %}selected{% endif %}>Male</option>
+                <option value="Non-binary"       {% if selected_gender == 'Non-binary' %}selected{% endif %}>Non-binary</option>
+                <option value="Prefer not to say" {% if selected_gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+              </select>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="height_cm">Height (cm)</label>
+              <input class="auth-input" id="height_cm" name="height_cm" type="number"
+                     min="80" max="250" step="0.1"
+                     value="{{ form_data.get('height_cm', '') }}" placeholder="175">
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="weight_kg">Weight (kg)</label>
+              <input class="auth-input" id="weight_kg" name="weight_kg" type="number"
+                     min="25" max="300" step="0.1"
+                     value="{{ form_data.get('weight_kg', '') }}" placeholder="70">
+            </div>
+
+            <div class="auth-field auth-field--full">
+              <label class="auth-label" for="goal">Fitness Goal</label>
+              {% set selected_goal = form_data.get('goal', '') %}
+              <select class="auth-input" id="goal" name="goal">
+                <option value="" {% if not selected_goal %}selected{% endif %}>Choose your goal</option>
+                <option value="Lose weight"        {% if selected_goal == 'Lose weight' %}selected{% endif %}>Lose weight</option>
+                <option value="Build muscle"       {% if selected_goal == 'Build muscle' %}selected{% endif %}>Build muscle</option>
+                <option value="Improve stamina"    {% if selected_goal == 'Improve stamina' %}selected{% endif %}>Improve stamina</option>
+                <option value="Maintain fitness"   {% if selected_goal == 'Maintain fitness' %}selected{% endif %}>Maintain fitness</option>
+                <option value="Improve flexibility" {% if selected_goal == 'Improve flexibility' %}selected{% endif %}>Improve flexibility</option>
+              </select>
+            </div>
+
+            <div class="auth-field auth-field--full">
+              <label class="auth-label" for="activity_level">Activity Level</label>
+              {% set selected_activity = form_data.get('activity_level', '') %}
+              <select class="auth-input" id="activity_level" name="activity_level">
+                <option value="" {% if not selected_activity %}selected{% endif %}>Choose activity level</option>
+                <option value="Beginner"       {% if selected_activity == 'Beginner' %}selected{% endif %}>Beginner</option>
+                <option value="Lightly active" {% if selected_activity == 'Lightly active' %}selected{% endif %}>Lightly active</option>
+                <option value="Active"         {% if selected_activity == 'Active' %}selected{% endif %}>Active</option>
+                <option value="Very active"    {% if selected_activity == 'Very active' %}selected{% endif %}>Very active</option>
+              </select>
+            </div>
+
+            <div class="auth-field auth-field--full">
+              <label class="auth-label" for="injury_notes">Injury Notes <span class="auth-optional">(optional)</span></label>
+              <input class="auth-input" id="injury_notes" name="injury_notes" type="text"
+                     value="{{ form_data.get('injury_notes', '') }}"
+                     placeholder="e.g. knee pain, shoulder injury, or none">
+            </div>
+
+          </div>
+
+          <button class="auth-btn auth-btn--primary auth-btn--full mt-3" type="submit">
+            Create Profile &amp; Start Training
+          </button>
+        </form>
+
+        {% if bmi %}
+        <div class="auth-bmi-pill">
+          <span>Your BMI</span>
+          <strong>{{ bmi }}</strong>
+          <span class="auth-bmi-cat">{{ category }}</span>
+        </div>
+        <p class="auth-bmi-quote">{{ quote }}</p>
+        {% endif %}
+
+      </div>
+
     </div>
+
   </div>
 </section>
 
 <script>
-  const showProfileForm = document.getElementById("showProfileForm");
-  const profilePanel = document.getElementById("profileCreatePanel");
-  const passwordToggles = document.querySelectorAll("[data-password-toggle]");
+(function () {
+  const tabs   = document.querySelectorAll(".auth-tab");
+  const card = document.getElementById("authCard");
 
-  if (showProfileForm && profilePanel) {
-    showProfileForm.addEventListener("click", () => {
-      profilePanel.classList.add("is-open");
-      profilePanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); });
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected", "true");
 
-  passwordToggles.forEach((button) => {
-    button.addEventListener("click", () => {
-      const input = document.getElementById(button.dataset.passwordToggle);
+      document.querySelectorAll(".auth-panel").forEach((p) => p.classList.add("auth-panel--hidden"));
+      const target = document.getElementById(tab.dataset.panel);
+      if (target) target.classList.remove("auth-panel--hidden");
 
-      if (!input) {
-        return;
-      }
-
-      const shouldShow = input.type === "password";
-      input.type = shouldShow ? "text" : "password";
-      button.textContent = shouldShow ? "Hide" : "Show";
-      button.setAttribute("aria-label", shouldShow ? "Hide password" : "Show password");
+      if (card) card.classList.toggle("auth-card--wide", tab.dataset.panel === "panelSignUp");
     });
   });
+
+  {% if show_signup %}
+  const signupTab = document.getElementById("tabSignUp");
+  if (signupTab) signupTab.click();
+  {% endif %}
+
+  document.querySelectorAll("[data-password-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = document.getElementById(btn.dataset.passwordToggle);
+      if (!input) return;
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.textContent = show ? "Hide" : "Show";
+    });
+  });
+})();
 </script>
 {% endblock %}

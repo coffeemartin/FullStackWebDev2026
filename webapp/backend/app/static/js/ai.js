@@ -150,26 +150,21 @@ const profileCancelBtn = document.getElementById("profile-edit-cancel");
 // The data-profile-form attribute is on the <form> element in the profile section,
 // which contains both the view and edit fields. This allows us to easily toggle between them.
 const profileForm = document.querySelector("[data-profile-form]");
+const profileViewPanel = document.getElementById("ai-profile-view");
 if (profileEditBtn && profileForm) {
   let profileEditing = false;
 
-  // This function shows/hides the view vs edit fields based on the editing state.
-  // The view fields have data-profile-view attributes and the edit fields have data-profile-field attributes,
+  // Toggle between the stat-chip view panel and the edit form
   const setProfileEditableState = (editing) => {
-    profileForm.querySelectorAll("[data-profile-view]").forEach((view) => {
-      view.classList.toggle("d-none", editing);
-    });
+    // Toggle the read-only view chips panel
+    if (profileViewPanel) profileViewPanel.classList.toggle("d-none", editing);
+    // Toggle the edit form
+    profileForm.classList.toggle("d-none", !editing);
 
-    // show the input fileds and make them editable when in editing mode, hide them when not in editing mode.
-    profileForm.querySelectorAll("[data-profile-field]").forEach((field) => {
-      field.classList.toggle("d-none", !editing);
-    });
     if (profileCancelBtn) {
       profileCancelBtn.classList.toggle("d-none", !editing);
     }
-    profileEditBtn.textContent = editing
-      ? "Save profile updates"
-      : "Update profile";
+    profileEditBtn.textContent = editing ? "Save Changes" : "Edit Profile";
     profileEditBtn.classList.toggle("btn-outline-secondary", !editing);
     profileEditBtn.classList.toggle("btn-success", editing);
   };
@@ -183,19 +178,14 @@ if (profileEditBtn && profileForm) {
       setProfileEditableState(false);
     });
   }
-  // When the profile edit/save button is clicked, if we're not currently editing, switch to edit mode.
-  // If we are currently editing, submit the form which will trigger the profile update logic in the route handler.
   profileEditBtn.addEventListener("click", () => {
     if (!profileEditing) {
       profileEditing = true;
       setProfileEditableState(true);
       return;
     }
-    // This submits the form to Flask. The route handler will check the form_action field to determine that
-    // this is a profile update request, and will update the user's profile accordingly without generating a new plan.
     const formAction = profileForm.querySelector('input[name="form_action"]');
     if (formAction) formAction.value = "update_profile";
-
     profileForm.submit();
   });
 }

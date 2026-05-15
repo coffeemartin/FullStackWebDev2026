@@ -1,726 +1,1286 @@
-/* EXERCISE PAGE - DARK GYM THEME */
+/* ============================================================
+   EXERCISE PAGE — ELITE FITNESS DARK THEME v2
+   ============================================================ */
+
 .exercise-page {
-  --exercise-bg-1: #07110d;
-  --exercise-bg-2: #101d17;
-  --exercise-panel: rgba(8, 14, 11, 0.92);
-  --exercise-border: rgba(110, 255, 176, 0.16);
-  --exercise-accent: #72ffb7;
-  --exercise-accent-strong: #25c56d;
-  --exercise-text-soft: #abc8b8;
-  --exercise-shadow: 0 24px 54px rgba(0, 0, 0, 0.34);
-  color: #f4fff8;
-  background: var(--exercise-bg-1);
+  --ex-bg:          #05090f;
+  --ex-surface:     #0d1520;
+  --ex-surface-2:   #111d2e;
+  --ex-border:      rgba(56, 189, 248, 0.12);
+  --ex-accent:      #38bdf8;
+  --ex-glow:        rgba(56, 189, 248, 0.15);
+  --ex-text:        #ddeeff;
+  --ex-text-muted:  #5a8aaa;
+  --ex-shadow:      0 8px 32px rgba(0, 0, 0, 0.45);
+
+  /* Category palette — bright on dark */
+  --cat-strength:        #60a5fa;
+  --cat-strength-bg:     rgba(96, 165, 250, 0.08);
+  --cat-strength-border: rgba(96, 165, 250, 0.28);
+  --cat-strength-glow:   rgba(96, 165, 250, 0.2);
+
+  --cat-cardio:        #fb923c;
+  --cat-cardio-bg:     rgba(251, 146, 60, 0.08);
+  --cat-cardio-border: rgba(251, 146, 60, 0.28);
+  --cat-cardio-glow:   rgba(251, 146, 60, 0.2);
+
+  --cat-mobility:        #a78bfa;
+  --cat-mobility-bg:     rgba(167, 139, 250, 0.08);
+  --cat-mobility-border: rgba(167, 139, 250, 0.28);
+  --cat-mobility-glow:   rgba(167, 139, 250, 0.2);
+
+  --cat-recovery:        #2dd4bf;
+  --cat-recovery-bg:     rgba(45, 212, 191, 0.08);
+  --cat-recovery-border: rgba(45, 212, 191, 0.28);
+  --cat-recovery-glow:   rgba(45, 212, 191, 0.2);
+
+  color: var(--ex-text);
+  background: var(--ex-bg);
   min-height: 100vh;
-  padding: 1rem;
+  padding: 1.5rem 1rem 3rem;
 }
 
-/* Hero Section */
+/* ── Hero ───────────────────────────────────────────────── */
 .exercise-hero {
-  margin-bottom: 2rem;
-  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+  min-height: 24rem;
+  padding: 2.8rem 2.5rem;
   border-radius: 28px;
   background:
-    radial-gradient(
-      circle at top right,
-      rgba(114, 255, 183, 0.18),
-      transparent 28%
-    ),
-    linear-gradient(135deg, var(--exercise-bg-2), var(--exercise-bg-1));
-  border: 1px solid var(--exercise-border);
-  box-shadow: var(--exercise-shadow);
+    radial-gradient(ellipse at 78% -10%, rgba(37, 99, 235, 0.26) 0%, transparent 45%),
+    radial-gradient(ellipse at 12% 110%, rgba(56, 189, 248, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 52% 48%, rgba(34, 211, 238, 0.04) 0%, transparent 70%),
+    linear-gradient(155deg, #0a1730 0%, #071220 52%, #040913 100%);
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  box-shadow: var(--ex-shadow), 0 0 0 1px rgba(96, 165, 250, 0.05) inset;
+  display: flex;
+  align-items: center;
+}
+
+.exercise-hero > .row {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* dot-grid overlay */
+.exercise-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(96, 165, 250, 0.13) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+/* rotating aurora sweep — energetic, fast, blue-to-orange arc */
+.exercise-hero::after {
+  content: "";
+  position: absolute;
+  inset: -42% -18%;
+  background: conic-gradient(
+    from 175deg at 70% 38%,
+    rgba(96, 165, 250, 0.13) 0deg,
+    rgba(34, 211, 238, 0.08) 72deg,
+    rgba(56, 189, 248, 0.05) 120deg,
+    transparent 170deg
+  );
+  pointer-events: none;
+  animation: ex-aurora 10s linear infinite;
+}
+
+@keyframes ex-aurora {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .exercise-kicker {
-  display: inline-block;
-  margin-bottom: 0.85rem;
-  padding: 0.4rem 0.9rem;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.4rem 1rem;
   border-radius: 999px;
-  background: rgba(114, 255, 183, 0.12);
-  color: var(--exercise-accent);
-  font-size: 0.82rem;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  color: var(--cat-strength);
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
+.exercise-kicker::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cat-strength);
+  animation: pulse-dot 2.2s ease infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.35; transform: scale(0.65); }
+}
+
 .exercise-title {
-  margin-bottom: 0.9rem;
-  font-size: clamp(2.2rem, 4.5vw, 3.3rem);
-  font-weight: 800;
-  line-height: 1.05;
-  background: linear-gradient(135deg, #f4fff8, var(--exercise-accent));
+  position: relative;
+  margin-bottom: 0.85rem;
+  font-size: clamp(2.1rem, 4.8vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #ffffff 20%, var(--cat-strength) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .exercise-subtitle {
-  color: var(--exercise-text-soft);
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  line-height: 1.6;
+  position: relative;
+  color: var(--ex-text-muted);
+  font-size: 1rem;
+  margin-bottom: 1.6rem;
+  line-height: 1.75;
+  max-width: 480px;
 }
 
-.exercise-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.exercise-chip {
-  padding: 0.55rem 1rem;
-  border: 1px solid rgba(114, 255, 183, 0.18);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--exercise-accent);
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-}
-
-.exercise-chip:hover {
-  background: rgba(114, 255, 183, 0.12);
-  border-color: var(--exercise-accent);
-}
-
-/* BMI Summary Card */
+/* ── BMI Glass Card ─────────────────────────────────────── */
 .bmi-summary-card {
-  padding: 2rem;
+  position: relative;
+  padding: 2rem 1.75rem;
   border-radius: 24px;
-  background: linear-gradient(
-    180deg,
-    rgba(18, 35, 26, 0.96),
-    rgba(7, 16, 12, 0.96)
-  );
-  border: 1px solid var(--exercise-border);
-  box-shadow: var(--exercise-shadow);
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.18), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(56, 189, 248, 0.08), transparent 50%),
+    linear-gradient(160deg, rgba(13, 30, 50, 0.97), rgba(7, 14, 25, 0.99));
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  box-shadow:
+    var(--ex-shadow),
+    0 0 0 1px rgba(96, 165, 250, 0.08) inset,
+    0 0 30px rgba(96, 165, 250, 0.12);
+  backdrop-filter: blur(16px);
   height: 100%;
+  overflow: hidden;
+}
+
+/* shimmer top edge */
+.bmi-summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 12%; right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.6), rgba(56, 189, 248, 0.4), transparent);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.bmi-summary-card::after {
+  content: "";
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.16), transparent 70%);
+  pointer-events: none;
 }
 
 .bmi-summary-card--empty {
-  background: linear-gradient(
-    180deg,
-    rgba(24, 28, 26, 0.96),
-    rgba(10, 12, 11, 0.96)
-  );
+  background: linear-gradient(160deg, rgba(9, 15, 25, 0.95), rgba(5, 9, 15, 0.98));
+  border-color: rgba(56, 189, 248, 0.1);
 }
 
 .bmi-label {
-  margin-bottom: 0.3rem;
-  color: var(--exercise-text-soft);
+  margin-bottom: 0.2rem;
+  color: var(--ex-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.8rem;
-  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .bmi-value {
   font-size: 4rem;
   font-weight: 900;
   line-height: 1;
-  color: var(--exercise-accent);
-  margin-bottom: 0.5rem;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--cat-strength) 0%, #fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.2rem;
 }
 
 .bmi-status {
-  margin: 0.8rem 0 1rem 0;
-  font-size: 1.3rem;
+  margin: 0.55rem 0 0.6rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  color: #f4fff8;
+  color: #fff;
 }
 
 .bmi-focus {
-  color: var(--exercise-text-soft);
-  line-height: 1.6;
-  margin-bottom: 1rem;
+  color: var(--ex-text-muted);
+  line-height: 1.65;
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
 }
 
 .bmi-meta {
-  margin-top: 1.2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  color: var(--cat-strength);
+  font-size: 0.83rem;
   font-weight: 600;
-  color: var(--exercise-accent);
-  font-size: 0.95rem;
 }
 
-/* Section Layout */
+/* ── Section Layout ─────────────────────────────────────── */
 .exercise-section {
-  margin-bottom: 3rem;
+  margin-bottom: 2.8rem;
 }
 
 .section-heading {
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
 .section-heading h2 {
-  margin-bottom: 0.6rem;
-  font-size: 2rem;
+  margin-bottom: 0.4rem;
+  font-size: 1.7rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #f4fff8, var(--exercise-accent));
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #ffffff, var(--ex-accent));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .section-heading p {
-  color: var(--exercise-text-soft);
-  max-width: 600px;
+  color: var(--ex-text-muted);
+  max-width: 520px;
   margin: 0 auto;
-  font-size: 1.05rem;
+  font-size: 0.94rem;
+  line-height: 1.65;
 }
 
-/* Cards */
-.category-card,
-.exercise-card,
-.exercise-panel,
-.exercise-empty-state {
+/* ── Category Cards ─────────────────────────────────────── */
+.category-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   height: 100%;
-  padding: 1.8rem;
-  border-radius: 24px;
+  padding: 1.1rem 1.3rem;
+  border-radius: 18px;
+  background: var(--ex-surface);
+  border: 1px solid var(--ex-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top accent line */
+.category-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--ex-border);
+  transition: background 0.25s ease;
+}
+
+/* Category-specific card styles */
+.category-card[data-category*="strength"] {
   background:
-    radial-gradient(
-      circle at top right,
-      rgba(114, 255, 183, 0.08),
-      transparent 25%
-    ),
-    linear-gradient(180deg, rgba(12, 20, 17, 0.96), rgba(8, 13, 11, 0.96));
-  border: 1px solid var(--exercise-border);
-  box-shadow: var(--exercise-shadow);
-  transition: all 0.3s ease;
+    radial-gradient(ellipse at top left, var(--cat-strength-bg), transparent 60%),
+    var(--ex-surface);
+  border-color: var(--cat-strength-border);
+}
+.category-card[data-category*="strength"]::before { background: var(--cat-strength); }
+
+.category-card[data-category*="cardio"],
+.category-card[data-category*="walking"],
+.category-card[data-category*="cycling"],
+.category-card[data-category*="water"],
+.category-card[data-category*="sport"] {
+  background:
+    radial-gradient(ellipse at top left, var(--cat-cardio-bg), transparent 60%),
+    var(--ex-surface);
+  border-color: var(--cat-cardio-border);
+}
+.category-card[data-category*="cardio"]::before,
+.category-card[data-category*="walking"]::before,
+.category-card[data-category*="cycling"]::before,
+.category-card[data-category*="sport"]::before  { background: var(--cat-cardio); }
+
+.category-card[data-category*="mobility"] {
+  background:
+    radial-gradient(ellipse at top left, var(--cat-mobility-bg), transparent 60%),
+    var(--ex-surface);
+  border-color: var(--cat-mobility-border);
+}
+.category-card[data-category*="mobility"]::before { background: var(--cat-mobility); }
+
+.category-card[data-category*="recovery"] {
+  background:
+    radial-gradient(ellipse at top left, var(--cat-recovery-bg), transparent 60%),
+    var(--ex-surface);
+  border-color: var(--cat-recovery-border);
+}
+.category-card[data-category*="recovery"]::before { background: var(--cat-recovery); }
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
-.category-card:hover,
-.exercise-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(114, 255, 183, 0.35);
-  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+.category-card[data-category*="strength"]:hover  { box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 0 24px var(--cat-strength-glow); }
+.category-card[data-category*="cardio"]:hover,
+.category-card[data-category*="walking"]:hover,
+.category-card[data-category*="cycling"]:hover,
+.category-card[data-category*="sport"]:hover     { box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 0 24px var(--cat-cardio-glow); }
+.category-card[data-category*="mobility"]:hover  { box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 0 24px var(--cat-mobility-glow); }
+.category-card[data-category*="recovery"]:hover  { box-shadow: 0 14px 36px rgba(0,0,0,0.45), 0 0 24px var(--cat-recovery-glow); }
+
+.category-icon {
+  font-size: 1.8rem;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
-.category-card h3,
-.exercise-card h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin-bottom: 0.8rem;
-  color: #f4fff8;
+.category-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0;
+  color: var(--ex-text);
 }
 
+.category-card[data-category*="strength"] h3 { color: var(--cat-strength); }
+.category-card[data-category*="cardio"] h3,
+.category-card[data-category*="walking"] h3,
+.category-card[data-category*="cycling"] h3,
+.category-card[data-category*="sport"] h3   { color: var(--cat-cardio); }
+.category-card[data-category*="mobility"] h3 { color: var(--cat-mobility); }
+.category-card[data-category*="recovery"] h3 { color: var(--cat-recovery); }
+
+/* ── Exercise Badge ──────────────────────────────────────── */
 .exercise-badge {
-  display: inline-block;
-  margin-bottom: 1rem;
-  padding: 0.45rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  padding: 0.28rem 0.7rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #106238, #2dbc74);
-  color: white;
-  font-size: 0.82rem;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: var(--ex-accent);
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
-.exercise-tip,
-.category-card p {
-  color: var(--exercise-text-soft);
-  line-height: 1.6;
-  margin-bottom: 0;
+/* ── Exercise Pill Grid ─────────────────────────────────── */
+.exercise-pill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 }
 
+.exercise-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: 18px;
+  border: 1px solid var(--ex-border);
+  border-top: 3px solid var(--ex-accent);
+  background: var(--ex-surface);
+  color: var(--ex-text);
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+  text-align: left;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Category-colored top border on pills */
+.exercise-pill[data-category*="strength"]  { border-top-color: var(--cat-strength); }
+.exercise-pill[data-category*="cardio"],
+.exercise-pill[data-category*="walking"],
+.exercise-pill[data-category*="cycling"],
+.exercise-pill[data-category*="water"],
+.exercise-pill[data-category*="sport"]     { border-top-color: var(--cat-cardio); }
+.exercise-pill[data-category*="mobility"]  { border-top-color: var(--cat-mobility); }
+.exercise-pill[data-category*="recovery"]  { border-top-color: var(--cat-recovery); }
+
+.exercise-pill:hover {
+  transform: translateY(-4px);
+  background: var(--ex-surface-2);
+}
+
+.exercise-pill[data-category*="strength"]:hover  { border-color: var(--cat-strength-border); box-shadow: 0 10px 32px rgba(0,0,0,0.4), 0 0 20px var(--cat-strength-glow); }
+.exercise-pill[data-category*="cardio"]:hover,
+.exercise-pill[data-category*="walking"]:hover,
+.exercise-pill[data-category*="cycling"]:hover,
+.exercise-pill[data-category*="sport"]:hover     { border-color: var(--cat-cardio-border); box-shadow: 0 10px 32px rgba(0,0,0,0.4), 0 0 20px var(--cat-cardio-glow); }
+.exercise-pill[data-category*="mobility"]:hover  { border-color: var(--cat-mobility-border); box-shadow: 0 10px 32px rgba(0,0,0,0.4), 0 0 20px var(--cat-mobility-glow); }
+.exercise-pill[data-category*="recovery"]:hover  { border-color: var(--cat-recovery-border); box-shadow: 0 10px 32px rgba(0,0,0,0.4), 0 0 20px var(--cat-recovery-glow); }
+
+.exercise-pill-category {
+  display: inline-block;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* Category-colored pill badges */
+.exercise-pill[data-category*="strength"]  .exercise-pill-category { background: var(--cat-strength-bg); color: var(--cat-strength); border: 1px solid var(--cat-strength-border); }
+.exercise-pill[data-category*="cardio"]    .exercise-pill-category,
+.exercise-pill[data-category*="walking"]   .exercise-pill-category,
+.exercise-pill[data-category*="cycling"]   .exercise-pill-category,
+.exercise-pill[data-category*="water"]     .exercise-pill-category,
+.exercise-pill[data-category*="sport"]     .exercise-pill-category { background: var(--cat-cardio-bg); color: var(--cat-cardio); border: 1px solid var(--cat-cardio-border); }
+.exercise-pill[data-category*="mobility"]  .exercise-pill-category { background: var(--cat-mobility-bg); color: var(--cat-mobility); border: 1px solid var(--cat-mobility-border); }
+.exercise-pill[data-category*="recovery"]  .exercise-pill-category { background: var(--cat-recovery-bg); color: var(--cat-recovery); border: 1px solid var(--cat-recovery-border); }
+
+/* Default (no data-category) */
+.exercise-pill:not([data-category]) .exercise-pill-category,
+.exercise-pill[data-category=""] .exercise-pill-category {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--ex-accent);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.exercise-pill-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+}
+
+.exercise-pill-hint {
+  font-size: 0.77rem;
+  color: var(--ex-text-muted);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.exercise-pill:hover .exercise-pill-hint { color: var(--ex-accent); }
+
+@media (max-width: 900px) {
+  .exercise-pill-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 540px) {
+  .exercise-pill-grid { grid-template-columns: 1fr; }
+  .exercise-pill { border-radius: 14px; padding: 1.2rem 1.3rem; }
+}
+
+/* ── Stats Dashboard Bar ────────────────────────────────── */
+.exercise-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card {
+  position: relative;
+  padding: 1.3rem 1.4rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.07), transparent 55%),
+    var(--ex-surface);
+  border: 1px solid var(--ex-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  border-color: rgba(96, 165, 250, 0.25);
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cat-strength), transparent);
+}
+
+.stat-card:nth-child(2)::before { background: linear-gradient(90deg, var(--cat-cardio), transparent); }
+.stat-card:nth-child(3)::before { background: linear-gradient(90deg, var(--cat-mobility), transparent); }
+.stat-card:nth-child(4)::before { background: linear-gradient(90deg, var(--cat-recovery), transparent); }
+
+.stat-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ex-text-muted);
+  margin-bottom: 0.55rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+
+.stat-value--accent { color: var(--cat-strength); }
+.stat-value--sm     { font-size: 1.05rem; font-weight: 700; letter-spacing: 0; line-height: 1.3; margin-top: 0.1rem; }
+.stat-value--muted  { color: var(--ex-text-muted); }
+
+.stat-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--ex-text-muted);
+  margin-top: 0.2rem;
+}
+
+@media (max-width: 768px) {
+  .exercise-stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.65rem;
+    margin-bottom: 1.75rem;
+  }
+  .stat-value { font-size: 1.8rem; }
+}
+
+@media (max-width: 480px) {
+  .exercise-stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Empty State ────────────────────────────────────────── */
 .exercise-empty-state {
   text-align: center;
-  padding: 3rem 2rem;
-  color: var(--exercise-text-soft);
+  padding: 2.5rem 1.5rem;
+  color: var(--ex-text-muted);
+  border-radius: 20px;
+  background: var(--ex-surface);
+  border: 1px dashed rgba(56, 189, 248, 0.15);
+  font-size: 0.95rem;
 }
 
 .exercise-empty-state::before {
   content: "🔒";
   display: block;
-  font-size: 3rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
 }
 
-/* Form Styling */
+/* ── Workout Log Form Panel ─────────────────────────────── */
 .exercise-panel {
+  padding: 2.2rem;
+  border-radius: 26px;
   background:
-    radial-gradient(
-      circle at top left,
-      rgba(114, 255, 183, 0.06),
-      transparent 30%
-    ),
-    linear-gradient(180deg, rgba(12, 20, 17, 0.98), rgba(8, 13, 11, 0.98));
+    radial-gradient(ellipse at top left, rgba(96, 165, 250, 0.06), transparent 45%),
+    linear-gradient(160deg, var(--ex-surface-2), var(--ex-surface));
+  border: 1px solid var(--ex-border);
+  box-shadow: var(--ex-shadow);
+  counter-reset: form-step;
+}
+
+/* Numbered step labels */
+.form-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ex-border);
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ex-text-muted);
+  counter-increment: form-step;
+}
+
+.form-section-label::before {
+  content: "0" counter(form-step);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: var(--cat-strength);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.exercise-input {
+  border: 1.5px solid rgba(56, 189, 248, 0.13);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ex-text);
+  transition: all 0.22s ease;
+  font-size: 0.95rem;
 }
 
 .exercise-input option {
-  background-color: #1e1e1e;
-  color: #f4fff8;
+  background-color: #111d2e;
+  color: var(--ex-text);
 }
+
 .exercise-input:focus {
-  border: 1.5px solid rgba(114, 255, 183, 0.2);
-  border-radius: 18px;
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.09);
   background: rgba(255, 255, 255, 0.05);
-  color: #f4fff8;
-  padding: 0.9rem 1.2rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  color: var(--ex-text);
+  outline: none;
 }
 
-.exercise-input option {
-  background-color: #1e1e1e;
-  color: #f4fff8;
-}
-
-.exercise-input:focus {
-  border-color: rgba(114, 255, 183, 0.6);
-  box-shadow: 0 0 0 0.25rem rgba(114, 255, 183, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
-}
-
-.exercise-input::placeholder {
-  color: #89a998;
-}
+.exercise-input::placeholder { color: #3d6a85; }
 
 .exercise-textarea {
-  min-height: 130px;
+  min-height: 100px;
   resize: vertical;
   font-family: inherit;
 }
 
-.exercise-check .form-check-input {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(114, 255, 183, 0.3);
-  width: 1.3em;
-  height: 1.3em;
+.exercise-form-guidance {
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  border-radius: 10px;
+  background: rgba(96, 165, 250, 0.05);
+  color: #a8c8f0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  min-height: 2.5rem;
 }
 
-.exercise-check .form-check-input:checked {
-  background-color: var(--exercise-accent-strong);
-  border-color: var(--exercise-accent-strong);
-}
-
+/* Submit button with shimmer */
 .exercise-submit-btn {
-  padding: 1.1rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem;
   border: none;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #118344, #42e28a);
-  color: #06150d;
-  font-weight: 800;
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6, #60a5fa);
+  background-size: 200% 200%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  transition: all 0.3s ease;
-  box-shadow: 0 12px 30px rgba(66, 226, 138, 0.3);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 8px 28px rgba(96, 165, 250, 0.3);
+  animation: btn-shimmer 4s ease infinite;
+}
+
+@keyframes btn-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .exercise-submit-btn:hover {
-  background: linear-gradient(135deg, #16a553, #73ffb8);
-  transform: translateY(-3px);
-  box-shadow: 0 18px 40px rgba(66, 226, 138, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(96, 165, 250, 0.42);
+  color: #fff;
 }
 
 .exercise-error {
-  margin-top: 0.5rem;
-  color: #ff9d9d;
-  font-size: 0.9rem;
-  background: rgba(255, 157, 157, 0.1);
-  padding: 0.4rem 0.8rem;
+  margin-top: 0.4rem;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  background: rgba(252, 165, 165, 0.07);
+  padding: 0.35rem 0.7rem;
   border-radius: 8px;
-  border-left: 3px solid #ff6b6b;
+  border-left: 3px solid #f87171;
 }
 
 .exercise-field-help {
-  color: var(--exercise-text-soft);
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-
-.exercise-form-guidance {
-  padding: 0.95rem 1rem;
-  border: 1px solid rgba(114, 255, 183, 0.14);
-  border-radius: 16px;
-  background: rgba(114, 255, 183, 0.08);
-  color: #dfffee;
-  font-size: 0.95rem;
+  color: var(--ex-text-muted);
+  font-size: 0.84rem;
   line-height: 1.5;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .exercise-page {
-    padding: 0.5rem;
-  }
-
-  .exercise-hero,
-  .exercise-panel,
-  .category-card,
-  .exercise-card,
-  .bmi-summary-card,
-  .exercise-empty-state {
-    padding: 1.5rem;
-    border-radius: 20px;
-  }
-
-  .bmi-value {
-    font-size: 3rem;
-  }
-
-  .section-heading h2 {
-    font-size: 1.7rem;
-  }
-
-  .exercise-title {
-    font-size: 2.2rem;
-  }
+/* ── Autocomplete Dropdown ──────────────────────────────── */
+.exercise-autocomplete-wrap {
+  position: relative;
 }
 
-@media (max-width: 480px) {
-  .exercise-hero {
-    padding: 1.5rem;
-  }
-
-  .bmi-value {
-    font-size: 2.5rem;
-  }
-}
-
-/* Rich exercise cards */
-.exercise-card--interactive {
-  padding: 1.35rem;
-}
-
-.exercise-benefit {
-  color: #dfffee;
-  font-weight: 600;
-  margin-bottom: 0.65rem;
-}
-
-.exercise-card-meta {
-  display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.85rem;
-}
-
-.exercise-card-meta p {
+.exercise-dropdown {
+  display: none;
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #111d2e;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  border-radius: 12px;
   margin: 0;
-  color: var(--exercise-text-soft);
-  font-size: 0.95rem;
-  line-height: 1.45;
+  padding: 0.3rem 0;
+  list-style: none;
+  top: calc(100% + 4px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
 }
 
-.exercise-card-meta strong {
-  color: #f4fff8;
+.exercise-dropdown li {
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  color: var(--ex-text);
+  font-size: 0.92rem;
+  transition: background 0.15s ease;
+  border-radius: 8px;
+  margin: 0 0.3rem;
 }
 
-.exercise-card-demo-btn,
-.exercise-log-shortcut {
-  border: none;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #118344, #42e28a);
-  color: #06150d;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  transition:
-    transform 0.25s ease,
-    box-shadow 0.25s ease,
-    background 0.25s ease;
+.exercise-dropdown li:hover {
+  background: rgba(96, 165, 250, 0.1);
+  color: var(--cat-strength);
 }
 
-.exercise-card-demo-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem 1.05rem;
-  box-shadow: 0 10px 22px rgba(66, 226, 138, 0.24);
-}
-
-.exercise-card-demo-btn:hover,
-.exercise-log-shortcut:hover {
-  background: linear-gradient(135deg, #16a553, #73ffb8);
-  color: #06150d;
-  transform: translateY(-2px);
-}
-
-/* Recent workout history */
+/* ── Workout History ────────────────────────────────────── */
 .history-stack {
-  display: grid;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .history-card {
   position: relative;
-  height: 100%;
-  padding: 1.5rem;
-  border-radius: 24px;
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba(114, 255, 183, 0.08),
-      transparent 24%
-    ),
-    linear-gradient(180deg, rgba(12, 20, 17, 0.98), rgba(7, 12, 10, 0.98));
-  border: 1px solid var(--exercise-border);
-  box-shadow: var(--exercise-shadow);
-  transition:
-    transform 0.28s ease,
-    border-color 0.28s ease,
-    box-shadow 0.28s ease;
+  padding: 1rem 1.2rem 1rem 1.4rem;
+  border-radius: 16px;
+  background: var(--ex-surface);
+  border: 1px solid var(--ex-border);
+  border-left: 3px solid var(--ex-accent);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.history-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 1.5rem;
-  right: 1.5rem;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    rgba(114, 255, 183, 0),
-    rgba(114, 255, 183, 0.45),
-    rgba(114, 255, 183, 0)
-  );
-}
+/* Category left-border colors */
+.history-card[data-category*="strength"] { border-left-color: var(--cat-strength); }
+.history-card[data-category*="cardio"]   { border-left-color: var(--cat-cardio); }
+.history-card[data-category*="walking"]  { border-left-color: var(--cat-cardio); }
+.history-card[data-category*="cycling"]  { border-left-color: var(--cat-cardio); }
+.history-card[data-category*="sport"]    { border-left-color: var(--cat-cardio); }
+.history-card[data-category*="mobility"] { border-left-color: var(--cat-mobility); }
+.history-card[data-category*="recovery"] { border-left-color: var(--cat-recovery); }
 
 .history-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(114, 255, 183, 0.3);
-  box-shadow: 0 30px 62px rgba(0, 0, 0, 0.42);
+  background: var(--ex-surface-2);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  transform: translateX(3px);
+}
+
+.history-card[data-category*="strength"]:hover  { border-color: var(--cat-strength-border); }
+.history-card[data-category*="cardio"]:hover,
+.history-card[data-category*="walking"]:hover,
+.history-card[data-category*="cycling"]:hover,
+.history-card[data-category*="sport"]:hover     { border-color: var(--cat-cardio-border); }
+.history-card[data-category*="mobility"]:hover  { border-color: var(--cat-mobility-border); }
+.history-card[data-category*="recovery"]:hover  { border-color: var(--cat-recovery-border); }
+
+/* Compact row layout */
+.history-card--stacked {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.4rem;
 }
 
 .history-card-top {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.15rem;
-}
-
-.history-date {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(114, 255, 183, 0.16);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--exercise-text-soft);
-  font-size: 0.88rem;
-  font-weight: 600;
-  white-space: nowrap;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .history-title {
-  margin-bottom: 1.1rem;
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1.05;
-  color: #f4fff8;
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .history-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
 }
+
+.history-note {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
+  padding: 0.3rem 0.65rem;
+  border-left: 2px solid rgba(96, 165, 250, 0.25);
+  border-radius: 0 6px 6px 0;
+  background: rgba(96, 165, 250, 0.03);
+  color: var(--ex-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.history-note--muted { color: #3d6a85; }
 
 .history-stat {
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
-  border: 1px solid rgba(114, 255, 183, 0.12);
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.history-stat--wide {
-  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--ex-border);
+  background: rgba(56, 189, 248, 0.04);
+  white-space: nowrap;
 }
 
 .history-stat span {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: var(--exercise-text-soft);
-  font-size: 0.76rem;
+  color: var(--ex-text-muted);
+  font-size: 0.67rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .history-stat strong {
-  color: #f4fff8;
-  font-size: 1.08rem;
-  font-weight: 800;
+  color: var(--ex-text);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
-.history-note {
-  margin: 1rem 0 0;
-  padding: 0.95rem 1rem;
-  border-left: 3px solid rgba(114, 255, 183, 0.55);
-  border-radius: 0 16px 16px 0;
-  background: rgba(255, 255, 255, 0.028);
-  color: #dfffee;
-  line-height: 1.6;
-}
+.history-stat--wide { grid-column: auto; }
 
-.history-note--muted {
-  color: var(--exercise-text-soft);
+/* Category-colored stat chips on hover */
+.history-card[data-category*="strength"]:hover  .history-stat { border-color: var(--cat-strength-border); background: var(--cat-strength-bg); }
+.history-card[data-category*="cardio"]:hover    .history-stat,
+.history-card[data-category*="walking"]:hover   .history-stat,
+.history-card[data-category*="cycling"]:hover   .history-stat,
+.history-card[data-category*="sport"]:hover     .history-stat { border-color: var(--cat-cardio-border); background: var(--cat-cardio-bg); }
+.history-card[data-category*="mobility"]:hover  .history-stat { border-color: var(--cat-mobility-border); background: var(--cat-mobility-bg); }
+.history-card[data-category*="recovery"]:hover  .history-stat { border-color: var(--cat-recovery-border); background: var(--cat-recovery-bg); }
+
+/* Category-colored exercise badges in history */
+.history-card[data-category*="strength"]  .exercise-badge { background: var(--cat-strength-bg); border-color: var(--cat-strength-border); color: var(--cat-strength); }
+.history-card[data-category*="cardio"]    .exercise-badge,
+.history-card[data-category*="walking"]   .exercise-badge,
+.history-card[data-category*="cycling"]   .exercise-badge,
+.history-card[data-category*="sport"]     .exercise-badge { background: var(--cat-cardio-bg); border-color: var(--cat-cardio-border); color: var(--cat-cardio); }
+.history-card[data-category*="mobility"]  .exercise-badge { background: var(--cat-mobility-bg); border-color: var(--cat-mobility-border); color: var(--cat-mobility); }
+.history-card[data-category*="recovery"]  .exercise-badge { background: var(--cat-recovery-bg); border-color: var(--cat-recovery-border); color: var(--cat-recovery); }
+
+.history-date {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--ex-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ex-text-muted);
+  font-size: 0.73rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .history-card--empty {
-  max-width: 560px;
+  max-width: 460px;
   margin: 0 auto;
+  text-align: center;
+  padding: 2rem;
+  display: block;
+  background: var(--ex-surface);
+  border-left: 1px solid var(--ex-border);
 }
 
-.history-card--stacked {
-  padding: 1.35rem 1.5rem;
+.history-day-card {
+  padding: 1.15rem 1.2rem 1.2rem 1.3rem;
+  border-left-width: 4px;
 }
 
-.history-card--stacked .history-stats {
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+.history-day-card[data-primary-category*="strength"] { border-left-color: var(--cat-strength); }
+.history-day-card[data-primary-category*="cardio"]   { border-left-color: var(--cat-cardio); }
+.history-day-card[data-primary-category*="mobility"] { border-left-color: var(--cat-mobility); }
+.history-day-card[data-primary-category*="recovery"] { border-left-color: var(--cat-recovery); }
+
+.history-day-card:hover {
+  background: var(--ex-surface-2);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  transform: translateX(3px);
 }
 
-.history-card--stacked .history-note {
-  margin-top: 0.9rem;
+.history-day-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.95rem;
 }
 
-/* Modal */
+.history-day-heading {
+  min-width: 0;
+}
+
+.history-day-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.history-day-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.24);
+  color: var(--cat-strength);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-day-title {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.history-day-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.history-day-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ex-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ex-text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.history-day-chip--accent {
+  border-color: rgba(96, 165, 250, 0.24);
+  background: rgba(96, 165, 250, 0.08);
+  color: var(--ex-text);
+}
+
+.history-day-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-entry {
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ex-border);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.history-entry:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(2px);
+}
+
+.history-entry[data-category*="strength"] {
+  border-color: rgba(96, 165, 250, 0.2);
+}
+
+.history-entry[data-category*="cardio"],
+.history-entry[data-category*="walking"],
+.history-entry[data-category*="cycling"],
+.history-entry[data-category*="sport"] {
+  border-color: rgba(251, 146, 60, 0.2);
+}
+
+.history-entry[data-category*="mobility"] {
+  border-color: rgba(167, 139, 250, 0.2);
+}
+
+.history-entry[data-category*="recovery"] {
+  border-color: rgba(45, 212, 191, 0.2);
+}
+
+.history-entry-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.7rem;
+}
+
+.history-entry-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.history-entry-title {
+  margin: 0;
+  color: #fff;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.history-stats--entry {
+  justify-content: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.history-entry[data-category*="strength"] .exercise-badge { background: var(--cat-strength-bg); border-color: var(--cat-strength-border); color: var(--cat-strength); }
+.history-entry[data-category*="cardio"] .exercise-badge,
+.history-entry[data-category*="walking"] .exercise-badge,
+.history-entry[data-category*="cycling"] .exercise-badge,
+.history-entry[data-category*="sport"] .exercise-badge { background: var(--cat-cardio-bg); border-color: var(--cat-cardio-border); color: var(--cat-cardio); }
+.history-entry[data-category*="mobility"] .exercise-badge { background: var(--cat-mobility-bg); border-color: var(--cat-mobility-border); color: var(--cat-mobility); }
+.history-entry[data-category*="recovery"] .exercise-badge { background: var(--cat-recovery-bg); border-color: var(--cat-recovery-border); color: var(--cat-recovery); }
+
+/* ── Log Shortcut Button (from modals) ──────────────────── */
+.exercise-log-shortcut {
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  transition: all 0.22s ease;
+  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.25);
+}
+
+.exercise-log-shortcut:hover {
+  background: linear-gradient(135deg, #2563eb, #93c5fd);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ── Modal ──────────────────────────────────────────────── */
 .exercise-modal .modal-dialog {
-  max-width: 1040px;
+  max-width: 1000px;
 }
 
 .exercise-modal-content {
-  border: 1px solid rgba(114, 255, 183, 0.18);
-  border-radius: 28px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 26px;
   overflow: hidden;
   background:
-    radial-gradient(
-      circle at top right,
-      rgba(114, 255, 183, 0.09),
-      transparent 24%
-    ),
-    linear-gradient(180deg, rgba(10, 18, 15, 0.98), rgba(6, 10, 8, 0.98));
-  color: #f4fff8;
-  box-shadow: 0 36px 90px rgba(0, 0, 0, 0.5);
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.08), transparent 35%),
+    linear-gradient(160deg, #0d1520, #05090f);
+  color: var(--ex-text);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.65);
 }
 
 .exercise-modal-header,
 .exercise-modal-footer {
-  border-color: rgba(114, 255, 183, 0.12);
-  padding: 1.4rem 1.5rem;
+  border-color: rgba(96, 165, 250, 0.1);
+  padding: 1.25rem 1.5rem;
 }
 
 .exercise-modal-subtitle {
-  color: var(--exercise-text-soft);
+  color: var(--ex-text-muted);
+  font-size: 0.92rem;
 }
 
 .exercise-modal-image,
 .exercise-modal-video video,
 .exercise-modal-video iframe {
   width: 100%;
-  min-height: 320px;
+  min-height: 270px;
   object-fit: cover;
-  border: 1px solid rgba(114, 255, 183, 0.14);
-  background: #09110d;
+  border: 1px solid rgba(96, 165, 250, 0.12);
+  border-radius: 16px;
+  background: #05090f;
 }
 
 .exercise-modal-grid {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.7rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .exercise-modal-stat,
 .exercise-modal-callout,
 .exercise-modal-steps {
-  border: 1px solid rgba(114, 255, 183, 0.14);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ex-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
 }
 
-.exercise-modal-stat {
-  padding: 1rem;
-}
-
-.exercise-modal-callout {
-  margin-top: 1rem;
-  padding: 1rem 1.1rem;
-}
-
-.exercise-modal-steps {
-  padding: 1.2rem;
-}
+.exercise-modal-stat     { padding: 0.85rem; }
+.exercise-modal-callout  { margin-top: 0.7rem; padding: 0.85rem 1rem; }
+.exercise-modal-steps    { padding: 1rem; }
 
 .exercise-modal-label {
   display: block;
-  margin-bottom: 0.35rem;
-  color: var(--exercise-accent);
-  font-size: 0.78rem;
+  margin-bottom: 0.28rem;
+  color: var(--cat-strength);
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .exercise-modal-steps ol {
   margin: 0;
-  padding-left: 1.2rem;
+  padding-left: 1.1rem;
 }
 
 .exercise-modal-steps li {
-  margin-bottom: 0.7rem;
-  color: #ebfff4;
+  margin-bottom: 0.55rem;
+  color: #b8d8ee;
   line-height: 1.6;
+  font-size: 0.93rem;
 }
 
-.exercise-modal-steps li:last-child {
-  margin-bottom: 0;
-}
+.exercise-modal-steps li:last-child { margin-bottom: 0; }
 
-.exercise-log-shortcut {
-  padding: 0.9rem 1.35rem;
-  box-shadow: 0 12px 28px rgba(66, 226, 138, 0.22);
-}
-
+/* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 991.98px) {
-  .exercise-modal-grid {
-    grid-template-columns: 1fr;
+  .exercise-hero {
+    min-height: 29rem;
+    padding: 1.8rem 1.5rem;
   }
+
+  .exercise-modal-grid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 768px) {
-  .history-card {
-    padding: 1.25rem;
+@media (max-width: 767.98px) {
+  .exercise-page { padding: 0.75rem 0.5rem 2rem; }
+
+  .exercise-hero {
+    min-height: 27rem;
+    padding: 1.5rem 1.2rem;
+    border-radius: 22px;
+    margin-bottom: 1.75rem;
+  }
+
+  .exercise-panel {
+    padding: 1.4rem 1.2rem;
+    border-radius: 20px;
+  }
+
+  .bmi-summary-card {
+    padding: 1.4rem;
+    border-radius: 20px;
+    margin-top: 1rem;
+  }
+
+  .bmi-value { font-size: 3rem; }
+
+  .section-heading h2 { font-size: 1.45rem; }
+  .exercise-title { font-size: 2rem; }
+
+  .history-day-card {
+    padding: 0.95rem 1rem 1rem 1.05rem;
+  }
+
+  .history-day-header,
+  .history-entry-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .history-day-summary {
+    justify-content: flex-start;
+  }
+
+  .history-entry-heading {
+    flex-wrap: wrap;
+  }
+
+  .history-entry-title {
+    font-size: 0.92rem;
   }
 
   .history-card--stacked {
-    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem 0.9rem 0.9rem 1rem;
   }
 
   .history-card-top {
-    align-items: flex-start;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
   .history-title {
-    font-size: 1.65rem;
+    white-space: normal;
+    font-size: 0.92rem;
   }
 
-  .history-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .history-stat--wide {
-    grid-column: auto;
-  }
-
-  .exercise-card-demo-btn {
-    width: 100%;
-  }
+  .history-stats { justify-content: flex-start; }
 
   .exercise-modal-header,
-  .exercise-modal-footer {
-    padding: 1.1rem 1rem;
-  }
+  .exercise-modal-footer { padding: 1rem; }
 
   .exercise-modal-image,
   .exercise-modal-video video,
-  .exercise-modal-video iframe {
-    min-height: 220px;
+  .exercise-modal-video iframe { min-height: 200px; }
+}
+
+@media (max-width: 479.98px) {
+  .exercise-hero {
+    min-height: 25.5rem;
+    padding: 1.4rem 1rem;
   }
+  .bmi-value { font-size: 2.4rem; }
+  .section-heading h2 { font-size: 1.2rem; }
+  .history-stat { padding: 0.2rem 0.5rem; }
+  .history-stat strong { font-size: 0.8rem; }
 }
