@@ -4,48 +4,113 @@
 {% endblock %}
 {% block content %}
 
-<section class="mb-3 ai-section-panel ai-profile-panel">
-  <div class="d-flex justify-content-end gap-2 mb-2">
-    <button
-      type="button"
-      class="btn ai-action-btn"
-      id="profile-edit-toggle"
-    >
-      Edit profile
-    </button>
-    <button
-      type="button"
-      class="btn btn-outline-danger d-none"
-      id="profile-edit-cancel"
-    >
-      Cancel
-    </button>
+<div class="ai-page">
+
+<!-- ── Floating AI icons ─────────────────────────────────────── -->
+<div class="ai-floating-icons" aria-hidden="true">
+  <span>🤖</span><span>🧠</span><span>✨</span>
+  <span>💡</span><span>🎯</span><span>⚡</span>
+  <span>🔮</span><span>📊</span><span>🚀</span>
+  <span>⭐</span>
+</div>
+
+<!-- ── Hero ──────────────────────────────────────────────────── -->
+<section class="ai-hero">
+  <div class="ai-hero-content">
+    <span class="ai-kicker">Your AI Coach</span>
+    <h1 class="ai-title">Plans That Know You</h1>
+    <p class="ai-subtitle">
+      Not a template. Not a guess. A training and nutrition plan built from
+      your goals, your body, and your history — refined every single session.
+    </p>
   </div>
+
+  <div class="ai-hero-card">
+    <div class="ai-hero-card-top">
+      <div class="ai-hero-avatar">🤖</div>
+      <div>
+        <span class="ai-hero-card-label">Smart Planning</span>
+        <strong class="ai-hero-card-sub">Built For You</strong>
+      </div>
+    </div>
+    <p class="ai-hero-card-stat-label">Personalized For You</p>
+    <div class="ai-hero-card-value">7-Day Plan</div>
+    <strong class="ai-hero-card-status">Training + Nutrition</strong>
+    <div class="ai-hero-card-divider"></div>
+    <div class="ai-hero-card-row">
+      <div>
+        <span class="ai-hero-card-label">Training</span>
+        <strong class="ai-hero-card-count">✓</strong>
+      </div>
+      <div>
+        <span class="ai-hero-card-label">Nutrition</span>
+        <strong class="ai-hero-card-count">✓</strong>
+      </div>
+      <div>
+        <span class="ai-hero-card-label">Goals</span>
+        <strong class="ai-hero-card-count">✓</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Profile snapshot panel ────────────────────────────────── -->
+<section class="mb-3 ai-section-panel ai-profile-panel">
+
+  <!-- Panel header -->
+  <div class="ai-panel-header">
+    <span class="ai-panel-title">Your Fitness Profile</span>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn ai-action-btn" id="profile-edit-toggle">
+        Edit Profile
+      </button>
+      <button type="button" class="btn btn-outline-danger d-none" id="profile-edit-cancel">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- VIEW mode: stat chips (hidden when editing) -->
+  <div id="ai-profile-view">
+    <div class="ai-stat-grid">
+      <div class="ai-stat-chip">
+        <span class="ai-stat-chip-label">Age</span>
+        <span class="ai-stat-chip-value">{{ current_user.age if current_user.age is not none else '—' }}</span>
+      </div>
+      <div class="ai-stat-chip">
+        <span class="ai-stat-chip-label">Height (cm)</span>
+        <span class="ai-stat-chip-value">{{ current_user.height_cm if current_user.height_cm is not none else '—' }}</span>
+      </div>
+      <div class="ai-stat-chip">
+        <span class="ai-stat-chip-label">Weight (kg)</span>
+        <span class="ai-stat-chip-value">{{ current_user.weight_kg if current_user.weight_kg is not none else '—' }}</span>
+      </div>
+      <div class="ai-stat-chip ai-stat-chip--goal">
+        <span class="ai-stat-chip-label">Goal</span>
+        <span class="ai-stat-chip-value">{{ current_user.goal or '—' }}</span>
+      </div>
+    </div>
+    <div class="ai-injury-block">
+      <span class="ai-injury-block-label">Injury Notes</span>
+      <p class="ai-injury-block-value mb-0">{{ current_user.injury_notes or 'None recorded' }}</p>
+    </div>
+  </div>
+
+  <!-- EDIT mode: form (hidden by default) -->
   <form
     method="post"
-    class="row g-2"
+    class="row g-2 d-none"
     id="profile-update-form"
     data-profile-form
   >
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="update_profile" />
-    <!-- # The form fields are duplicated in both view and edit mode, with the edit fields hidden by default.
-    # name attributes on the input fields are used to identify which data is being updated when the form is submitted, 
-    # and data-profile-view-field attributes are used to link the view fields to the corresponding data fields for easy
-    # toggling between view and edit modes. -->
 
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-age">Age</label>
-      <div
-        class="form-control-plaintext"
-        data-profile-view
-        data-profile-view-field="age"
-      >
-        {{ current_user.age if current_user.age is not none else 'Not set' }}
-      </div>
       <input
         type="number"
-        class="form-control d-none"
+        class="form-control"
         id="ai-age"
         name="age"
         value="{{ current_user.age or '' }}"
@@ -55,17 +120,9 @@
     </div>
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-height">Height (cm)</label>
-      <div
-        class="form-control-plaintext"
-        data-profile-view
-        data-profile-view-field="height_cm"
-      >
-        {{ current_user.height_cm if current_user.height_cm is not none else
-        'Not set' }}
-      </div>
       <input
         type="number"
-        class="form-control d-none"
+        class="form-control"
         id="ai-height"
         name="height_cm"
         value="{{ current_user.height_cm or '' }}"
@@ -76,17 +133,9 @@
     </div>
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-weight">Weight (kg)</label>
-      <div
-        class="form-control-plaintext"
-        data-profile-view
-        data-profile-view-field="weight_kg"
-      >
-        {{ current_user.weight_kg if current_user.weight_kg is not none else
-        'Not set' }}
-      </div>
       <input
         type="number"
-        class="form-control d-none"
+        class="form-control"
         id="ai-weight"
         name="weight_kg"
         value="{{ current_user.weight_kg or '' }}"
@@ -97,76 +146,41 @@
     </div>
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-goal">Goal</label>
-      <div
-        class="form-control-plaintext"
-        data-profile-view
-        data-profile-view-field="goal"
-      >
-        {{ current_user.goal or 'Not set' }}
-      </div>
-      <select
-        class="form-select d-none"
-        id="ai-goal"
-        name="goal"
-        data-profile-field
-      >
+      <select class="form-select" id="ai-goal" name="goal" data-profile-field>
         {% set selected_goal = current_user.goal or '' %}
-        
-        <option value="" {{ 'selected' if not selected_goal else '' }}>
-          Choose goal
-        </option>
-
-        <option value="Lose weight" {{ 'selected' if selected_goal == 'Lose weight' else '' }}>
-          Lose weight
-        </option>
-
-        <option value="Build muscle" {{ 'selected' if selected_goal == 'Build muscle' else '' }}>
-          Build muscle
-        </option>
-
-        <option value="Improve stamina" {{ 'selected' if selected_goal == 'Improve stamina' else '' }}>
-          Improve stamina
-        </option>
-
-        <option value="Maintain fitness" {{ 'selected' if selected_goal == 'Maintain fitness' else '' }}>
-          Maintain fitness
-        </option>
-
-        <option value="Improve flexibility" {{ 'selected' if selected_goal == 'Improve flexibility' else '' }}>
-          Improve flexibility
-        </option>
+        <option value="" {{ 'selected' if not selected_goal else '' }}>Choose goal</option>
+        <option value="Lose weight" {{ 'selected' if selected_goal == 'Lose weight' else '' }}>Lose weight</option>
+        <option value="Build muscle" {{ 'selected' if selected_goal == 'Build muscle' else '' }}>Build muscle</option>
+        <option value="Improve stamina" {{ 'selected' if selected_goal == 'Improve stamina' else '' }}>Improve stamina</option>
+        <option value="Maintain fitness" {{ 'selected' if selected_goal == 'Maintain fitness' else '' }}>Maintain fitness</option>
+        <option value="Improve flexibility" {{ 'selected' if selected_goal == 'Improve flexibility' else '' }}>Improve flexibility</option>
       </select>
     </div>
     <div class="col-12">
       <label class="form-label" for="ai-injury-notes">Injury notes</label>
-      <div
-        class="form-control-plaintext"
-        data-profile-view
-        data-profile-view-field="injury_notes"
-      >
-        {{ current_user.injury_notes or 'Not set' }}
-      </div>
       <textarea
-        class="form-control d-none"
+        class="form-control"
         id="ai-injury-notes"
         name="injury_notes"
         rows="3"
         data-profile-field
-      >
-{{ current_user.injury_notes or '' }}</textarea
-      >
+      >{{ current_user.injury_notes or '' }}</textarea>
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn ai-action-btn">Save Profile</button>
     </div>
   </form>
+
 </section>
 
- <div class="flex-grow-1"></div>
+<div class="flex-grow-1"></div>
 
-  <div class="text-center">
-  <!-- This is a post form that triggers generation of a new plan using the LLM. 
-   It includes an input for how many days of history to include in the LLM input, 
-   which is sent to the backend and used to determine how many days of recent exercise logs to include in the data sent to the LLM. 
+<!-- ── Generate form ─────────────────────────────────────────── -->
+<div class="ai-generate-area">
+  <!-- This is a post form that triggers generation of a new plan using the LLM.
+   It includes an input for how many days of history to include in the LLM input,
+   which is sent to the backend and used to determine how many days of recent exercise logs to include in the data sent to the LLM.
    -->
-
   <form method="post" class="mb-0 d-inline-block">
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="generate" />
@@ -176,11 +190,10 @@
         type="number"
         id="history-days"
         name="history_days"
-        class="form-control form-control-sm"
+        class="form-control form-control-sm ai-history-input"
         value="30"
         min="1"
         max="90"
-        style="width:5.5rem;"
         aria-label="Days of history to use"
       />
       <label class="mb-0">days of logs</label>
@@ -196,25 +209,23 @@
         type="range"
         id="temperature-slider"
         name="temperature"
-        class="form-range"
+        class="form-range ai-range"
         min="0"
         max="1"
         step="0.01"
         value="0"
-        style="width: 10rem;"
         aria-label="LLM creativity slider"
       />
       <span id="temperature-value" class="small text-white">0.00</span>
     </div>
   </form>
-  </div>
+</div>
 
-  <div class="flex-grow-1" style="min-height: 1.5rem;"></div>
-
+<div class="flex-grow-1" style="min-height: 1.5rem;"></div>
 
 {% if latest_recommendation %}
 <section class="mb-4 ai-section-panel ai-generated-panel">
-  <h2 class="text-center">Summary</h2>
+  <h2 class="text-center">Your Coach's Take</h2>
   <p>{{ latest_recommendation.llm_comments }}</p>
 </section>
 
@@ -228,7 +239,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
 {% if training_plan %}
 <section class="mb-4 ai-section-panel ai-generated-panel">
   <div class="ai-generated-section-header">
-    <h2 class="text-center mb-0">Recommended Weekly Training Plan</h2>
+    <h2 class="text-center mb-0">Your Weekly Blueprint</h2>
     <div class="ai-generated-actions">
       {% if latest_recommendation %}
       <form
@@ -424,7 +435,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
 </section>
 {% endif %} {% if nutrition_plan %}
 <section class="mb-4 ai-section-panel ai-generated-panel">
-  <h2 class="text-center">Recommended Nutrition</h2>
+  <h2 class="text-center">Fuel Your Plan</h2>
 
   <ul class="list-group nutrition-list">
     {% for item in nutrition_plan %}
@@ -436,15 +447,15 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
   </ul>
 </section>
 {% endif %} {% else %}
-<p>No AI plan generated yet. Click the button above to create one.</p>
+<p class="ai-empty-msg">Your first plan is one click away — hit Generate and let the AI go to work.</p>
 {% endif %}
 
 {% if saved_recommendations %}
 <section class="mb-4 ai-section-panel ai-generated-panel">
-  <h2 class="text-center">Last 5 Saved Plans</h2>
+  <h2 class="text-center">Your Plan History</h2>
 
-  <div class="table-responsive">
-    <table class="table table-dark table-hover align-middle mb-0">
+  <div class="table-responsive ai-history-table-wrap">
+    <table class="table table-dark table-hover align-middle mb-0 ai-history-table">
       <thead>
         <tr>
           <th scope="col">ID</th>
@@ -459,15 +470,15 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
         {% for recommendation in saved_recommendations %}
         {% set training = recommendation.get_training_plan() %}
         {% set nutrition = recommendation.get_nutrition_plan() %}
-        <tr data-reco-id="{{ recommendation.id }}" 
-            data-reco-training='{{ training|tojson|safe }}' 
-            data-reco-nutrition='{{ nutrition|tojson|safe }}' 
+        <tr data-reco-id="{{ recommendation.id }}"
+            data-reco-training='{{ training|tojson|safe }}'
+            data-reco-nutrition='{{ nutrition|tojson|safe }}'
             data-reco-summary='{{ recommendation.llm_comments|tojson|safe }}'>
           <td>#{{ recommendation.id }}</td>
           <td>
             {{ recommendation.created_at.strftime('%Y-%m-%d %H:%M') if recommendation.created_at else 'Unknown' }}
           </td>
-          <td style="max-width:34ch; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ recommendation.llm_comments }}</td>
+          <td class="ai-history-summary">{{ recommendation.llm_comments }}</td>
           <td>
             <span class="badge text-bg-success">True</span>
           </td>
@@ -479,7 +490,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
             {% endif %}
           </td>
           <td>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 plan-history-actions">
               <button type="button" class="btn btn-sm btn-outline-primary view-reco-btn">View</button>
               {% if recommendation.is_current %}
               <button type="button" class="btn btn-sm btn-primary" disabled>Current</button>
@@ -505,6 +516,8 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
   </div>
 </section>
 {% endif %}
+
+</div><!-- /.ai-page -->
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/ai.js') }}"></script>
 {% endblock %}

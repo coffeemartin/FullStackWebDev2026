@@ -1,4 +1,4 @@
-from datetime import date, timezone
+from datetime import date, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from app import app, db
@@ -7,7 +7,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
 from app.models import User, Exercise, ExerciseLog, Food, Friendship, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -121,6 +121,40 @@ def get_friend_suggestions(user_id, limit=8):
     if connected_user_ids:
         query = query.filter(~User.id.in_(connected_user_ids))
     return query.order_by(User.username).limit(limit).all()
+
+
+def get_latest_nutrition_summary(user_id):
+    latest_log = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == user_id)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .first()
+    )
+    if not latest_log or not latest_log.food:
+        return None
+
+    quantity_ratio = (latest_log.quantity_g or 0) / 100
+    return {
+        "food_name": latest_log.food.name,
+        "meal_type": latest_log.meal_type or "Meal",
+        "log_date": latest_log.log_date,
+        "calories": round(quantity_ratio * (latest_log.food.calories_per_100g or 0)),
+        "protein": round(quantity_ratio * (latest_log.food.protein_per_100g or 0), 1),
+        "carbs": round(quantity_ratio * (latest_log.food.carbs_per_100g or 0), 1),
+        "fat": round(quantity_ratio * (latest_log.food.fat_per_100g or 0), 1),
+    }
+
+
+def get_latest_workout_summary(user_id):
+    return (
+        ExerciseLog.query
+        .filter_by(user_id=user_id)
+        .join(Exercise)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .first()
+    )
 
 from app.ai_page import * 
 from app.ai_service import generate_ai_plan
@@ -451,15 +485,98 @@ def exercise():
         .all()
     )
 
+    grouped_recent_logs = []
+    grouped_recent_logs_by_date = {}
+
+    # Group the latest entries by workout date so the history reads as one daily story.
+    for log in recent_logs:
+        category = log.exercise.category if log.exercise and log.exercise.category else "Workout"
+        category_lower = category.lower()
+        is_strength = "strength" in category_lower
+        is_cardio_style = any(token in category_lower for token in ("cardio", "walking", "cycling", "water", "sport"))
+        is_mobility = "mobility" in category_lower
+        is_recovery = "recovery" in category_lower
+
+        filter_tokens = []
+        if is_strength:
+            filter_tokens.append("strength")
+        if is_cardio_style:
+            filter_tokens.append("cardio")
+        if is_mobility:
+            filter_tokens.append("mobility")
+        if is_recovery:
+            filter_tokens.append("recovery")
+        if not filter_tokens:
+            filter_tokens.append("other")
+
+        day_group = grouped_recent_logs_by_date.get(log.log_date)
+        if day_group is None:
+            day_delta = (log.log_date - date.today()).days
+            relative_label = None
+            if day_delta == 0:
+                relative_label = "Today"
+            elif day_delta == -1:
+                relative_label = "Yesterday"
+            elif day_delta == 1:
+                relative_label = "Tomorrow"
+
+            day_group = {
+                "log_date": log.log_date,
+                "relative_label": relative_label,
+                "entries": [],
+                "filter_tokens": [],
+                "primary_filter": filter_tokens[0],
+                "workout_count": 0,
+                "total_minutes": 0,
+            }
+            grouped_recent_logs_by_date[log.log_date] = day_group
+            grouped_recent_logs.append(day_group)
+
+        for token in filter_tokens:
+            if token not in day_group["filter_tokens"]:
+                day_group["filter_tokens"].append(token)
+
+        day_group["entries"].append({
+            "log": log,
+            "category": category,
+            "category_lower": category_lower,
+            "is_strength": is_strength,
+            "is_cardio_style": is_cardio_style,
+        })
+        day_group["workout_count"] += 1
+        day_group["total_minutes"] += log.duration_minutes or 0
+
+    # Dashboard stats
+    total_workouts = ExerciseLog.query.filter_by(user_id=user.id).count()
+
+    week_start = date.today() - timedelta(days=date.today().weekday())
+    workouts_this_week = (
+        ExerciseLog.query
+        .filter_by(user_id=user.id)
+        .filter(ExerciseLog.log_date >= week_start)
+        .count()
+    )
+
+    total_minutes_raw = (
+        db.session.query(func.sum(ExerciseLog.duration_minutes))
+        .filter_by(user_id=user.id)
+        .scalar()
+    )
+    total_minutes = int(total_minutes_raw) if total_minutes_raw else 0
+
     return render_template(
         'exercise.html',
         title='Exercise',
         form=form,
         exercise_options=exercises,
         recent_logs=recent_logs,
+        grouped_recent_logs=grouped_recent_logs,
         bmi_value=bmi_value,
         exercise_level=user.activity_level,
         recommendation=recommendation,
+        total_workouts=total_workouts,
+        workouts_this_week=workouts_this_week,
+        total_minutes=total_minutes,
     )
 
 # this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
@@ -890,6 +1007,9 @@ def friend_profile(user_id):
         except ValueError:
             pass
 
+    latest_workout = get_latest_workout_summary(friend.id)
+    latest_nutrition = get_latest_nutrition_summary(friend.id)
+
     return render_template(
         "friend_profile.html",
         title=f"{friend.name or friend.username} Profile",
@@ -897,8 +1017,11 @@ def friend_profile(user_id):
         bmi=bmi,
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
-        fitness_points=fitness_points
-        ,current_recommendation=current_recommendation
+        fitness_points=fitness_points,
+        latest_workout=latest_workout,
+        latest_nutrition=latest_nutrition,
+        hide_app_nav=True,
+        current_recommendation=current_recommendation
     )
 
 

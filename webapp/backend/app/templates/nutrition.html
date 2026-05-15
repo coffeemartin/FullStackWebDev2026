@@ -13,220 +13,196 @@
 {% set safe_initial_water = initial_water|default(0) %}
 {% set safe_food_entries = food_entries|default([]) %}
 
+<section class="nutrition-page">
+
 <div class="nutrition-floating-foods" aria-hidden="true">
-  <span>&#129382;</span>
-  <span>&#127822;</span>
-  <span>&#129365;</span>
-  <span>&#129367;</span>
-  <span>&#127820;</span>
-  <span>&#127827;</span>
-  <span>&#129361;</span>
-  <span>&#127834;</span>
-  <span>&#127815;</span>
+  <span>&#129382;</span><span>&#127822;</span><span>&#129365;</span>
+  <span>&#129367;</span><span>&#127820;</span><span>&#127827;</span>
+  <span>&#129361;</span><span>&#127834;</span><span>&#127815;</span>
   <span>&#129370;</span>
 </div>
 
-<section class="nutrition-hero mb-4">
-  <div>
-    <p class="text-uppercase text-success fw-bold mb-2">Daily Nutrition Dashboard</p>
-    <h1 class="display-5 fw-bold">Fuel Your Fitness</h1>
-    <p class="lead mb-0">
-      Track meals, calculate calories from grams, improve hydration, and build healthier food habits.
+<section class="nutrition-hero">
+  <div class="nutrition-hero-content">
+    <span class="nutrition-kicker">Your Daily Fuel Station</span>
+    <h1 class="nutrition-title">Eat Bold. Train Hard.</h1>
+    <p class="nutrition-subtitle">
+      Every bite is a choice. Track your meals, hit your calorie targets,
+      stay hydrated, and build the habits that power your best self.
     </p>
   </div>
-</section>
 
-<section class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="nutrition-stat">
-      <span>Total Calories</span>
-      <strong id="totalCalories">0 kcal</strong>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="nutrition-stat">
-      <span>Foods Logged</span>
-      <strong id="foodCount">0</strong>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="nutrition-stat">
-      <span>Water Intake</span>
-      <strong id="waterCount">
-        {{ safe_initial_water }}
-        {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
-      </strong>
-      <div class="d-flex flex-wrap gap-2 mt-2">
-        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="decreaseWater()">-</button>
-        <button class="btn btn-sm btn-outline-secondary" type="button" onclick="increaseWater()">+</button>
-        <button class="btn btn-sm btn-outline-info" type="button" onclick="addWater()">Add Water</button>
-        <button class="btn btn-sm btn-success" type="button" onclick="saveWater()">Save</button>
+  <div class="nutrition-hero-card">
+    <div class="nutrition-hero-card-top">
+      <div class="nutrition-hero-avatar">🥗</div>
+      <div>
+        <span class="nutrition-hero-card-label">Today's Log</span>
+        <strong class="nutrition-hero-card-sub">Nutrition Tracker</strong>
       </div>
-      <small id="waterSaveStatus" class="text-success d-block mt-2"></small>
+    </div>
+    <p class="nutrition-hero-card-stat-label">Calories Logged</p>
+    <div class="nutrition-hero-card-value" id="heroCalories">0 kcal</div>
+    <strong class="nutrition-hero-card-status" id="heroStatus">Start logging meals</strong>
+    <div class="nutrition-hero-card-divider"></div>
+    <div class="nutrition-hero-card-row">
+      <div>
+        <span class="nutrition-hero-card-label">Foods</span>
+        <strong class="nutrition-hero-card-count" id="heroFoodCount">0</strong>
+      </div>
+      <div>
+        <span class="nutrition-hero-card-label">Water</span>
+        <strong class="nutrition-hero-card-count" id="heroWater">{{ safe_initial_water }} gl</strong>
+      </div>
+      <div>
+        <span class="nutrition-hero-card-label">Goal</span>
+        <strong class="nutrition-hero-card-count">2000 kcal</strong>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="row g-4 mb-4">
-  <div class="col-lg-6">
-    <div class="nutrition-panel">
-      <h2 class="h4 mb-3">Nutrition Information</h2>
-
-      <div class="smart-plate">
-        <div>
-          <h3 class="h6 text-success">Smart Plate Guide</h3>
-          <p>Half your plate should include fruits or vegetables.</p>
-        </div>
-        <div>
-          <h3 class="h6 text-warning">Energy Foods</h3>
-          <p>Carbohydrates help fuel workouts and daily activities.</p>
-        </div>
-        <div>
-          <h3 class="h6 text-info">Protein Power</h3>
-          <p>Protein supports muscle repair and recovery after exercise.</p>
-        </div>
-        <div>
-          <h3 class="h6 text-danger">Healthy Fats</h3>
-          <p>Healthy fats support hormones and long-term energy.</p>
-        </div>
-      </div>
-
-      <div class="nutrition-tip mt-3">
-        <h3 class="h6 text-success">Quick Tip</h3>
-        <p class="mb-0">
-          Choose mostly whole foods, drink enough water, and balance every meal with protein, energy foods, and vegetables.
-        </p>
-      </div>
-    </div>
+<section class="nutrition-stats-bar">
+  <div class="nutrition-stat-card">
+    <span class="nutrition-stat-label">Total Calories</span>
+    <strong class="nutrition-stat-value" id="totalCalories">0 kcal</strong>
   </div>
-
-  <div class="col-lg-6">
-    <div class="nutrition-panel">
-      <h2 class="h4 mb-3">Food Log</h2>
-
-      <form id="foodForm">
-        <div class="row g-3">
-          <div class="col-md-4">
-            <label class="form-label" for="mealType">Meal Type</label>
-            <select id="mealType" class="form-select" required>
-              <option value="">Choose meal</option>
-              <option>Breakfast</option>
-              <option>Lunch</option>
-              <option>Dinner</option>
-              <option>Snack</option>
-            </select>
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label" for="logDate">Date</label>
-            <input id="logDate" class="form-control" type="date" value="{{ selected_date }}" required>
-          </div>
-
-          <div class="col-md-4">
-            <label class="form-label" for="foodName">Food Name</label>
-            <select id="foodName" class="form-select" required>
-              <option value="">Choose food</option>
-              <option>Apple</option>
-              <option>Banana</option>
-              <option>Boiled Egg</option>
-              <option>Brown Rice</option>
-              <option>Chicken Breast</option>
-              <option>Greek Yogurt</option>
-              <option>Oats</option>
-              <option>Pasta</option>
-              <option>Potato</option>
-              <option>Rice</option>
-              <option>Salmon</option>
-              <option>Tofu</option>
-              <option>White Rice</option>
-              <option>Whole Wheat Bread</option>
-              <option>Others</option>
-            </select>
-          </div>
-
-          <div class="col-md-6" id="standardQuantityGroup">
-            <label class="form-label" for="quantity">Quantity Taken</label>
-            <input id="quantity" class="form-control" type="number" min="1" placeholder="grams" required>
-          </div>
-
-          <div class="col-md-6 d-none" id="otherFoodGroup">
-            <label class="form-label" for="otherFoodName">Please enter the name of other food you had</label>
-            <input id="otherFoodName" class="form-control" type="text" placeholder="Example: Mango">
-          </div>
-
-          <div class="col-md-6 d-none" id="otherQuantityGroup">
-            <label class="form-label" for="otherQuantity">Enter the Quantity of the food taken</label>
-            <input id="otherQuantity" class="form-control" type="number" min="1" placeholder="grams">
-          </div>
-
-          <div class="col-md-6 d-none" id="otherCaloriesGroup">
-            <label class="form-label" for="otherCalories">Calories per 100g for this food</label>
-            <input id="otherCalories" class="form-control" type="number" min="0" step="0.1" placeholder="Example: 60">
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label" for="calculatedCalories">Calculated Calories</label>
-            <input id="calculatedCalories" class="form-control" type="text" value="0 kcal" readonly>
-          </div>
-
-          <div class="col-12">
-            <label class="form-label" for="feedback">Meal Feedback</label>
-            <select id="feedback" class="form-select">
-              <option>Energized</option>
-              <option>Full</option>
-              <option>Still hungry</option>
-              <option>Tired</option>
-            </select>
-          </div>
-
-          <div class="col-12">
-            <label class="form-label" for="comments">Comments</label>
-            <textarea id="comments" class="form-control" rows="2" placeholder="Example: Healthy homemade meal"></textarea>
-          </div>
-        </div>
-
-        <button class="btn btn-success mt-3" type="submit">Add Food Entry</button>
-      </form>
+  <div class="nutrition-stat-card">
+    <span class="nutrition-stat-label">Foods Logged</span>
+    <strong class="nutrition-stat-value" id="foodCount">0</strong>
+  </div>
+  <div class="nutrition-stat-card nutrition-stat-card--water">
+    <span class="nutrition-stat-label">Water Intake</span>
+    <strong class="nutrition-stat-value" id="waterCount">
+      {{ safe_initial_water }}
+      {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
+    </strong>
+    <div class="water-btn-row">
+      <button class="water-btn" type="button" onclick="decreaseWater()">−</button>
+      <button class="water-btn" type="button" onclick="increaseWater()">+</button>
+      <button class="water-btn water-btn--add" type="button" onclick="addWater()">Add</button>
+      <button class="water-btn water-btn--save" type="button" onclick="saveWater()">Save</button>
     </div>
+    <small class="water-status" id="waterSaveStatus"></small>
   </div>
 </section>
 
-<section class="nutrition-panel mb-4">
-  <h2 class="h4 mb-3">{{ selected_date_label }}</h2>
+<section class="nutrition-two-col">
+  <div class="nutrition-panel">
+    <h2 class="nutrition-panel-title">Your Plate, Your Power</h2>
+    <div class="smart-plate">
+      <div class="smart-plate-card smart-plate-card--green">
+        <h3>🥦 Smart Plate</h3>
+        <p>Half your plate should include fruits or vegetables.</p>
+      </div>
+      <div class="smart-plate-card smart-plate-card--amber">
+        <h3>⚡ Energy Foods</h3>
+        <p>Carbohydrates help fuel workouts and daily activities.</p>
+      </div>
+      <div class="smart-plate-card smart-plate-card--blue">
+        <h3>💪 Protein Power</h3>
+        <p>Protein supports muscle repair and recovery after exercise.</p>
+      </div>
+      <div class="smart-plate-card smart-plate-card--teal">
+        <h3>🫒 Healthy Fats</h3>
+        <p>Healthy fats support hormones and long-term energy.</p>
+      </div>
+    </div>
+    <div class="nutrition-tip">
+      <h3>💡 Quick Tip</h3>
+      <p>Choose mostly whole foods, drink enough water, and balance every meal with protein, energy foods, and vegetables.</p>
+    </div>
+  </div>
 
-  <div class="table-responsive">
-    <table class="table table-dark table-striped align-middle">
+  <div class="nutrition-panel">
+    <h2 class="nutrition-panel-title">Log What You Ate</h2>
+    <form id="foodForm">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="nutrition-label" for="mealType">Meal Type</label>
+          <select id="mealType" class="nutrition-input" required>
+            <option value="">Choose meal</option>
+            <option>Breakfast</option><option>Lunch</option>
+            <option>Dinner</option><option>Snack</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="nutrition-label" for="foodName">Food Name</label>
+          <select id="foodName" class="nutrition-input" required>
+            <option value="">Choose food</option>
+            <option>Apple</option><option>Banana</option><option>Boiled Egg</option>
+            <option>Brown Rice</option><option>Chicken Breast</option><option>Greek Yogurt</option>
+            <option>Oats</option><option>Pasta</option><option>Potato</option>
+            <option>Rice</option><option>Salmon</option><option>Tofu</option>
+            <option>White Rice</option><option>Whole Wheat Bread</option><option>Others</option>
+          </select>
+        </div>
+        <div class="col-md-6" id="standardQuantityGroup">
+          <label class="nutrition-label" for="quantity">Quantity (grams)</label>
+          <input id="quantity" class="nutrition-input" type="number" min="1" placeholder="e.g. 150" required>
+        </div>
+        <div class="col-md-6 d-none" id="otherFoodGroup">
+          <label class="nutrition-label" for="otherFoodName">Other food name</label>
+          <input id="otherFoodName" class="nutrition-input" type="text" placeholder="e.g. Mango">
+        </div>
+        <div class="col-md-6 d-none" id="otherQuantityGroup">
+          <label class="nutrition-label" for="otherQuantity">Quantity (grams)</label>
+          <input id="otherQuantity" class="nutrition-input" type="number" min="1" placeholder="grams">
+        </div>
+        <div class="col-md-6 d-none" id="otherCaloriesGroup">
+          <label class="nutrition-label" for="otherCalories">Calories per 100g</label>
+          <input id="otherCalories" class="nutrition-input" type="number" min="0" step="0.1" placeholder="e.g. 60">
+        </div>
+        <div class="col-md-6">
+          <label class="nutrition-label" for="calculatedCalories">Calculated Calories</label>
+          <input id="calculatedCalories" class="nutrition-input nutrition-input--readonly" type="text" value="0 kcal" readonly>
+        </div>
+        <div class="col-12">
+          <label class="nutrition-label" for="feedback">How did you feel?</label>
+          <select id="feedback" class="nutrition-input">
+            <option>Energized</option><option>Full</option>
+            <option>Still hungry</option><option>Tired</option>
+          </select>
+        </div>
+        <div class="col-12">
+          <label class="nutrition-label" for="comments">Comments</label>
+          <textarea id="comments" class="nutrition-input nutrition-textarea" rows="2" placeholder="e.g. Healthy homemade meal"></textarea>
+        </div>
+      </div>
+      <button class="nutrition-submit-btn" type="submit">Add Food Entry</button>
+    </form>
+  </div>
+</section>
+
+<section class="nutrition-panel">
+  <h2 class="nutrition-panel-title">Today's Fuel Breakdown</h2>
+  <div class="nutrition-table-wrap">
+    <table class="nutrition-table">
       <thead>
         <tr>
-          <th>Meal</th>
-          <th>Food</th>
-          <th>Quantity</th>
-          <th>Total Calories</th>
-          <th>Feedback</th>
-          <th>Comments</th>
+          <th>Meal</th><th>Food</th><th>Quantity</th>
+          <th>Calories</th><th>Feedback</th><th>Comments</th>
         </tr>
       </thead>
       <tbody id="foodTable">
-        <tr>
-          <td colspan="6" class="text-center text-secondary">No food entries yet.</td>
-        </tr>
+        <tr><td colspan="6" class="nutrition-table-empty">No food entries yet.</td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<section class="nutrition-insight mb-4">
-  <h2 class="h5">Nutrition Insight</h2>
-  <p id="nutritionMessage" class="mb-0">
-    Start logging your meals to receive a simple daily nutrition suggestion.
+<section class="nutrition-insight">
+  <h2 class="nutrition-insight-title">💡 Your Daily Insight</h2>
+  <p id="nutritionMessage" class="nutrition-insight-msg">
+    Log your first meal and we'll serve up a personalised nutrition tip just for you.
   </p>
 </section>
+
+</section><!-- end .nutrition-page -->
 
 <script id="nutritionInitialData" type="application/json">
   {{ {
     "food_entries": safe_food_entries,
-    "initial_water": safe_initial_water,
-    "selected_date": selected_date
+    "initial_water": safe_initial_water
   }|tojson }}
 </script>
 
@@ -239,8 +215,11 @@
   const nutritionMessage = document.getElementById("nutritionMessage");
   const waterCount = document.getElementById("waterCount");
   const waterSaveStatus = document.getElementById("waterSaveStatus");
+  const heroCalories = document.getElementById("heroCalories");
+  const heroStatus = document.getElementById("heroStatus");
+  const heroFoodCount = document.getElementById("heroFoodCount");
+  const heroWater = document.getElementById("heroWater");
   const foodNameInput = document.getElementById("foodName");
-  const logDateInput = document.getElementById("logDate");
   const quantityInput = document.getElementById("quantity");
   const standardQuantityGroup = document.getElementById("standardQuantityGroup");
   const otherFoodGroup = document.getElementById("otherFoodGroup");
@@ -276,11 +255,6 @@
     toggleOtherFoodFields();
     updateCalculatedCalories();
   });
-  logDateInput.addEventListener("change", function () {
-    const params = new URLSearchParams(window.location.search);
-    params.set("date", logDateInput.value);
-    window.location.search = params.toString();
-  });
   quantityInput.addEventListener("input", updateCalculatedCalories);
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
@@ -303,12 +277,6 @@
       return;
     }
 
-    const logDate = logDateInput.value;
-    if (!logDate) {
-      alert("Please select the date for this food entry.");
-      return;
-    }
-
     if (!Number.isFinite(caloriesPer100g)) {
       alert("Please choose a listed food or use Others.");
       return;
@@ -320,7 +288,6 @@
         food_name: foodName,
         quantity_g: quantity,
         calories_per_100g: caloriesPer100g,
-        log_date: logDate,
         notes: [feedback, comments].filter(Boolean).join(" - ")
       });
     } catch (error) {
@@ -439,6 +406,14 @@
     totalCalories.textContent = calorieTotal + " kcal";
     foodCount.textContent = entries.length;
 
+    // sync hero card
+    heroCalories.textContent = calorieTotal + " kcal";
+    heroFoodCount.textContent = entries.length;
+    if (calorieTotal === 0)        heroStatus.textContent = "Start logging meals";
+    else if (calorieTotal < 1200)  heroStatus.textContent = "Intake looks low";
+    else if (calorieTotal <= 2200) heroStatus.textContent = "On track today 🎯";
+    else                           heroStatus.textContent = "High intake today";
+
     if (calorieTotal < 1200) {
       nutritionMessage.textContent = "Your intake looks low today. Consider adding a balanced meal with protein, carbohydrates, and vegetables.";
     } else if (calorieTotal <= 2200) {
@@ -450,6 +425,7 @@
 
   function renderWaterCount() {
     waterCount.textContent = water + (water === 1 ? " glass" : " glasses");
+    heroWater.textContent = water + " gl";
     updateWaterWarning();
   }
 
@@ -492,7 +468,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ water_glasses: water, log_date: logDateInput.value })
+        body: JSON.stringify({ water_glasses: water })
       });
       const data = await response.json();
 
