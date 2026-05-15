@@ -311,6 +311,7 @@ def nutrition():
     )
     food_entries = [
         {
+            "id": log.id,
             "mealType": log.meal_type or "",
             "foodName": log.food.name if log.food else "",
             "quantity": log.quantity_g or 0,
@@ -348,6 +349,7 @@ def nutrition():
         )
         previous_day_entries = [
             {
+                "id": log.id,
                 "mealType": log.meal_type or "",
                 "foodName": log.food.name if log.food else "",
                 "quantity": log.quantity_g or 0,
@@ -432,6 +434,24 @@ def save_nutrition_log():
         "calories": round((quantity_g / 100) * calories_per_100g),
         "log_date": nutrition_log.log_date.isoformat(),
     })
+
+
+@app.route("/nutrition/log/<int:log_id>", methods=["DELETE"])
+@login_required
+def delete_nutrition_log(log_id):
+    nutrition_log = (
+        NutritionLog.query
+        .filter_by(id=log_id, user_id=current_user.id)
+        .filter(NutritionLog.meal_type != "Water")
+        .first()
+    )
+
+    if nutrition_log is None:
+        return jsonify({"error": "Food entry was not found."}), 404
+
+    db.session.delete(nutrition_log)
+    db.session.commit()
+    return jsonify({"deleted": True, "log_id": log_id})
 
 
 @app.route("/nutrition/water", methods=["POST"])
