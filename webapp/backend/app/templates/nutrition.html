@@ -14,6 +14,8 @@
 {% set safe_food_entries = food_entries|default([]) %}
 {% set safe_previous_day_entries = previous_day_entries|default([]) %}
 {% set safe_water_by_date = water_by_date|default({}) %}
+{% set safe_selected_date = selected_date|default('') %}
+{% set safe_server_today = server_today|default('') %}
 
 <section class="nutrition-page">
 
@@ -208,8 +210,8 @@
     "previous_day_entries": safe_previous_day_entries,
     "initial_water": safe_initial_water,
     "water_by_date": safe_water_by_date,
-    "selected_date": selected_date,
-    "server_today": server_today
+    "selected_date": safe_selected_date,
+    "server_today": safe_server_today
   }|tojson }}
 </script>
 
