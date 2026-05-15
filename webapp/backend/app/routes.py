@@ -80,6 +80,82 @@ def users_are_friends(user_id, other_user_id):
     friendship = find_friendship_between(user_id, other_user_id)
     return bool(friendship and friendship.status == "accepted")
 
+
+def get_connected_friend_user_ids(user_id):
+    connected_friendships = Friendship.query.filter(
+        or_(
+            Friendship.requester_id == user_id,
+            Friendship.receiver_id == user_id
+        ),
+        Friendship.status.in_(["pending", "accepted"])
+    ).all()
+    return {
+        item.receiver_id if item.requester_id == user_id else item.requester_id
+        for item in connected_friendships
+    }
+
+
+def search_available_friends(user_id, search_term, limit=8):
+    if not search_term:
+        return []
+
+    connected_user_ids = get_connected_friend_user_ids(user_id)
+    search_pattern = f"%{search_term}%"
+    query = (
+        User.query
+        .filter(User.id != user_id)
+        .filter(or_(
+            User.name.ilike(search_pattern),
+            User.username.ilike(search_pattern),
+            User.email.ilike(search_pattern)
+        ))
+    )
+    if connected_user_ids:
+        query = query.filter(~User.id.in_(connected_user_ids))
+    return query.order_by(User.username).limit(limit).all()
+
+
+def get_friend_suggestions(user_id, limit=8):
+    connected_user_ids = get_connected_friend_user_ids(user_id)
+    query = User.query.filter(User.id != user_id)
+    if connected_user_ids:
+        query = query.filter(~User.id.in_(connected_user_ids))
+    return query.order_by(User.username).limit(limit).all()
+
+
+def get_latest_nutrition_summary(user_id):
+    latest_log = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == user_id)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .first()
+    )
+    if not latest_log or not latest_log.food:
+        return None
+
+    quantity_ratio = (latest_log.quantity_g or 0) / 100
+    return {
+        "food_name": latest_log.food.name,
+        "meal_type": latest_log.meal_type or "Meal",
+        "log_date": latest_log.log_date,
+        "calories": round(quantity_ratio * (latest_log.food.calories_per_100g or 0)),
+        "protein": round(quantity_ratio * (latest_log.food.protein_per_100g or 0), 1),
+        "carbs": round(quantity_ratio * (latest_log.food.carbs_per_100g or 0), 1),
+        "fat": round(quantity_ratio * (latest_log.food.fat_per_100g or 0), 1),
+    }
+
+
+def get_latest_workout_summary(user_id):
+    return (
+        ExerciseLog.query
+        .filter_by(user_id=user_id)
+        .join(Exercise)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .first()
+    )
+
 from app.ai_page import * 
 from app.ai_service import generate_ai_plan
 from app.models import LLMRecommendation
@@ -737,18 +813,6 @@ def myprofile():
         perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
         latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    connected_friendships = Friendship.query.filter(
-        or_(
-            Friendship.requester_id == current_user.id,
-            Friendship.receiver_id == current_user.id
-        ),
-        Friendship.status.in_(["pending", "accepted"])
-    ).all()
-    connected_user_ids = {
-        item.receiver_id if item.requester_id == current_user.id else item.requester_id
-        for item in connected_friendships
-    }
-
     incoming_requests = (
         Friendship.query
         .filter_by(receiver_id=current_user.id, status="pending")
@@ -777,23 +841,11 @@ def myprofile():
         item.receiver if item.requester_id == current_user.id else item.requester
         for item in accepted_friendships
     ]
+    suggested_friends = get_friend_suggestions(current_user.id)
 
     app_friends = []
     if friend_search:
-        search_pattern = f"%{friend_search}%"
-        app_friends = (
-            User.query
-            .filter(User.id != current_user.id)
-            .filter(~User.id.in_(connected_user_ids) if connected_user_ids else True)
-            .filter(or_(
-                User.name.ilike(search_pattern),
-                User.username.ilike(search_pattern),
-                User.email.ilike(search_pattern)
-            ))
-            .order_by(User.username)
-            .limit(8)
-            .all()
-        )
+        app_friends = search_available_friends(current_user.id, friend_search)
 
     return render_template(
         "myprofile.html",
@@ -808,8 +860,27 @@ def myprofile():
         friend_search=friend_search,
         incoming_requests=incoming_requests,
         outgoing_requests=outgoing_requests,
-        accepted_friends=accepted_friends
+        accepted_friends=accepted_friends,
+        suggested_friends=suggested_friends
     )
+
+
+@app.route("/friends/search")
+@login_required
+def search_friends():
+    friend_search = request.args.get("q", "").strip()
+    users = search_available_friends(current_user.id, friend_search)
+    return jsonify({
+        "results": [
+            {
+                "username": user.username,
+                "name": user.name or user.username,
+                "goal": user.goal or "Fitness journey in progress",
+                "initial": (user.name or user.username)[:1].upper()
+            }
+            for user in users
+        ]
+    })
 
 
 @app.route("/profile/<int:user_id>")
@@ -840,6 +911,9 @@ def friend_profile(user_id):
         except ValueError:
             pass
 
+    latest_workout = get_latest_workout_summary(friend.id)
+    latest_nutrition = get_latest_nutrition_summary(friend.id)
+
     return render_template(
         "friend_profile.html",
         title=f"{friend.name or friend.username} Profile",
@@ -847,8 +921,11 @@ def friend_profile(user_id):
         bmi=bmi,
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
-        fitness_points=fitness_points
-        ,current_recommendation=current_recommendation
+        fitness_points=fitness_points,
+        latest_workout=latest_workout,
+        latest_nutrition=latest_nutrition,
+        hide_app_nav=True,
+        current_recommendation=current_recommendation
     )
 
 
