@@ -278,6 +278,7 @@ def nutrition():
     initial_water = 0
     food_entries = []
     previous_day_entries = []
+    water_by_date = {}
 
     water_log = (
         NutritionLog.query
@@ -287,6 +288,7 @@ def nutrition():
     )
     if water_log and water_log.water_glasses:
         initial_water = water_log.water_glasses
+    water_by_date[selected_date_str] = initial_water
 
     nutrition_logs = (
         NutritionLog.query
@@ -314,6 +316,17 @@ def nutrition():
     # Fetch previous day's food entries if viewing today
     if selected_date_date == date.today():
         previous_date = selected_date_date - timedelta(days=1)
+        previous_water_log = (
+            NutritionLog.query
+            .filter_by(user_id=current_user.id, log_date=previous_date, meal_type="Water")
+            .order_by(NutritionLog.id.desc())
+            .first()
+        )
+        water_by_date[previous_date.isoformat()] = (
+            previous_water_log.water_glasses
+            if previous_water_log and previous_water_log.water_glasses
+            else 0
+        )
         previous_logs = (
             NutritionLog.query
             .filter(NutritionLog.user_id == current_user.id)
@@ -343,6 +356,7 @@ def nutrition():
         initial_water=initial_water,
         food_entries=food_entries,
         previous_day_entries=previous_day_entries,
+        water_by_date=water_by_date,
         nutrition_logs=nutrition_logs,
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
