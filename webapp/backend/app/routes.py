@@ -304,6 +304,7 @@ def nutrition():
             "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
             "feedback": "",
             "comments": log.notes or "",
+            "logDate": log.log_date.isoformat(),
         }
         for log in nutrition_logs
     ]
@@ -371,6 +372,7 @@ def save_nutrition_log():
         "food_name": food.name,
         "quantity_g": nutrition_log.quantity_g,
         "calories": round((quantity_g / 100) * calories_per_100g),
+        "log_date": nutrition_log.log_date.isoformat(),
     })
 
 

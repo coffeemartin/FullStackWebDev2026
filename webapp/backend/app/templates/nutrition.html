@@ -118,6 +118,10 @@
     <form id="foodForm">
       <div class="row g-3">
         <div class="col-md-6">
+          <label class="nutrition-label" for="logDate">Date</label>
+          <input id="logDate" class="nutrition-input" type="date" required>
+        </div>
+        <div class="col-md-6">
           <label class="nutrition-label" for="mealType">Meal Type</label>
           <select id="mealType" class="nutrition-input" required>
             <option value="">Choose meal</option>
@@ -179,18 +183,12 @@
     <table class="nutrition-table">
       <thead>
         <tr>
-          <th>Meal</th><th>Food</th><th>Quantity</th>
-          <th>Calories</th><th>Feedback</th><th>Comments</th>
-        </tr>
-      </thead>
-      <tbody id="foodTable">
-        <tr><td colspan="6" class="nutrition-table-empty">No food entries yet.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section class="nutrition-insight">
+            <th>Date</th><th>Meal</th><th>Food</th><th>Quantity</th>
+            <th>Calories</th><th>Feedback</th><th>Comments</th>
+          </tr>
+        </thead>
+        <tbody id="foodTable">
+          <tr><td colspan="7" class="nutrition-table-empty">No food entries yet.</td></tr>
   <h2 class="nutrition-insight-title">💡 Your Daily Insight</h2>
   <p id="nutritionMessage" class="nutrition-insight-msg">
     Log your first meal and we'll serve up a personalised nutrition tip just for you.
@@ -219,6 +217,7 @@
   const heroStatus = document.getElementById("heroStatus");
   const heroFoodCount = document.getElementById("heroFoodCount");
   const heroWater = document.getElementById("heroWater");
+  const logDateInput = document.getElementById("logDate");
   const foodNameInput = document.getElementById("foodName");
   const quantityInput = document.getElementById("quantity");
   const standardQuantityGroup = document.getElementById("standardQuantityGroup");
@@ -233,6 +232,11 @@
   let entries = nutritionInitialData.food_entries;
   let water = nutritionInitialData.initial_water;
   const dailyWaterTarget = 8;
+
+  // Initialize date field with today's date and set max date to today
+  const today = new Date().toISOString().split('T')[0];
+  logDateInput.value = today;
+  logDateInput.max = today;
 
   const foodCalories = {
     "apple": 52,
@@ -263,6 +267,7 @@
   foodForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    const logDate = document.getElementById("logDate").value;
     const mealType = document.getElementById("mealType").value;
     const isOtherFood = foodNameInput.value === "Others";
     const foodName = isOtherFood ? otherFoodNameInput.value.trim() : foodNameInput.value.trim();
@@ -272,8 +277,8 @@
     const feedback = document.getElementById("feedback").value;
     const comments = document.getElementById("comments").value.trim();
 
-    if (!mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
-      alert("Please enter a valid meal type, food name, and quantity.");
+    if (!logDate || !mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
+      alert("Please enter a valid date, meal type, food name, and quantity.");
       return;
     }
 
@@ -284,6 +289,7 @@
 
     try {
       await saveNutritionLog({
+        log_date: logDate,
         meal_type: mealType,
         food_name: foodName,
         quantity_g: quantity,
@@ -296,6 +302,7 @@
     }
 
     entries.push({
+      logDate,
       mealType,
       foodName,
       quantity,
@@ -305,6 +312,7 @@
     });
 
     foodForm.reset();
+    logDateInput.value = today;
     toggleOtherFoodFields();
     calculatedCaloriesInput.value = "0 kcal";
     renderFoodLog();
@@ -374,7 +382,7 @@
     if (entries.length === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 6;
+      emptyCell.colSpan = 7;
       emptyCell.className = "text-center text-secondary";
       emptyCell.textContent = "No food entries yet.";
       emptyRow.appendChild(emptyCell);
@@ -384,6 +392,7 @@
     entries.forEach(function (entry) {
       const row = document.createElement("tr");
       const values = [
+        entry.logDate || "N/A",
         entry.mealType,
         entry.foodName,
         entry.quantity + "g",
