@@ -122,6 +122,40 @@ def get_friend_suggestions(user_id, limit=8):
         query = query.filter(~User.id.in_(connected_user_ids))
     return query.order_by(User.username).limit(limit).all()
 
+
+def get_latest_nutrition_summary(user_id):
+    latest_log = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == user_id)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .first()
+    )
+    if not latest_log or not latest_log.food:
+        return None
+
+    quantity_ratio = (latest_log.quantity_g or 0) / 100
+    return {
+        "food_name": latest_log.food.name,
+        "meal_type": latest_log.meal_type or "Meal",
+        "log_date": latest_log.log_date,
+        "calories": round(quantity_ratio * (latest_log.food.calories_per_100g or 0)),
+        "protein": round(quantity_ratio * (latest_log.food.protein_per_100g or 0), 1),
+        "carbs": round(quantity_ratio * (latest_log.food.carbs_per_100g or 0), 1),
+        "fat": round(quantity_ratio * (latest_log.food.fat_per_100g or 0), 1),
+    }
+
+
+def get_latest_workout_summary(user_id):
+    return (
+        ExerciseLog.query
+        .filter_by(user_id=user_id)
+        .join(Exercise)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .first()
+    )
+
 from app.ai_page import * 
 from app.ai_service import generate_ai_plan
 from app.models import LLMRecommendation
@@ -856,6 +890,9 @@ def friend_profile(user_id):
         except ValueError:
             pass
 
+    latest_workout = get_latest_workout_summary(friend.id)
+    latest_nutrition = get_latest_nutrition_summary(friend.id)
+
     return render_template(
         "friend_profile.html",
         title=f"{friend.name or friend.username} Profile",
@@ -863,8 +900,11 @@ def friend_profile(user_id):
         bmi=bmi,
         bmi_category=bmi_category,
         bmi_quote=bmi_quote,
-        fitness_points=fitness_points
-        ,current_recommendation=current_recommendation
+        fitness_points=fitness_points,
+        latest_workout=latest_workout,
+        latest_nutrition=latest_nutrition,
+        hide_app_nav=True,
+        current_recommendation=current_recommendation
     )
 
 
