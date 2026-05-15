@@ -208,7 +208,8 @@
     "previous_day_entries": safe_previous_day_entries,
     "initial_water": safe_initial_water,
     "water_by_date": safe_water_by_date,
-    "selected_date": selected_date
+    "selected_date": selected_date,
+    "server_today": server_today
   }|tojson }}
 </script>
 
@@ -243,8 +244,15 @@
   let waterByDate = nutritionInitialData.water_by_date || {};
   const dailyWaterTarget = 8;
 
-  // Initialize date field with today's date and set max date to today
-  const today = new Date().toISOString().split('T')[0];
+  function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+  }
+
+  // Initialize date field with today's local date and block future dates.
+  const today = nutritionInitialData.server_today || formatLocalDate(new Date());
   logDateInput.value = nutritionInitialData.selected_date || today;
   logDateInput.max = today;
 

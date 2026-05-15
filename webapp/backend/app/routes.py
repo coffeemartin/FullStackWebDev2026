@@ -1,4 +1,4 @@
-from datetime import date, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
 from app import app, db
@@ -163,6 +163,13 @@ import json
 from werkzeug.datastructures import MultiDict
 
 
+APP_TIMEZONE = ZoneInfo("Australia/Perth")
+
+
+def get_app_today():
+    return datetime.now(APP_TIMEZONE).date()
+
+
 
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/login", methods=['GET', 'POST'])
@@ -263,15 +270,18 @@ def login():
 @login_required
 def nutrition():
     selected_date = request.args.get("date", "")
+    today = get_app_today()
     try:
-        selected_date_date = date.fromisoformat(selected_date) if selected_date else date.today()
+        selected_date_date = date.fromisoformat(selected_date) if selected_date else today
     except ValueError:
-        selected_date_date = date.today()
+        selected_date_date = today
+    if selected_date_date > today:
+        selected_date_date = today
 
     selected_date_str = selected_date_date.isoformat()
     selected_date_label = (
         "Today's Food Entries"
-        if selected_date_date == date.today()
+        if selected_date_date == today
         else f"Food Entries for {selected_date_str}"
     )
 
@@ -314,7 +324,7 @@ def nutrition():
     ]
 
     # Fetch previous day's food entries if viewing today
-    if selected_date_date == date.today():
+    if selected_date_date == today:
         previous_date = selected_date_date - timedelta(days=1)
         previous_water_log = (
             NutritionLog.query
@@ -360,6 +370,7 @@ def nutrition():
         nutrition_logs=nutrition_logs,
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
+        server_today=today.isoformat(),
     )
 
 
@@ -367,6 +378,7 @@ def nutrition():
 @login_required
 def save_nutrition_log():
     data = request.get_json() or {}
+    today = get_app_today()
     meal_type = (data.get("meal_type") or "").strip()
     food_name = (data.get("food_name") or "").strip()
     quantity_g = data.get("quantity_g")
@@ -380,7 +392,10 @@ def save_nutrition_log():
         except ValueError:
             return jsonify({"error": "Log date must be a valid ISO date."}), 400
     else:
-        log_date = date.today()
+        log_date = today
+
+    if log_date > today:
+        return jsonify({"error": "Food entries can only be logged for today or previous dates."}), 400
 
     try:
         quantity_g = float(quantity_g)
@@ -423,6 +438,7 @@ def save_nutrition_log():
 @login_required
 def save_water_log():
     data = request.get_json() or {}
+    today = get_app_today()
     water_glasses = data.get("water_glasses")
     log_date = data.get("log_date")
 
@@ -440,7 +456,10 @@ def save_water_log():
         except ValueError:
             return jsonify({"error": "Log date must be a valid ISO date."}), 400
     else:
-        log_date = date.today()
+        log_date = today
+
+    if log_date > today:
+        return jsonify({"error": "Water intake can only be logged for today or previous dates."}), 400
 
     water_food = Food.query.filter(db.func.lower(Food.name) == "water").first()
     if water_food is None:
