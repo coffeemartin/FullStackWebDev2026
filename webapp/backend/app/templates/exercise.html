@@ -346,98 +346,113 @@
   <section class="exercise-section">
     <div class="section-heading">
       <h2>Your Comeback Story</h2>
-      <p>Your last 10 sessions — proof of how far you've come.</p>
+      <p>Your last 10 sessions, grouped by day so each workout block is easier to scan.</p>
     </div>
 
-    {% if recent_logs %}
-      <div class="history-filter-bar" id="history-filter-bar">
-        <button class="history-filter-btn active" data-filter="all">All</button>
-        <button class="history-filter-btn history-filter-btn--strength" data-filter="strength">💪 Strength</button>
-        <button class="history-filter-btn history-filter-btn--cardio"   data-filter="cardio">🏃 Cardio</button>
-        <button class="history-filter-btn history-filter-btn--mobility" data-filter="mobility">🧘 Mobility</button>
-        <button class="history-filter-btn history-filter-btn--recovery" data-filter="recovery">💧 Recovery</button>
-      </div>
-      <p class="history-filter-empty" id="history-filter-empty" style="display:none;">
-        No workouts found for this category.
-      </p>
-    {% endif %}
-
-    {% if recent_logs %}
+    {% if grouped_recent_logs %}
       <div class="history-stack">
-        {% for log in recent_logs %}
-          {% set category = log.exercise.category or 'Workout' %}
-          {% set category_lower = category|lower %}
-          {% set is_strength = 'strength' in category_lower %}
-          {% set is_cardio_style = 'cardio' in category_lower or 'walking' in category_lower or 'cycling' in category_lower or 'water' in category_lower or 'sport' in category_lower %}
-          <article class="history-card history-card--stacked" data-category="{{ category_lower }}">
-            <div class="history-card-top">
-              <span class="exercise-badge">{{ category }}</span>
-              <span class="history-date">{{ log.log_date.strftime('%d %b %Y') }}</span>
+        {% for day in grouped_recent_logs %}
+          <article
+            class="history-card history-day-card"
+            data-categories="{{ day.filter_tokens|join(' ') }}"
+            data-primary-category="{{ day.primary_filter }}"
+          >
+            <div class="history-day-header">
+              <div class="history-day-heading">
+                <div class="history-day-meta">
+                  {% if day.relative_label %}
+                    <span class="history-day-pill">{{ day.relative_label }}</span>
+                  {% endif %}
+                  <span class="history-date">{{ day.log_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <h3 class="history-day-title">
+                  {{ day.workout_count }} {{ "exercise" if day.workout_count == 1 else "exercises" }} logged
+                </h3>
+              </div>
+
+              <div class="history-day-summary">
+                <span class="history-day-chip">{{ day.workout_count }} session{{ "" if day.workout_count == 1 else "s" }}</span>
+                {% if day.total_minutes %}
+                  <span class="history-day-chip history-day-chip--accent">{{ day.total_minutes }} min total</span>
+                {% endif %}
+              </div>
             </div>
 
-            <h3 class="history-title">{{ log.exercise.name }}</h3>
+            <div class="history-day-list">
+              {% for entry in day.entries %}
+                {% set log = entry.log %}
+                <article class="history-entry" data-category="{{ entry.category_lower }}">
+                  <div class="history-entry-top">
+                    <div class="history-entry-heading">
+                      <span class="exercise-badge">{{ entry.category }}</span>
+                      <h4 class="history-entry-title">{{ log.exercise.name }}</h4>
+                    </div>
+                  </div>
 
-            <div class="history-stats">
-              {% if is_strength %}
-                {% if log.sets %}
-                  <div class="history-stat">
-                    <span>Sets</span>
-                    <strong>{{ log.sets }}</strong>
+                  <div class="history-stats history-stats--entry">
+                    {% if entry.is_strength %}
+                      {% if log.sets %}
+                        <div class="history-stat">
+                          <span>Sets</span>
+                          <strong>{{ log.sets }}</strong>
+                        </div>
+                      {% endif %}
+                      {% if log.reps %}
+                        <div class="history-stat">
+                          <span>Reps</span>
+                          <strong>{{ log.reps }}</strong>
+                        </div>
+                      {% endif %}
+                      {% if log.weight_kg %}
+                        <div class="history-stat">
+                          <span>Load</span>
+                          <strong>{{ log.weight_kg }} kg</strong>
+                        </div>
+                      {% endif %}
+                      {% if log.duration_minutes %}
+                        <div class="history-stat">
+                          <span>Time</span>
+                          <strong>{{ log.duration_minutes }} min</strong>
+                        </div>
+                      {% endif %}
+                    {% elif entry.is_cardio_style %}
+                      {% if log.duration_minutes %}
+                        <div class="history-stat history-stat--wide">
+                          <span>Duration</span>
+                          <strong>{{ log.duration_minutes }} min</strong>
+                        </div>
+                      {% else %}
+                        <div class="history-stat history-stat--wide">
+                          <span>Session</span>
+                          <strong>Workout saved</strong>
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      {% if log.duration_minutes %}
+                        <div class="history-stat history-stat--wide">
+                          <span>Time</span>
+                          <strong>{{ log.duration_minutes }} min</strong>
+                        </div>
+                      {% endif %}
+                      {% if log.sets and log.reps %}
+                        <div class="history-stat history-stat--wide">
+                          <span>Volume</span>
+                          <strong>{{ log.sets }} x {{ log.reps }}</strong>
+                        </div>
+                      {% endif %}
+                    {% endif %}
                   </div>
-                {% endif %}
-                {% if log.reps %}
-                  <div class="history-stat">
-                    <span>Reps</span>
-                    <strong>{{ log.reps }}</strong>
-                  </div>
-                {% endif %}
-                {% if log.weight_kg %}
-                  <div class="history-stat">
-                    <span>Load</span>
-                    <strong>{{ log.weight_kg }} kg</strong>
-                  </div>
-                {% endif %}
-                {% if log.duration_minutes %}
-                  <div class="history-stat">
-                    <span>Time</span>
-                    <strong>{{ log.duration_minutes }} min</strong>
-                  </div>
-                {% endif %}
-              {% elif is_cardio_style %}
-                {% if log.duration_minutes %}
-                  <div class="history-stat history-stat--wide">
-                    <span>Duration</span>
-                    <strong>{{ log.duration_minutes }} min</strong>
-                  </div>
-                {% else %}
-                  <div class="history-stat history-stat--wide">
-                    <span>Session</span>
-                    <strong>Workout saved</strong>
-                  </div>
-                {% endif %}
-              {% else %}
-                {% if log.duration_minutes %}
-                  <div class="history-stat history-stat--wide">
-                    <span>Time</span>
-                    <strong>{{ log.duration_minutes }} min</strong>
-                  </div>
-                {% endif %}
-                {% if log.sets and log.reps %}
-                  <div class="history-stat history-stat--wide">
-                    <span>Volume</span>
-                    <strong>{{ log.sets }} x {{ log.reps }}</strong>
-                  </div>
-                {% endif %}
-              {% endif %}
+
+                  {% if log.notes %}
+                    <p class="history-note">{{ log.notes }}</p>
+                  {% else %}
+                    <p class="history-note history-note--muted">
+                      {{ "Strength session logged and ready for progress tracking." if entry.is_strength else "Workout captured and saved to your training history." }}
+                    </p>
+                  {% endif %}
+                </article>
+              {% endfor %}
             </div>
-
-            {% if log.notes %}
-              <p class="history-note">{{ log.notes }}</p>
-            {% else %}
-              <p class="history-note history-note--muted">
-                {{ "Strength session logged and ready for progress tracking." if is_strength else "Workout captured and saved to your training history." }}
-              </p>
-            {% endif %}
           </article>
         {% endfor %}
       </div>
@@ -580,28 +595,6 @@
         exerciseSearch.focus();
       });
     });
-
-    // ── History category filter ──────────────────────────────
-    const filterBar = document.getElementById("history-filter-bar");
-    const filterEmpty = document.getElementById("history-filter-empty");
-    if (filterBar) {
-      filterBar.addEventListener("click", (e) => {
-        const btn = e.target.closest(".history-filter-btn");
-        if (!btn) return;
-        filterBar.querySelectorAll(".history-filter-btn").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        const filter = btn.dataset.filter;
-        const cards = document.querySelectorAll(".history-card--stacked");
-        let visible = 0;
-        cards.forEach((card) => {
-          const cat = (card.dataset.category || "").toLowerCase();
-          const show = filter === "all" || cat.includes(filter);
-          card.style.display = show ? "" : "none";
-          if (show) visible++;
-        });
-        if (filterEmpty) filterEmpty.style.display = visible === 0 ? "block" : "none";
-      });
-    }
 
     // Stop YouTube video when modal is closed
     document.querySelectorAll(".exercise-modal").forEach((modal) => {

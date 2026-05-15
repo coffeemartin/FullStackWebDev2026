@@ -6,12 +6,9 @@
 
 {% block content %}
 <section class="auth-page">
-
-  <!-- Background layers -->
   <div class="auth-aurora" aria-hidden="true"></div>
   <div class="auth-dots"   aria-hidden="true"></div>
 
-  <!-- Floating decorative stat bubbles -->
   <div class="auth-floaters" aria-hidden="true">
     <div class="auth-floater af1">💪 +2.4 kg muscle</div>
     <div class="auth-floater af2">🔥 820 kcal burned</div>
@@ -21,27 +18,19 @@
     <div class="auth-floater af6">🏋️ PR: 120 kg squat</div>
   </div>
 
-  <!-- Center wrapper -->
   <div class="auth-center">
-
-    <!-- Brand -->
     <div class="auth-top-brand">
       <span class="auth-logo-box">FT</span>
       <span class="auth-logo-name">FitTrack</span>
     </div>
     <p class="auth-hero-line">Your fitness journey, <span>fully personalised.</span></p>
 
-    <!-- Main card -->
     <div class="auth-card" id="authCard">
-
-      <!-- Tabs -->
       <div class="auth-tabs" role="tablist">
         <button class="auth-tab active" id="tabSignIn" data-panel="panelSignIn" role="tab" aria-selected="true" type="button">Sign In</button>
         <button class="auth-tab"        id="tabSignUp" data-panel="panelSignUp" role="tab" aria-selected="false" type="button">Get Started</button>
-        <span class="auth-tab-slider" id="authTabSlider"></span>
       </div>
 
-      <!-- ── SIGN IN PANEL ── -->
       <div class="auth-panel" id="panelSignIn" role="tabpanel">
         <p class="auth-panel-sub">Welcome back — let's pick up where you left off.</p>
 
@@ -77,7 +66,6 @@
         </form>
       </div>
 
-      <!-- ── CREATE PROFILE PANEL ── -->
       <div class="auth-panel auth-panel--hidden" id="panelSignUp" role="tabpanel">
         <p class="auth-panel-sub">Set up your profile once — FitTrack does the rest.</p>
 
@@ -190,7 +178,7 @@
                      placeholder="e.g. knee pain, shoulder injury, or none">
             </div>
 
-          </div><!-- /auth-signup-grid -->
+          </div>
 
           <button class="auth-btn auth-btn--primary auth-btn--full mt-3" type="submit">
             Create Profile &amp; Start Training
@@ -206,28 +194,16 @@
         <p class="auth-bmi-quote">{{ quote }}</p>
         {% endif %}
 
-      </div><!-- /panelSignUp -->
+      </div>
 
-    </div><!-- /auth-card -->
+    </div>
 
-  </div><!-- /auth-center -->
+  </div>
 </section>
 
 <script>
 (function () {
-  /* ── Tab switching ── */
   const tabs   = document.querySelectorAll(".auth-tab");
-  const slider = document.getElementById("authTabSlider");
-
-  function moveSlider(tab) {
-    slider.style.left  = tab.offsetLeft + "px";
-    slider.style.width = tab.offsetWidth + "px";
-  }
-
-  // Initialise slider on active tab
-  const activeTab = document.querySelector(".auth-tab.active");
-  if (activeTab) moveSlider(activeTab);
-
   const card = document.getElementById("authCard");
 
   tabs.forEach((tab) => {
@@ -235,24 +211,20 @@
       tabs.forEach((t) => { t.classList.remove("active"); t.setAttribute("aria-selected", "false"); });
       tab.classList.add("active");
       tab.setAttribute("aria-selected", "true");
-      moveSlider(tab);
 
       document.querySelectorAll(".auth-panel").forEach((p) => p.classList.add("auth-panel--hidden"));
       const target = document.getElementById(tab.dataset.panel);
       if (target) target.classList.remove("auth-panel--hidden");
 
-      // Widen card for signup form
       if (card) card.classList.toggle("auth-card--wide", tab.dataset.panel === "panelSignUp");
     });
   });
 
   {% if show_signup %}
-  // Auto-open signup tab if redirected here after create-profile
   const signupTab = document.getElementById("tabSignUp");
   if (signupTab) signupTab.click();
   {% endif %}
 
-  /* ── Password show/hide ── */
   document.querySelectorAll("[data-password-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const input = document.getElementById(btn.dataset.passwordToggle);

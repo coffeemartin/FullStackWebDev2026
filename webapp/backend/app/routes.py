@@ -451,6 +451,67 @@ def exercise():
         .all()
     )
 
+    grouped_recent_logs = []
+    grouped_recent_logs_by_date = {}
+
+    # Group the latest entries by workout date so the history reads as one daily story.
+    for log in recent_logs:
+        category = log.exercise.category if log.exercise and log.exercise.category else "Workout"
+        category_lower = category.lower()
+        is_strength = "strength" in category_lower
+        is_cardio_style = any(token in category_lower for token in ("cardio", "walking", "cycling", "water", "sport"))
+        is_mobility = "mobility" in category_lower
+        is_recovery = "recovery" in category_lower
+
+        filter_tokens = []
+        if is_strength:
+            filter_tokens.append("strength")
+        if is_cardio_style:
+            filter_tokens.append("cardio")
+        if is_mobility:
+            filter_tokens.append("mobility")
+        if is_recovery:
+            filter_tokens.append("recovery")
+        if not filter_tokens:
+            filter_tokens.append("other")
+
+        day_group = grouped_recent_logs_by_date.get(log.log_date)
+        if day_group is None:
+            day_delta = (log.log_date - date.today()).days
+            relative_label = None
+            if day_delta == 0:
+                relative_label = "Today"
+            elif day_delta == -1:
+                relative_label = "Yesterday"
+            elif day_delta == 1:
+                relative_label = "Tomorrow"
+
+            day_group = {
+                "log_date": log.log_date,
+                "relative_label": relative_label,
+                "entries": [],
+                "filter_tokens": [],
+                "primary_filter": filter_tokens[0],
+                "workout_count": 0,
+                "total_minutes": 0,
+            }
+            grouped_recent_logs_by_date[log.log_date] = day_group
+            grouped_recent_logs.append(day_group)
+
+        for token in filter_tokens:
+            if token not in day_group["filter_tokens"]:
+                day_group["filter_tokens"].append(token)
+
+        day_group["entries"].append({
+            "log": log,
+            "category": category,
+            "category_lower": category_lower,
+            "is_strength": is_strength,
+            "is_cardio_style": is_cardio_style,
+        })
+        day_group["workout_count"] += 1
+        day_group["total_minutes"] += log.duration_minutes or 0
+
     # Dashboard stats
     total_workouts = ExerciseLog.query.filter_by(user_id=user.id).count()
 
@@ -475,6 +536,7 @@ def exercise():
         form=form,
         exercise_options=exercises,
         recent_logs=recent_logs,
+        grouped_recent_logs=grouped_recent_logs,
         bmi_value=bmi_value,
         exercise_level=user.activity_level,
         recommendation=recommendation,

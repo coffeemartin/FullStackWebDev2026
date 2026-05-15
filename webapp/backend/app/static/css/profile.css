@@ -489,6 +489,365 @@
   margin: 0;
 }
 
+/* ── People section ─────────────────────────────────────── */
+.profile-page .profile-circle-panel {
+  position: relative;
+  margin-bottom: 1rem;
+  padding: 1.45rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.1), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(34, 211, 238, 0.05), transparent 45%),
+    linear-gradient(160deg, rgba(17, 29, 46, 0.98), rgba(10, 21, 34, 0.98));
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  box-shadow: var(--pr-shadow), 0 0 0 1px rgba(96, 165, 250, 0.05) inset;
+  overflow: hidden;
+}
+
+.profile-page .profile-circle-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(96, 165, 250, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.profile-page .profile-circle-heading,
+.profile-page .profile-circle-row,
+.profile-page .friend-menu-header,
+.profile-page .friend-menu-search,
+.profile-page .friend-menu-status,
+.profile-page .friend-menu-results {
+  position: relative;
+  z-index: 1;
+}
+
+.profile-page .profile-circle-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-page .profile-circle-heading h3 {
+  margin: 0.2rem 0 0;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.profile-page .profile-circle-heading p {
+  max-width: 280px;
+  margin: 0;
+  color: var(--pr-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.profile-page .profile-circle-row {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.profile-page .profile-circle-link,
+.profile-page .profile-circle-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 132px;
+  padding: 1rem 0.85rem;
+  border-radius: 18px;
+  text-decoration: none;
+  border: 1px solid rgba(96, 165, 250, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.profile-page .profile-circle-link:hover,
+.profile-page .profile-circle-add:hover {
+  transform: translateY(-2px);
+  background: rgba(96, 165, 250, 0.06);
+  border-color: rgba(96, 165, 250, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.profile-page .profile-circle-avatar {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: 2px solid rgba(96, 165, 250, 0.45);
+  box-shadow: 0 8px 20px rgba(96, 165, 250, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.profile-page .profile-circle-link small,
+.profile-page .profile-circle-add small {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.profile-page .profile-circle-view {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.26rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  color: var(--pr-accent);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.profile-page .profile-circle-add {
+  appearance: none;
+  cursor: pointer;
+  background:
+    linear-gradient(135deg, rgba(29, 78, 216, 0.16), rgba(96, 165, 250, 0.08)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.profile-page .profile-circle-add span {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  color: var(--pr-accent);
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* ── Friend search menu ─────────────────────────────────── */
+.profile-page .friend-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.62);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
+}
+
+.profile-page .friend-menu[hidden],
+.profile-page .friend-menu-backdrop[hidden] {
+  display: none !important;
+}
+
+.profile-page .friend-menu {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 560px);
+  max-height: min(78vh, 700px);
+  overflow: auto;
+  padding: 1.4rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.12), transparent 45%),
+    radial-gradient(ellipse at bottom left, rgba(34, 211, 238, 0.05), transparent 40%),
+    linear-gradient(160deg, rgba(17, 29, 46, 0.99), rgba(8, 17, 29, 0.99));
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(96, 165, 250, 0.06) inset;
+  z-index: 1060;
+}
+
+.profile-page .friend-menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-page .friend-menu-header h3 {
+  margin: 0.2rem 0 0;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.profile-page .friend-menu-close {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pr-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-page .friend-menu-close:hover {
+  border-color: rgba(96, 165, 250, 0.38);
+  color: #fff;
+  background: rgba(96, 165, 250, 0.08);
+}
+
+.profile-page .friend-menu-search {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.profile-page .friend-menu-search span {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--pr-text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profile-page .friend-menu-search input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(96, 165, 250, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--pr-text);
+  padding: 0.8rem 1rem;
+  font-size: 0.94rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.profile-page .friend-menu-search input:focus {
+  outline: none;
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.profile-page .friend-menu-search input::placeholder {
+  color: var(--pr-text-muted);
+}
+
+.profile-page .friend-menu-status {
+  margin: 0 0 0.9rem;
+  color: var(--pr-text-muted);
+  font-size: 0.88rem;
+}
+
+.profile-page .friend-menu-results {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.profile-page .friend-menu-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--pr-border);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.profile-page .friend-menu-card:hover {
+  transform: translateX(2px);
+  background: rgba(96, 165, 250, 0.05);
+  border-color: rgba(96, 165, 250, 0.26);
+}
+
+.profile-page .friend-menu-avatar {
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  border: 2px solid rgba(96, 165, 250, 0.38);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.profile-page .friend-menu-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-page .friend-menu-details strong {
+  color: #fff;
+  font-size: 0.94rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-page .friend-menu-details small {
+  color: var(--pr-text-muted);
+  font-size: 0.8rem;
+}
+
+.profile-page .friend-menu-card button {
+  margin-left: auto;
+  min-width: 84px;
+  border: none;
+  border-radius: 999px;
+  padding: 0.62rem 1rem;
+  background: linear-gradient(135deg, #1d4ed8, #60a5fa);
+  color: #fff;
+  font-size: 0.83rem;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(96, 165, 250, 0.26);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-page .friend-menu-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(96, 165, 250, 0.36);
+}
+
+.profile-page .friend-menu-empty {
+  padding: 1rem 1.05rem;
+  border-radius: 16px;
+  border: 1px dashed rgba(96, 165, 250, 0.24);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 0.22rem;
+}
+
+.profile-page .friend-menu-empty strong {
+  color: #fff;
+  font-size: 0.93rem;
+}
+
+.profile-page .friend-menu-empty span {
+  color: var(--pr-text-muted);
+  font-size: 0.84rem;
+}
+
 /* ── Friend request / friends panels ───────────────────── */
 .profile-page .friend-request-panel {
   padding: 1.4rem;
@@ -866,6 +1225,25 @@
     grid-template-columns: 1fr;
   }
 
+  .profile-page .profile-circle-heading,
+  .profile-page .friend-menu-header {
+    flex-direction: column;
+  }
+
+  .profile-page .profile-circle-heading p {
+    max-width: none;
+  }
+
+  .profile-page .friend-menu {
+    width: min(94vw, 560px);
+    max-height: 82vh;
+    padding: 1.2rem;
+  }
+
+  .profile-page .friend-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .profile-page .friend-request-card,
   .profile-page .friend-card {
     flex-wrap: wrap;
@@ -898,6 +1276,28 @@
 @media (max-width: 480px) {
   .profile-page .profile-hero {
     min-height: 25.5rem;
+  }
+
+  .profile-page .profile-circle-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-page .profile-circle-link,
+  .profile-page .profile-circle-add {
+    min-height: 118px;
+  }
+
+  .profile-page .friend-menu-card {
+    flex-wrap: wrap;
+  }
+
+  .profile-page .friend-menu-card button {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .profile-page .friend-macro-grid {
+    grid-template-columns: 1fr;
   }
 
   .profile-page .friend-status-grid {
@@ -945,6 +1345,120 @@
   border-color: var(--pr-accent);
   color: #fff;
   transform: translateX(-2px);
+}
+
+/* ── Friend profile cards ───────────────────────────────── */
+.profile-page .friend-focus-card {
+  padding: 1.8rem;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.08), transparent 50%),
+    linear-gradient(160deg, var(--pr-surface-2), var(--pr-surface));
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+}
+
+.profile-page .friend-focus-card strong {
+  display: block;
+  margin-top: 0.35rem;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.profile-page .friend-focus-card p {
+  margin: 0.5rem 0 0;
+  color: var(--pr-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.profile-page .friend-profile-summary {
+  margin-bottom: 2rem;
+}
+
+.profile-page .friend-summary-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-page .friend-summary-card {
+  padding: 1.5rem;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at top right, rgba(96, 165, 250, 0.08), transparent 50%),
+    linear-gradient(160deg, var(--pr-surface-2), var(--pr-surface));
+  border: 1px solid var(--pr-border);
+  box-shadow: var(--pr-shadow);
+}
+
+.profile-page .friend-summary-card strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.profile-page .friend-summary-card p {
+  margin: 0;
+  color: var(--pr-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.profile-page .friend-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.profile-page .friend-summary-meta span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(96, 165, 250, 0.08);
+  color: var(--pr-accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.profile-page .friend-macro-grid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.9rem;
+}
+
+.profile-page .friend-macro-grid div {
+  padding: 0.8rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(96, 165, 250, 0.14);
+}
+
+.profile-page .friend-macro-grid span {
+  display: block;
+  margin-bottom: 0.28rem;
+  color: var(--pr-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.profile-page .friend-macro-grid strong {
+  margin: 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.profile-page .friend-summary-grid > .fitness-point-list {
+  grid-column: 1 / -1;
 }
 
 /* ── Friend Plan Section ────────────────────────────────── */

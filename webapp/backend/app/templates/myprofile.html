@@ -67,35 +67,6 @@
     </div>
   </section>
 
-  <section class="profile-section">
-    <div class="section-heading">
-      <h2>Your Account</h2>
-      <p>Your sign-in details, safe and secure.</p>
-    </div>
-
-    <div class="profile-grid">
-      <article class="profile-card">
-        <span>Username</span>
-        <strong>{{ user.username }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Email</span>
-        <strong>{{ user.email }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>User ID</span>
-        <strong>{{ user.id }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Created at</span>
-        <strong>{{ user.created_at | default('Not set', true) }}</strong>
-      </article>
-      <article class="profile-card">
-        <span>Most recent login</span>
-        <strong>{{ latest_login_at | default('Not set', true) }}</strong>
-      </article>
-    </div>
-  </section>
   <section class="profile-section friends-section">
     <div class="section-heading">
       <h2>Your Squad</h2>
