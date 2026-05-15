@@ -5,9 +5,9 @@ from app import app, db
 from flask import jsonify, render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
-from app.models import User, Exercise, ExerciseLog, Food, LoginEvent, NutritionLog
+from app.models import User, Exercise, ExerciseLog, Food, Friendship, LoginEvent, NutritionLog
 from app.exercise_recommendation import get_exercise_plan
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -67,6 +67,94 @@ def get_bmi_fitness_points(category):
         "Avoid comparing your progress with someone else's journey.",
         "Small improvements each week can become lasting habits."
     ])
+
+
+def find_friendship_between(user_id, other_user_id):
+    return Friendship.query.filter(or_(
+        and_(Friendship.requester_id == user_id, Friendship.receiver_id == other_user_id),
+        and_(Friendship.requester_id == other_user_id, Friendship.receiver_id == user_id)
+    )).first()
+
+
+def users_are_friends(user_id, other_user_id):
+    friendship = find_friendship_between(user_id, other_user_id)
+    return bool(friendship and friendship.status == "accepted")
+
+
+def get_connected_friend_user_ids(user_id):
+    connected_friendships = Friendship.query.filter(
+        or_(
+            Friendship.requester_id == user_id,
+            Friendship.receiver_id == user_id
+        ),
+        Friendship.status.in_(["pending", "accepted"])
+    ).all()
+    return {
+        item.receiver_id if item.requester_id == user_id else item.requester_id
+        for item in connected_friendships
+    }
+
+
+def search_available_friends(user_id, search_term, limit=8):
+    if not search_term:
+        return []
+
+    connected_user_ids = get_connected_friend_user_ids(user_id)
+    search_pattern = f"%{search_term}%"
+    query = (
+        User.query
+        .filter(User.id != user_id)
+        .filter(or_(
+            User.name.ilike(search_pattern),
+            User.username.ilike(search_pattern),
+            User.email.ilike(search_pattern)
+        ))
+    )
+    if connected_user_ids:
+        query = query.filter(~User.id.in_(connected_user_ids))
+    return query.order_by(User.username).limit(limit).all()
+
+
+def get_friend_suggestions(user_id, limit=8):
+    connected_user_ids = get_connected_friend_user_ids(user_id)
+    query = User.query.filter(User.id != user_id)
+    if connected_user_ids:
+        query = query.filter(~User.id.in_(connected_user_ids))
+    return query.order_by(User.username).limit(limit).all()
+
+
+def get_latest_nutrition_summary(user_id):
+    latest_log = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == user_id)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .first()
+    )
+    if not latest_log or not latest_log.food:
+        return None
+
+    quantity_ratio = (latest_log.quantity_g or 0) / 100
+    return {
+        "food_name": latest_log.food.name,
+        "meal_type": latest_log.meal_type or "Meal",
+        "log_date": latest_log.log_date,
+        "calories": round(quantity_ratio * (latest_log.food.calories_per_100g or 0)),
+        "protein": round(quantity_ratio * (latest_log.food.protein_per_100g or 0), 1),
+        "carbs": round(quantity_ratio * (latest_log.food.carbs_per_100g or 0), 1),
+        "fat": round(quantity_ratio * (latest_log.food.fat_per_100g or 0), 1),
+    }
+
+
+def get_latest_workout_summary(user_id):
+    return (
+        ExerciseLog.query
+        .filter_by(user_id=user_id)
+        .join(Exercise)
+        .order_by(ExerciseLog.log_date.desc(), ExerciseLog.id.desc())
+        .first()
+    )
 
 from app.ai_page import * 
 from app.ai_service import generate_ai_plan
@@ -445,17 +533,40 @@ def AI():
         db.session.commit()
 
         flash("Customised plan generated successfully.")
-        return redirect(url_for("AI"))
+        ## Updated this to inlcude the new recommendation id as query param,
+        ## so that after generation, the page will show the newly generated plan 
+        # instead of defaulting back to the most recent saved plan.
+        return redirect(url_for("AI", recommendation_id=recommendation.id))
 
 
-    # On GET, query the database and show the latest recommendation (even if not saved) so user can continue editing if they want
-    # Prefer the most recent recommendation the user explicitly saved. If there is no saved, simply display most recent recommendation (e.g. new user)
-    latest_recommendation = (
-        LLMRecommendation.query
-        .filter_by(user_id=current_user.id)
-        .order_by(LLMRecommendation.created_at.desc())
-        .first()
-    )
+    recommendation_id = request.args.get("recommendation_id", type=int)
+    latest_recommendation = None
+
+    # firstly try to find the recommendation based on the recommendation_id query param, 
+    # which is set after a new plan generation or when user clicks on a past plan to view details. 
+    # This allows the page to show the generated plan right after generation.
+    if recommendation_id is not None:
+        latest_recommendation = LLMRecommendation.query.filter_by(
+            id=recommendation_id,
+            user_id=current_user.id,
+        ).first()
+
+    # If no recommendation found based on the query param, then try to find the user's current plan.
+    if latest_recommendation is None:
+        # On GET, prefer the user's current plan. If they have not marked one yet,
+        # fall back to the most recent recommendation so the page still has a plan to show.
+        latest_recommendation = (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id, is_current=True)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        # if current plan not found, fall back to most recent recommendation to show on the page 
+        ) or (
+            LLMRecommendation.query
+            .filter_by(user_id=current_user.id)
+            .order_by(LLMRecommendation.created_at.desc())
+            .first()
+        )
     # On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query
@@ -552,6 +663,38 @@ def save_ai_all():
     return redirect(url_for("AI"))
 
 
+@app.route("/AI/set-current", methods=["POST"])
+@login_required
+def set_current_reco():
+    csrf_form = CSRFOnlyForm()
+    if not csrf_form.validate_on_submit():
+        return jsonify({"success": False, "error": "Session expired."}), 400
+
+    recommendation_id = request.form.get("recommendation_id", type=int)
+    if recommendation_id is None:
+        return jsonify({"success": False, "error": "Missing recommendation id."}), 400
+
+    recommendation = LLMRecommendation.query.filter_by(
+        id=recommendation_id,
+        user_id=current_user.id,
+    ).first()
+
+    if recommendation is None:
+        return jsonify({"success": False, "error": "Recommendation not found."}), 404
+
+    try:
+        LLMRecommendation.query.filter_by(
+            user_id=current_user.id,
+            is_current=True,
+        ).update({"is_current": None})
+        recommendation.is_current = True
+        db.session.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @app.route("/AI/delete-reco", methods=["POST"])
 @login_required
 def delete_reco():
@@ -586,10 +729,41 @@ def myprofile():
 
     if request.method == 'POST' and request.form.get('form_type') == 'add_friend':
         friend_username = request.form.get('friend_username', '').strip()
-        if friend_username:
-            flash(f"Friend request ready for {friend_username}.")
-        else:
+        friend = User.query.filter_by(username=friend_username).first()
+        if not friend:
             flash("Please choose a friend to add.")
+        elif friend.id == current_user.id:
+            flash("You cannot send a friend request to yourself.")
+        elif find_friendship_between(current_user.id, friend.id):
+            flash("A friend request or friendship already exists with this user.")
+        else:
+            db.session.add(Friendship(
+                requester_id=current_user.id,
+                receiver_id=friend.id,
+                status="pending"
+            ))
+            db.session.commit()
+            flash(f"Friend request sent to {friend.name or friend.username}.")
+        return redirect(url_for('myprofile', friend_search=friend_search))
+
+    if request.method == 'POST' and request.form.get('form_type') in {"accept_friend", "decline_friend"}:
+        friendship_id = request.form.get('friendship_id')
+        friendship = Friendship.query.filter_by(
+            id=friendship_id,
+            receiver_id=current_user.id,
+            status="pending"
+        ).first()
+
+        if not friendship:
+            flash("Friend request could not be found.")
+        elif request.form.get('form_type') == "accept_friend":
+            friendship.status = "accepted"
+            db.session.commit()
+            flash(f"You are now friends with {friendship.requester.name or friendship.requester.username}.")
+        else:
+            friendship.status = "declined"
+            db.session.commit()
+            flash(f"Friend request from {friendship.requester.name or friendship.requester.username} declined.")
         return redirect(url_for('myprofile', friend_search=friend_search))
 
     bmi = None
@@ -618,21 +792,39 @@ def myprofile():
         perth_time = utc_time.astimezone(ZoneInfo("Australia/Perth"))
         latest_login_at = perth_time.strftime("%Y-%m-%d %H:%M:%S %Z")
 
+    incoming_requests = (
+        Friendship.query
+        .filter_by(receiver_id=current_user.id, status="pending")
+        .order_by(Friendship.created_at.desc())
+        .all()
+    )
+    outgoing_requests = (
+        Friendship.query
+        .filter_by(requester_id=current_user.id, status="pending")
+        .order_by(Friendship.created_at.desc())
+        .all()
+    )
+    accepted_friendships = (
+        Friendship.query
+        .filter(
+            or_(
+                Friendship.requester_id == current_user.id,
+                Friendship.receiver_id == current_user.id
+            ),
+            Friendship.status == "accepted"
+        )
+        .order_by(Friendship.updated_at.desc())
+        .all()
+    )
+    accepted_friends = [
+        item.receiver if item.requester_id == current_user.id else item.requester
+        for item in accepted_friendships
+    ]
+    suggested_friends = get_friend_suggestions(current_user.id)
+
     app_friends = []
     if friend_search:
-        search_pattern = f"%{friend_search}%"
-        app_friends = (
-            User.query
-            .filter(User.id != current_user.id)
-            .filter(or_(
-                User.name.ilike(search_pattern),
-                User.username.ilike(search_pattern),
-                User.email.ilike(search_pattern)
-            ))
-            .order_by(User.username)
-            .limit(8)
-            .all()
-        )
+        app_friends = search_available_friends(current_user.id, friend_search)
 
     return render_template(
         "myprofile.html",
@@ -644,7 +836,75 @@ def myprofile():
         bmi_quote=bmi_quote,
         fitness_points=fitness_points,
         app_friends=app_friends,
-        friend_search=friend_search
+        friend_search=friend_search,
+        incoming_requests=incoming_requests,
+        outgoing_requests=outgoing_requests,
+        accepted_friends=accepted_friends,
+        suggested_friends=suggested_friends
+    )
+
+
+@app.route("/friends/search")
+@login_required
+def search_friends():
+    friend_search = request.args.get("q", "").strip()
+    users = search_available_friends(current_user.id, friend_search)
+    return jsonify({
+        "results": [
+            {
+                "username": user.username,
+                "name": user.name or user.username,
+                "goal": user.goal or "Fitness journey in progress",
+                "initial": (user.name or user.username)[:1].upper()
+            }
+            for user in users
+        ]
+    })
+
+
+@app.route("/profile/<int:user_id>")
+@login_required
+def friend_profile(user_id):
+    friend = db.session.get(User, user_id)
+    if not friend:
+        flash("Profile could not be found.")
+        return redirect(url_for("myprofile"))
+
+    if friend.id != current_user.id and not users_are_friends(current_user.id, friend.id):
+        flash("You can view this profile after the friend request is accepted.")
+        return redirect(url_for("myprofile"))
+
+    bmi = None
+    bmi_category = None
+    bmi_quote = "This user has not added height and weight yet."
+    fitness_points = get_bmi_fitness_points(None)
+    current_recommendation = (
+        LLMRecommendation.query
+        .filter_by(user_id=friend.id, is_current=True)
+        .first()
+    )
+    if friend.height_cm and friend.weight_kg:
+        try:
+            bmi, bmi_category, bmi_quote = calculate_bmi_result(friend.height_cm, friend.weight_kg)
+            fitness_points = get_bmi_fitness_points(bmi_category)
+        except ValueError:
+            pass
+
+    latest_workout = get_latest_workout_summary(friend.id)
+    latest_nutrition = get_latest_nutrition_summary(friend.id)
+
+    return render_template(
+        "friend_profile.html",
+        title=f"{friend.name or friend.username} Profile",
+        friend=friend,
+        bmi=bmi,
+        bmi_category=bmi_category,
+        bmi_quote=bmi_quote,
+        fitness_points=fitness_points,
+        latest_workout=latest_workout,
+        latest_nutrition=latest_nutrition,
+        hide_app_nav=True,
+        current_recommendation=current_recommendation
     )
 
 

@@ -268,7 +268,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
         class="btn ai-action-btn"
         id="training-global-edit"
       >
-        Save Plan
+        Update or Save Plan
       </button>
 
       <button
@@ -451,6 +451,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
           <th scope="col">Created</th>
           <th scope="col">Summary</th>
           <th scope="col">Saved</th>
+          <th scope="col">Current</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
@@ -471,8 +472,20 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
             <span class="badge text-bg-success">True</span>
           </td>
           <td>
+            {% if recommendation.is_current %}
+            <span class="badge text-bg-primary">Current</span>
+            {% else %}
+            <span class="badge text-bg-secondary">Not current</span>
+            {% endif %}
+          </td>
+          <td>
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-sm btn-outline-primary view-reco-btn">View</button>
+              {% if recommendation.is_current %}
+              <button type="button" class="btn btn-sm btn-primary" disabled>Current</button>
+              {% else %}
+              <button type="button" class="btn btn-sm btn-outline-warning set-current-btn">Set Current</button>
+              {% endif %}
               <button type="button" class="btn btn-sm btn-outline-danger delete-reco-btn">Delete</button>
             </div>
           </td>

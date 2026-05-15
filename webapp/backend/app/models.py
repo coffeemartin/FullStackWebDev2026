@@ -36,6 +36,16 @@ class User(UserMixin, db.Model):
     recommendations: so.Mapped[list["LLMRecommendation"]] = so.relationship(back_populates="user")
     login_events: so.Mapped[list["LoginEvent"]] = so.relationship(back_populates="user")
     embeddings: so.Mapped[list["UserEmbedding"]] = so.relationship(back_populates="user")
+    sent_friendships: so.Mapped[list["Friendship"]] = so.relationship(
+        foreign_keys="Friendship.requester_id",
+        back_populates="requester",
+        cascade="all, delete-orphan",
+    )
+    received_friendships: so.Mapped[list["Friendship"]] = so.relationship(
+        foreign_keys="Friendship.receiver_id",
+        back_populates="receiver",
+        cascade="all, delete-orphan",
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -61,6 +71,33 @@ class LoginEvent(db.Model):
     success: so.Mapped[bool] = so.mapped_column(default=True)
 
     user: so.Mapped["User"] = so.relationship(back_populates="login_events")
+
+
+class Friendship(db.Model):
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    requester_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    receiver_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey("user.id"), index=True)
+    status: so.Mapped[str] = so.mapped_column(sa.String(20), default="pending", server_default="pending", index=True)
+    created_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow)
+    updated_at: so.Mapped[datetime] = so.mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    requester: so.Mapped["User"] = so.relationship(
+        foreign_keys=[requester_id],
+        back_populates="sent_friendships",
+    )
+    receiver: so.Mapped["User"] = so.relationship(
+        foreign_keys=[receiver_id],
+        back_populates="received_friendships",
+    )
+
+    __table_args__ = (
+        sa.UniqueConstraint("requester_id", "receiver_id", name="uq_friendship_request_pair"),
+        sa.CheckConstraint("requester_id != receiver_id", name="ck_friendship_not_self"),
+    )
+
+    def __repr__(self):
+        return f"<Friendship {self.requester_id}->{self.receiver_id} {self.status}>"
+
 
 class Exercise(db.Model):
     id: so.Mapped[int] = so.mapped_column(primary_key=True)
@@ -128,6 +165,23 @@ class LLMRecommendation(db.Model):
     training_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
     nutrition_plan_json: so.Mapped[str] = so.mapped_column(sa.Text)
     user_saved: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False, server_default=sa.false())
+    is_current: so.Mapped[Optional[bool]] = so.mapped_column(sa.Boolean, nullable=True, default=None)
+
+
+# The frontend will handle the logic to set is_current=True for the selected plan and is_current=False for all other plans of the user when they mark a plan as current.
+# The route handler will also ensure that when a new plan is generated and marked as current, all other plans for that user are automatically updated to is_current=False, so the user doesn't have to manually unmark the previous current plan.
+# But below is database level validation, Not just frontend!!!! Not just Flask backend validation !!!!
+# this is the safety net to ensure data integrity at the database level.
+# Add a unique partial index to enforce that each user can only have one recommendation marked as current.
+    __table_args__ = (
+        sa.Index(
+            "uq_llm_recommendation_one_current_per_user",
+            "user_id",
+            unique=True,
+            sqlite_where=sa.text("is_current = 1"),
+            postgresql_where=sa.text("is_current IS TRUE"),
+        ),
+    )
 
     user: so.Mapped["User"] = so.relationship(back_populates="recommendations")
 
