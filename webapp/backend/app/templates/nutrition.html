@@ -12,6 +12,7 @@
 {% block content %}
 {% set safe_initial_water = initial_water|default(0) %}
 {% set safe_food_entries = food_entries|default([]) %}
+{% set safe_previous_day_entries = previous_day_entries|default([]) %}
 
 <section class="nutrition-page">
 
@@ -200,6 +201,7 @@
 <script id="nutritionInitialData" type="application/json">
   {{ {
     "food_entries": safe_food_entries,
+    "previous_day_entries": safe_previous_day_entries,
     "initial_water": safe_initial_water
   }|tojson }}
 </script>
@@ -230,6 +232,7 @@
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
   let entries = nutritionInitialData.food_entries;
+  let previousDayEntries = nutritionInitialData.previous_day_entries;
   let water = nutritionInitialData.initial_water;
   const dailyWaterTarget = 8;
 
@@ -379,7 +382,9 @@
   function renderFoodLog() {
     foodTable.innerHTML = "";
 
-    if (entries.length === 0) {
+    const allEntries = [...entries, ...previousDayEntries];
+
+    if (allEntries.length === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
       emptyCell.colSpan = 7;
@@ -387,28 +392,68 @@
       emptyCell.textContent = "No food entries yet.";
       emptyRow.appendChild(emptyCell);
       foodTable.appendChild(emptyRow);
-    }
+    } else {
+      // Add separator for previous day entries if they exist
+      if (previousDayEntries.length > 0 && entries.length > 0) {
+        const separatorRow = document.createElement("tr");
+        separatorRow.style.fontWeight = "bold";
+        separatorRow.style.backgroundColor = "#f0f0f0";
+        const separatorCell = document.createElement("td");
+        separatorCell.colSpan = 7;
+        separatorCell.textContent = "📅 Yesterday's Entries";
+        separatorCell.style.textAlign = "center";
+        separatorCell.style.padding = "10px";
+        separatorRow.appendChild(separatorCell);
+        // Display previous day entries first
+        for (let i = previousDayEntries.length - 1; i >= 0; i--) {
+          const entry = previousDayEntries[i];
+          const row = document.createElement("tr");
+          row.style.opacity = "0.7";
+          row.style.backgroundColor = "#fafafa";
+          const values = [
+            entry.logDate || "N/A",
+            entry.mealType,
+            entry.foodName,
+            entry.quantity + "g",
+            entry.calculatedCalories + " kcal",
+            entry.feedback,
+            entry.comments || "No comment"
+          ];
 
-    entries.forEach(function (entry) {
-      const row = document.createElement("tr");
-      const values = [
-        entry.logDate || "N/A",
-        entry.mealType,
-        entry.foodName,
-        entry.quantity + "g",
-        entry.calculatedCalories + " kcal",
-        entry.feedback,
-        entry.comments || "No comment"
-      ];
+          values.forEach(function (value) {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
 
-      values.forEach(function (value) {
-        const cell = document.createElement("td");
-        cell.textContent = value;
-        row.appendChild(cell);
+          foodTable.appendChild(row);
+        }
+        
+        foodTable.appendChild(separatorRow);
+      }
+
+      // Display today's entries
+      entries.forEach(function (entry) {
+        const row = document.createElement("tr");
+        const values = [
+          entry.logDate || "N/A",
+          entry.mealType,
+          entry.foodName,
+          entry.quantity + "g",
+          entry.calculatedCalories + " kcal",
+          entry.feedback,
+          entry.comments || "No comment"
+        ];
+
+        values.forEach(function (value) {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+
+        foodTable.appendChild(row);
       });
-
-      foodTable.appendChild(row);
-    });
+    }
 
     const calorieTotal = entries.reduce((sum, entry) => sum + entry.calculatedCalories, 0);
 
@@ -426,7 +471,7 @@
     if (calorieTotal < 1200) {
       nutritionMessage.textContent = "Your intake looks low today. Consider adding a balanced meal with protein, carbohydrates, and vegetables.";
     } else if (calorieTotal <= 2200) {
-      nutritionMessage.textContent = "Nice balance. Keep focusing on whole foods, hydration, and consistent meal timing.";
+      nutritionMessage.textContent = "Nice balance. Keep focusing on whole foods, hydration, and consistent meal timing. Yesterday you logged " + previousDayEntries.reduce((sum, entry) => sum + entry.calculatedCalories, 0) + " calories.";
     } else {
       nutritionMessage.textContent = "Your calories are quite high today. Try reviewing portion sizes or choosing lighter snacks.";
     }

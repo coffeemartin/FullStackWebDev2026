@@ -277,6 +277,7 @@ def nutrition():
 
     initial_water = 0
     food_entries = []
+    previous_day_entries = []
 
     water_log = (
         NutritionLog.query
@@ -305,15 +306,43 @@ def nutrition():
             "feedback": "",
             "comments": log.notes or "",
             "logDate": log.log_date.isoformat(),
+            "isPreviousDay": False,
         }
         for log in nutrition_logs
     ]
+
+    # Fetch previous day's food entries if viewing today
+    if selected_date_date == date.today():
+        previous_date = selected_date_date - timedelta(days=1)
+        previous_logs = (
+            NutritionLog.query
+            .filter(NutritionLog.user_id == current_user.id)
+            .filter(NutritionLog.log_date == previous_date)
+            .filter(NutritionLog.meal_type != "Water")
+            .join(Food)
+            .order_by(NutritionLog.id.asc())
+            .all()
+        )
+        previous_day_entries = [
+            {
+                "mealType": log.meal_type or "",
+                "foodName": log.food.name if log.food else "",
+                "quantity": log.quantity_g or 0,
+                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
+                "feedback": "",
+                "comments": log.notes or "",
+                "logDate": log.log_date.isoformat(),
+                "isPreviousDay": True,
+            }
+            for log in previous_logs
+        ]
 
     return render_template(
         'nutrition.html',
         title='Nutrition',
         initial_water=initial_water,
         food_entries=food_entries,
+        previous_day_entries=previous_day_entries,
         nutrition_logs=nutrition_logs,
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
