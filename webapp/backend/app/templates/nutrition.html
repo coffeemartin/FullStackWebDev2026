@@ -409,6 +409,7 @@
     foodTable.innerHTML = "";
 
     const entryDates = getEntryDates();
+    const entryDateCounts = getEntryDateCounts();
     const waterDatesShown = new Set();
     const hydrationRows = getHydrationRows(entryDates);
     const allEntries = [...entries, ...previousDayEntries, ...hydrationRows];
@@ -447,8 +448,7 @@
             entry.calculatedCalories + " kcal",
             entry.feedback,
             entry.comments || "No comment",
-            createDeleteButton(entry, previousDayEntries),
-            getDailyWaterCell(entry.logDate, waterDatesShown)
+            createDeleteButton(entry, previousDayEntries)
           ];
 
           values.forEach(function (value) {
@@ -456,6 +456,7 @@
             appendCellValue(cell, value);
             row.appendChild(cell);
           });
+          appendDailyWaterCell(row, entry.logDate, entryDateCounts, waterDatesShown);
 
           foodTable.appendChild(row);
         }
@@ -474,8 +475,7 @@
           entry.calculatedCalories + " kcal",
           entry.feedback,
           entry.comments || "No comment",
-          createDeleteButton(entry, entries),
-          getDailyWaterCell(entry.logDate, waterDatesShown)
+          createDeleteButton(entry, entries)
         ];
 
         values.forEach(function (value) {
@@ -483,6 +483,7 @@
           appendCellValue(cell, value);
           row.appendChild(cell);
         });
+        appendDailyWaterCell(row, entry.logDate, entryDateCounts, waterDatesShown);
 
         foodTable.appendChild(row);
       });
@@ -528,6 +529,13 @@
     }));
   }
 
+  function getEntryDateCounts() {
+    return [...entries, ...previousDayEntries].reduce(function (counts, entry) {
+      counts[entry.logDate] = (counts[entry.logDate] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
   function getHydrationRows(entryDates) {
     if (water > 0) {
       waterLoggedDates[logDateInput.value || today] = true;
@@ -543,13 +551,19 @@
       });
   }
 
-  function getDailyWaterCell(logDate, waterDatesShown) {
-    if (!waterLoggedDates[logDate] || waterDatesShown.has(logDate)) {
-      return "-";
+  function appendDailyWaterCell(row, logDate, entryDateCounts, waterDatesShown) {
+    if (waterDatesShown.has(logDate)) {
+      return;
     }
 
     waterDatesShown.add(logDate);
-    return createWaterStatus(logDate);
+    const cell = document.createElement("td");
+    const rowCount = entryDateCounts[logDate] || 1;
+    if (rowCount > 1) {
+      cell.rowSpan = rowCount;
+    }
+    appendCellValue(cell, waterLoggedDates[logDate] ? createWaterStatus(logDate) : "-");
+    row.appendChild(cell);
   }
 
   function createHydrationRow(logDate) {
