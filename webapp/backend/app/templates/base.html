@@ -18,20 +18,13 @@
   </head>
 
   <body>
-    <<<<<<< HEAD {% set current_page = 'Login' %} {% if
-    current_user.is_authenticated %} {% set current_page = 'My Profile' %} {% if
-    request.endpoint == 'main.nutrition' %} {% set current_page = 'Nutrition' %}
-    {% elif request.endpoint == 'main.exercise' %} {% set current_page =
-    'Exercise' %} {% elif request.endpoint == 'main.AI' %} {% set current_page =
-    'AI Coach' %} {% elif request.endpoint == 'main.friend_profile' %} {% set
-    current_page = 'Friend Profile' %} {% endif %} {% endif %} ======= {% set
-    current_page = 'Login' %} {% if current_user.is_authenticated %} {% set
-    current_page = 'My Profile' %} {% if request.endpoint == 'nutrition' %} {%
-    set current_page = 'Nutrition' %} {% elif request.endpoint == 'exercise' %}
-    {% set current_page = 'Exercise' %} {% elif request.endpoint == 'AI' %} {%
-    set current_page = 'My Plans' %} {% elif request.endpoint ==
+    {% set current_page = 'Login' %} {% if current_user.is_authenticated %} {%
+    set current_page = 'My Profile' %} {% if request.endpoint == 'nutrition' %}
+    {% set current_page = 'Nutrition' %} {% elif request.endpoint == 'exercise'
+    %} {% set current_page = 'Exercise' %} {% elif request.endpoint == 'AI' %}
+    {% set current_page = 'My Plans' %} {% elif request.endpoint ==
     'friend_profile' %} {% set current_page = 'Friend Profile' %} {% endif %} {%
-    endif %} >>>>>>> main
+    endif %}
 
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <nav class="navbar navbar-expand-sm navbar-dark custom-navbar">
@@ -96,7 +89,7 @@
                 class="nav-link nav-link-ai {% if request.endpoint == 'main.AI' %}active{% endif %}"
                 href="{{ url_for('main.AI') }}"
               >
-                AI
+                My Plans
               </a>
             </li>
           </ul>
