@@ -12,6 +12,11 @@
 {% block content %}
 {% set safe_initial_water = initial_water|default(0) %}
 {% set safe_food_entries = food_entries|default([]) %}
+{% set safe_previous_day_entries = previous_day_entries|default([]) %}
+{% set safe_water_by_date = water_by_date|default({}) %}
+{% set safe_water_logged_dates = water_logged_dates|default({}) %}
+{% set safe_selected_date = selected_date|default('') %}
+{% set safe_server_today = server_today|default('') %}
 
 <section class="nutrition-page">
 
@@ -72,6 +77,7 @@
   </div>
   <div class="nutrition-stat-card nutrition-stat-card--water">
     <span class="nutrition-stat-label">Water Intake</span>
+    <small style="font-size: 0.75em; color: #666; display: block; margin-bottom: 4px;">(1 glass = 250mL)</small>
     <strong class="nutrition-stat-value" id="waterCount">
       {{ safe_initial_water }}
       {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
@@ -117,6 +123,10 @@
     <h2 class="nutrition-panel-title">Log What You Ate</h2>
     <form id="foodForm">
       <div class="row g-3">
+        <div class="col-md-6">
+          <label class="nutrition-label" for="logDate">Date</label>
+          <input id="logDate" class="nutrition-input" type="date" required>
+        </div>
         <div class="col-md-6">
           <label class="nutrition-label" for="mealType">Meal Type</label>
           <select id="mealType" class="nutrition-input" required>
@@ -179,18 +189,15 @@
     <table class="nutrition-table">
       <thead>
         <tr>
-          <th>Meal</th><th>Food</th><th>Quantity</th>
-          <th>Calories</th><th>Feedback</th><th>Comments</th>
-        </tr>
-      </thead>
-      <tbody id="foodTable">
-        <tr><td colspan="6" class="nutrition-table-empty">No food entries yet.</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section class="nutrition-insight">
+            <th>Date</th><th>Meal</th><th>Food</th><th>Quantity</th>
+            <th>Calories</th><th>Feedback</th><th>Comments</th><th>Actions</th><th>Water</th>
+          </tr>
+        </thead>
+        <tbody id="foodTable">
+          <tr><td colspan="9" class="nutrition-table-empty">No food entries yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
   <h2 class="nutrition-insight-title">💡 Your Daily Insight</h2>
   <p id="nutritionMessage" class="nutrition-insight-msg">
     Log your first meal and we'll serve up a personalised nutrition tip just for you.
@@ -202,7 +209,12 @@
 <script id="nutritionInitialData" type="application/json">
   {{ {
     "food_entries": safe_food_entries,
-    "initial_water": safe_initial_water
+    "previous_day_entries": safe_previous_day_entries,
+    "initial_water": safe_initial_water,
+    "water_by_date": safe_water_by_date,
+    "water_logged_dates": safe_water_logged_dates,
+    "selected_date": safe_selected_date,
+    "server_today": safe_server_today
   }|tojson }}
 </script>
 
@@ -219,6 +231,7 @@
   const heroStatus = document.getElementById("heroStatus");
   const heroFoodCount = document.getElementById("heroFoodCount");
   const heroWater = document.getElementById("heroWater");
+  const logDateInput = document.getElementById("logDate");
   const foodNameInput = document.getElementById("foodName");
   const quantityInput = document.getElementById("quantity");
   const standardQuantityGroup = document.getElementById("standardQuantityGroup");
@@ -231,8 +244,23 @@
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
 
   let entries = nutritionInitialData.food_entries;
+  let previousDayEntries = nutritionInitialData.previous_day_entries;
   let water = nutritionInitialData.initial_water;
-  const dailyWaterTarget = 8;
+  let waterByDate = nutritionInitialData.water_by_date || {};
+  let waterLoggedDates = nutritionInitialData.water_logged_dates || {};
+  const dailyWaterTarget = 12;  // Daily target is 8-12 glasses (2-3 litres)
+
+  function formatLocalDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+  }
+
+  // Initialize date field with today's local date and block future dates.
+  const today = nutritionInitialData.server_today || formatLocalDate(new Date());
+  logDateInput.value = nutritionInitialData.selected_date || today;
+  logDateInput.max = today;
 
   const foodCalories = {
     "apple": 52,
@@ -259,10 +287,32 @@
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
   otherCaloriesInput.addEventListener("input", updateCalculatedCalories);
+  logDateInput.addEventListener("change", async function () {
+    const selected = logDateInput.value;
+    if (!selected) return;
+    try {
+      const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(selected));
+      if (!resp.ok) throw new Error('Could not load data for selected date.');
+      const data = await resp.json();
+      // Update local state and re-render
+      entries = data.food_entries || [];
+      previousDayEntries = data.previous_day_entries || [];
+      water = Number(data.initial_water || 0);
+      waterByDate = data.water_by_date || {};
+      waterLoggedDates = data.water_logged_dates || {};
+      // keep server today if provided
+      renderWaterCount();
+      renderFoodLog();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to load entries for that date.');
+    }
+  });
 
   foodForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    const logDate = document.getElementById("logDate").value;
     const mealType = document.getElementById("mealType").value;
     const isOtherFood = foodNameInput.value === "Others";
     const foodName = isOtherFood ? otherFoodNameInput.value.trim() : foodNameInput.value.trim();
@@ -272,8 +322,8 @@
     const feedback = document.getElementById("feedback").value;
     const comments = document.getElementById("comments").value.trim();
 
-    if (!mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
-      alert("Please enter a valid meal type, food name, and quantity.");
+    if (!logDate || !mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
+      alert("Please enter a valid date, meal type, food name, and quantity.");
       return;
     }
 
@@ -283,7 +333,8 @@
     }
 
     try {
-      await saveNutritionLog({
+      const savedEntry = await saveNutritionLog({
+        log_date: logDate,
         meal_type: mealType,
         food_name: foodName,
         quantity_g: quantity,
@@ -296,6 +347,8 @@
     }
 
     entries.push({
+      id: savedEntry.log_id,
+      logDate,
       mealType,
       foodName,
       quantity,
@@ -305,9 +358,11 @@
     });
 
     foodForm.reset();
+    logDateInput.value = today;
+    water = Number(waterByDate[logDateInput.value] || 0);
     toggleOtherFoodFields();
     calculatedCaloriesInput.value = "0 kcal";
-    renderFoodLog();
+    renderWaterCount();
   });
 
   function calculateCalories(quantity, caloriesPer100g) {
@@ -371,35 +426,86 @@
   function renderFoodLog() {
     foodTable.innerHTML = "";
 
-    if (entries.length === 0) {
+    const entryDates = getEntryDates();
+    const entryDateCounts = getEntryDateCounts();
+    const waterDatesShown = new Set();
+    const hydrationRows = getHydrationRows(entryDates);
+    const allEntries = [...entries, ...previousDayEntries, ...hydrationRows];
+
+    if (allEntries.length === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 6;
+      emptyCell.colSpan = 9;
       emptyCell.className = "text-center text-secondary";
       emptyCell.textContent = "No food entries yet.";
       emptyRow.appendChild(emptyCell);
       foodTable.appendChild(emptyRow);
-    }
+    } else {
+      // Add separator for previous day entries if they exist
+      if (previousDayEntries.length > 0) {
+        const separatorRow = document.createElement("tr");
+        separatorRow.className = "nutrition-table-separator";
+        const separatorCell = document.createElement("td");
+        separatorCell.colSpan = 9;
+        separatorCell.textContent = "📅 Yesterday's Entries";
+        separatorRow.appendChild(separatorCell);
+        // Display previous day entries first
+        for (let i = previousDayEntries.length - 1; i >= 0; i--) {
+          const entry = previousDayEntries[i];
+          const row = document.createElement("tr");
+          row.className = "nutrition-table-row--previous";
+          const values = [
+            entry.logDate || "N/A",
+            entry.mealType,
+            entry.foodName,
+            entry.quantity + "g",
+            entry.calculatedCalories + " kcal",
+            entry.feedback,
+            entry.comments || "No comment",
+            createDeleteButton(entry, previousDayEntries)
+          ];
 
-    entries.forEach(function (entry) {
-      const row = document.createElement("tr");
-      const values = [
-        entry.mealType,
-        entry.foodName,
-        entry.quantity + "g",
-        entry.calculatedCalories + " kcal",
-        entry.feedback,
-        entry.comments || "No comment"
-      ];
+          values.forEach(function (value) {
+            const cell = document.createElement("td");
+            appendCellValue(cell, value);
+            row.appendChild(cell);
+          });
+          appendDailyWaterCell(row, entry.logDate, entryDateCounts, waterDatesShown);
 
-      values.forEach(function (value) {
-        const cell = document.createElement("td");
-        cell.textContent = value;
-        row.appendChild(cell);
+          foodTable.appendChild(row);
+        }
+
+        foodTable.appendChild(separatorRow);
+      }
+
+      // Display today's entries
+      entries.forEach(function (entry) {
+        const row = document.createElement("tr");
+        const values = [
+          entry.logDate || "N/A",
+          entry.mealType,
+          entry.foodName,
+          entry.quantity + "g",
+          entry.calculatedCalories + " kcal",
+          entry.feedback,
+          entry.comments || "No comment",
+          createDeleteButton(entry, entries)
+        ];
+
+        values.forEach(function (value) {
+          const cell = document.createElement("td");
+          appendCellValue(cell, value);
+          row.appendChild(cell);
+        });
+        appendDailyWaterCell(row, entry.logDate, entryDateCounts, waterDatesShown);
+
+        foodTable.appendChild(row);
       });
 
-      foodTable.appendChild(row);
-    });
+      hydrationRows.forEach(function (hydrationRow) {
+        foodTable.appendChild(createHydrationRow(hydrationRow.logDate));
+      });
+    }
 
     const calorieTotal = entries.reduce((sum, entry) => sum + entry.calculatedCalories, 0);
 
@@ -417,7 +523,7 @@
     if (calorieTotal < 1200) {
       nutritionMessage.textContent = "Your intake looks low today. Consider adding a balanced meal with protein, carbohydrates, and vegetables.";
     } else if (calorieTotal <= 2200) {
-      nutritionMessage.textContent = "Nice balance. Keep focusing on whole foods, hydration, and consistent meal timing.";
+      nutritionMessage.textContent = "Nice balance. Keep focusing on whole foods, hydration, and consistent meal timing. Yesterday you logged " + previousDayEntries.reduce((sum, entry) => sum + entry.calculatedCalories, 0) + " calories.";
     } else {
       nutritionMessage.textContent = "Your calories are quite high today. Try reviewing portion sizes or choosing lighter snacks.";
     }
@@ -426,7 +532,172 @@
   function renderWaterCount() {
     waterCount.textContent = water + (water === 1 ? " glass" : " glasses");
     heroWater.textContent = water + " gl";
+    waterByDate[logDateInput.value || today] = water;
+    renderFoodLog();
     updateWaterWarning();
+  }
+
+  function getEntryDates() {
+    return new Set([...entries, ...previousDayEntries].map(function (entry) {
+      return entry.logDate;
+    }));
+  }
+
+  function getEntryDateCounts() {
+    return [...entries, ...previousDayEntries].reduce(function (counts, entry) {
+      counts[entry.logDate] = (counts[entry.logDate] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  function getHydrationRows(entryDates) {
+    if (water > 0) {
+      waterLoggedDates[logDateInput.value || today] = true;
+    }
+
+    return Object.keys(waterLoggedDates)
+      .filter(function (logDate) {
+        return waterLoggedDates[logDate] && !entryDates.has(logDate);
+      })
+      .sort()
+      .map(function (logDate) {
+        return { logDate };
+      });
+  }
+
+  function appendDailyWaterCell(row, logDate, entryDateCounts, waterDatesShown) {
+    if (waterDatesShown.has(logDate)) {
+      return;
+    }
+
+    waterDatesShown.add(logDate);
+    const cell = document.createElement("td");
+    const rowCount = entryDateCounts[logDate] || 1;
+    if (rowCount > 1) {
+      cell.rowSpan = rowCount;
+    }
+    appendCellValue(cell, waterLoggedDates[logDate] ? createWaterStatus(logDate) : "-");
+    row.appendChild(cell);
+  }
+
+  function createHydrationRow(logDate) {
+    const row = document.createElement("tr");
+    row.className = "nutrition-table-row--hydration";
+    const values = [
+      logDate || "N/A",
+      "Not entered",
+      "Not entered",
+      "Not entered",
+      "Not entered",
+      "Not entered",
+      "Not entered",
+      "-",
+      createWaterStatus(logDate)
+    ];
+
+    values.forEach(function (value) {
+      const cell = document.createElement("td");
+      appendCellValue(cell, value);
+      row.appendChild(cell);
+    });
+
+    return row;
+  }
+
+  function appendCellValue(cell, value) {
+    if (value instanceof Node) {
+      cell.appendChild(value);
+    } else {
+      cell.textContent = value;
+    }
+  }
+
+  function createDeleteButton(entry, entryList) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "nutrition-delete-btn";
+    button.textContent = "Delete";
+    button.addEventListener("click", function () {
+      deleteFoodEntry(entry, entryList);
+    });
+    return button;
+  }
+
+  async function deleteFoodEntry(entry, entryList) {
+    if (!entry.id) {
+      alert("This food entry cannot be deleted until the page is refreshed.");
+      return;
+    }
+
+    if (!confirm("Delete this food entry?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/nutrition/log/" + entry.id, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Food entry could not be deleted.");
+      }
+
+      const entryIndex = entryList.findIndex(function (item) {
+        return item.id === entry.id;
+      });
+      if (entryIndex !== -1) {
+        entryList.splice(entryIndex, 1);
+      }
+      renderFoodLog();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function getWaterLevel(glasses) {
+    // Daily target range: 8-12 glasses (2-3 litres)
+    const minTarget = 8;
+    const maxTarget = 12;
+    const remaining = Math.max(0, minTarget - glasses);
+    const remainingText = remaining === 1 ? "1 more glass" : remaining + " more glasses";
+
+    if (glasses < minTarget) {
+      return {
+        className: "water-table-status water-table-status--low",
+        label: "Low; need " + remainingText + " to reach daily target",
+        icon: "\u26A0"
+      };
+    }
+
+    if (glasses < maxTarget) {
+      return {
+        className: "water-table-status water-table-status--ok",
+        label: "Good! Continue drinking",
+        icon: ""
+      };
+    }
+
+    return {
+      className: "water-table-status water-table-status--sufficient",
+      label: "Excellent! Daily target met (8-12 glasses)",
+      icon: ""
+    };
+  }
+
+  function createWaterStatus(logDate) {
+    const glasses = Number(waterByDate[logDate] || 0);
+    const level = getWaterLevel(glasses);
+    const wrapper = document.createElement("span");
+    const amount = document.createElement("strong");
+    const caption = document.createElement("small");
+
+    wrapper.className = level.className;
+    amount.textContent = (level.icon ? level.icon + " " : "") + glasses + (glasses === 1 ? " glass" : " glasses");
+    caption.textContent = level.label;
+    wrapper.append(amount, caption);
+
+    return wrapper;
   }
 
   function updateWaterWarning() {
@@ -468,7 +739,10 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ water_glasses: water })
+        body: JSON.stringify({
+          water_glasses: water,
+          log_date: logDateInput.value || today
+        })
       });
       const data = await response.json();
 
@@ -477,6 +751,8 @@
       }
 
       water = data.water_glasses;
+      waterByDate[logDateInput.value || today] = water;
+      waterLoggedDates[logDateInput.value || today] = true;
       renderWaterCount();
       if (water < dailyWaterTarget) {
         waterSaveStatus.textContent = "Water intake saved. Dehydration risk: drink more water today.";
