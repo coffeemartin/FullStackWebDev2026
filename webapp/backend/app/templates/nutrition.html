@@ -17,6 +17,8 @@
 {% set safe_water_logged_dates = water_logged_dates|default({}) %}
 {% set safe_selected_date = selected_date|default('') %}
 {% set safe_server_today = server_today|default('') %}
+{% set safe_food_calories = food_calories|default({}) %}
+{% set safe_food_macros = food_macros|default({}) %}
 
 <section class="nutrition-page">
 
@@ -95,6 +97,13 @@
 <section class="nutrition-two-col">
   <div class="nutrition-panel">
     <h2 class="nutrition-panel-title">Your Plate, Your Power</h2>
+    <div class="nutrition-gif-wrap">
+      <img
+        src="https://media.giphy.com/media/BnFXJ6yBtATn2/giphy.gif"
+        alt="Animated healthy food GIF"
+        class="nutrition-gif"
+      >
+    </div>
     <div class="smart-plate">
       <div class="smart-plate-card smart-plate-card--green">
         <h3>🥦 Smart Plate</h3>
@@ -139,11 +148,10 @@
           <label class="nutrition-label" for="foodName">Food Name</label>
           <select id="foodName" class="nutrition-input" required>
             <option value="">Choose food</option>
-            <option>Apple</option><option>Banana</option><option>Boiled Egg</option>
-            <option>Brown Rice</option><option>Chicken Breast</option><option>Greek Yogurt</option>
-            <option>Oats</option><option>Pasta</option><option>Potato</option>
-            <option>Rice</option><option>Salmon</option><option>Tofu</option>
-            <option>White Rice</option><option>Whole Wheat Bread</option><option>Others</option>
+            {% for food_name in food_options %}
+            <option value="{{ food_name }}">{{ food_name }}</option>
+            {% endfor %}
+            <option>Others</option>
           </select>
         </div>
         <div class="col-md-6" id="standardQuantityGroup">
@@ -162,16 +170,21 @@
           <label class="nutrition-label" for="otherCalories">Calories per 100g</label>
           <input id="otherCalories" class="nutrition-input" type="number" min="0" step="0.1" placeholder="e.g. 60">
         </div>
+        <div class="col-md-6 d-none" id="otherProteinGroup">
+          <label class="nutrition-label" for="otherProtein">Protein per 100g</label>
+          <input id="otherProtein" class="nutrition-input" type="number" min="0" step="0.1" placeholder="e.g. 1.5">
+        </div>
+        <div class="col-md-6 d-none" id="otherCarbsGroup">
+          <label class="nutrition-label" for="otherCarbs">Carbs per 100g</label>
+          <input id="otherCarbs" class="nutrition-input" type="number" min="0" step="0.1" placeholder="e.g. 14">
+        </div>
+        <div class="col-md-6 d-none" id="otherFatGroup">
+          <label class="nutrition-label" for="otherFat">Fat per 100g</label>
+          <input id="otherFat" class="nutrition-input" type="number" min="0" step="0.1" placeholder="e.g. 0.4">
+        </div>
         <div class="col-md-6">
           <label class="nutrition-label" for="calculatedCalories">Calculated Calories</label>
           <input id="calculatedCalories" class="nutrition-input nutrition-input--readonly" type="text" value="0 kcal" readonly>
-        </div>
-        <div class="col-12">
-          <label class="nutrition-label" for="feedback">How did you feel?</label>
-          <select id="feedback" class="nutrition-input">
-            <option>Energized</option><option>Full</option>
-            <option>Still hungry</option><option>Tired</option>
-          </select>
         </div>
         <div class="col-12">
           <label class="nutrition-label" for="comments">Comments</label>
@@ -184,17 +197,107 @@
 </section>
 
 <section class="nutrition-panel">
-  <h2 class="nutrition-panel-title">Today's Fuel Breakdown</h2>
+  <h2 class="nutrition-panel-title">Daily Nutrition Snapshot</h2>
+  <div class="macro-summary">
+    <div class="macro-summary-head">
+      <span class="nutrition-stat-label">Selected Date</span>
+      <strong id="macroDateLabel">{{ safe_selected_date }}</strong>
+    </div>
+    <div class="macro-grid">
+      <div class="macro-card macro-card--calories">
+        <span>Calories</span>
+        <strong id="macroCalories">0 kcal</strong>
+      </div>
+      <div class="macro-card macro-card--protein">
+        <span>Protein</span>
+        <strong id="macroProtein">0g</strong>
+      </div>
+      <div class="macro-card macro-card--carbs">
+        <span>Carbohydrates</span>
+        <strong id="macroCarbs">0g</strong>
+      </div>
+      <div class="macro-card macro-card--fat">
+        <span>Fat</span>
+        <strong id="macroFat">0g</strong>
+      </div>
+    </div>
+    <p class="macro-summary-note" id="macroSummaryNote">
+      Select a date or add food entries to see the saved daily breakdown.
+    </p>
+  </div>
+</section>
+
+<section class="nutrition-panel nutrition-history-panel">
+  <h2 class="nutrition-panel-title">Daily Nutrition History</h2>
+  <p class="nutrition-history-intro">Your latest meals are grouped by day, so each date shows its saved foods, macros, and water together.</p>
+
+  {% if grouped_recent_nutrition_logs %}
+    <div class="nutrition-history-stack">
+      {% for day in grouped_recent_nutrition_logs %}
+        <details class="nutrition-history-card" {% if loop.first %}open{% endif %}>
+          <summary class="nutrition-history-day-header">
+            <div>
+              <div class="nutrition-history-meta">
+                {% if day.relative_label %}
+                  <span class="nutrition-history-pill">{{ day.relative_label }}</span>
+                {% endif %}
+                <span class="nutrition-history-date">{{ day.log_date.strftime('%d %b %Y') }}</span>
+              </div>
+              <h3 class="nutrition-history-title">
+                {{ day.food_count }} {{ "food" if day.food_count == 1 else "foods" }} logged
+              </h3>
+            </div>
+            <div class="nutrition-history-summary">
+              <span>{{ day.total_calories }} kcal</span>
+              <span>{{ "%.1f"|format(day.total_protein) }}g protein</span>
+              <span>{{ day.water_glasses }} glass{{ "" if day.water_glasses == 1 else "es" }} water</span>
+            </div>
+            <span class="nutrition-history-toggle" aria-hidden="true"></span>
+          </summary>
+
+          {% if day.entries %}
+            <div class="nutrition-history-list">
+              {% for entry in day.entries %}
+                <article class="nutrition-history-entry">
+                  <div>
+                    <span class="nutrition-history-meal">{{ entry.mealType or "Meal" }}</span>
+                    <h4>{{ entry.foodName }}</h4>
+                    {% if entry.comments %}
+                      <p>{{ entry.comments }}</p>
+                    {% endif %}
+                  </div>
+                  <div class="nutrition-history-macros">
+                    <span><strong>{{ entry.calculatedCalories }}</strong> kcal</span>
+                    <span><strong>{{ "%.1f"|format(entry.protein) }}</strong>g protein</span>
+                    <span><strong>{{ "%.1f"|format(entry.carbs) }}</strong>g carbs</span>
+                    <span><strong>{{ "%.1f"|format(entry.fat) }}</strong>g fat</span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="nutrition-history-empty">Water was logged for this date, but no foods were added.</p>
+          {% endif %}
+        </details>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="nutrition-history-empty">No nutrition logs yet. Your first saved meal will appear here.</p>
+  {% endif %}
+</section>
+
+<section class="nutrition-panel">
+  <h2 class="nutrition-panel-title">Fuel Breakdown</h2>
   <div class="nutrition-table-wrap">
     <table class="nutrition-table">
       <thead>
         <tr>
             <th>Date</th><th>Meal</th><th>Food</th><th>Quantity</th>
-            <th>Calories</th><th>Feedback</th><th>Comments</th><th>Actions</th><th>Water</th>
+            <th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th><th>Comments</th><th>Actions</th><th>Water</th>
           </tr>
         </thead>
         <tbody id="foodTable">
-          <tr><td colspan="9" class="nutrition-table-empty">No food entries yet.</td></tr>
+          <tr><td colspan="11" class="nutrition-table-empty">No food entries yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -214,7 +317,9 @@
     "water_by_date": safe_water_by_date,
     "water_logged_dates": safe_water_logged_dates,
     "selected_date": safe_selected_date,
-    "server_today": safe_server_today
+    "server_today": safe_server_today,
+    "food_calories": safe_food_calories,
+    "food_macros": safe_food_macros
   }|tojson }}
 </script>
 
@@ -231,6 +336,12 @@
   const heroStatus = document.getElementById("heroStatus");
   const heroFoodCount = document.getElementById("heroFoodCount");
   const heroWater = document.getElementById("heroWater");
+  const macroDateLabel = document.getElementById("macroDateLabel");
+  const macroCalories = document.getElementById("macroCalories");
+  const macroProtein = document.getElementById("macroProtein");
+  const macroCarbs = document.getElementById("macroCarbs");
+  const macroFat = document.getElementById("macroFat");
+  const macroSummaryNote = document.getElementById("macroSummaryNote");
   const logDateInput = document.getElementById("logDate");
   const foodNameInput = document.getElementById("foodName");
   const quantityInput = document.getElementById("quantity");
@@ -238,16 +349,25 @@
   const otherFoodGroup = document.getElementById("otherFoodGroup");
   const otherQuantityGroup = document.getElementById("otherQuantityGroup");
   const otherCaloriesGroup = document.getElementById("otherCaloriesGroup");
+  const otherProteinGroup = document.getElementById("otherProteinGroup");
+  const otherCarbsGroup = document.getElementById("otherCarbsGroup");
+  const otherFatGroup = document.getElementById("otherFatGroup");
   const otherFoodNameInput = document.getElementById("otherFoodName");
   const otherQuantityInput = document.getElementById("otherQuantity");
   const otherCaloriesInput = document.getElementById("otherCalories");
+  const otherProteinInput = document.getElementById("otherProtein");
+  const otherCarbsInput = document.getElementById("otherCarbs");
+  const otherFatInput = document.getElementById("otherFat");
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
+  const foodCalories = nutritionInitialData.food_calories || {};
+  const foodMacros = nutritionInitialData.food_macros || {};
 
   let entries = nutritionInitialData.food_entries;
   let previousDayEntries = nutritionInitialData.previous_day_entries;
   let water = nutritionInitialData.initial_water;
   let waterByDate = nutritionInitialData.water_by_date || {};
   let waterLoggedDates = nutritionInitialData.water_logged_dates || {};
+  let currentlyViewingDate = nutritionInitialData.selected_date;  // Track currently displayed date
   const dailyWaterTarget = 12;  // Daily target is 8-12 glasses (2-3 litres)
 
   function formatLocalDate(date) {
@@ -261,23 +381,7 @@
   const today = nutritionInitialData.server_today || formatLocalDate(new Date());
   logDateInput.value = nutritionInitialData.selected_date || today;
   logDateInput.max = today;
-
-  const foodCalories = {
-    "apple": 52,
-    "banana": 89,
-    "boiled egg": 155,
-    "brown rice": 111,
-    "chicken breast": 165,
-    "greek yogurt": 59,
-    "oats": 389,
-    "pasta": 131,
-    "potato": 77,
-    "rice": 130,
-    "salmon": 208,
-    "tofu": 76,
-    "white rice": 130,
-    "whole wheat bread": 247
-  };
+  currentlyViewingDate = logDateInput.value;
 
   foodNameInput.addEventListener("change", function () {
     toggleOtherFoodFields();
@@ -287,9 +391,18 @@
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
   otherCaloriesInput.addEventListener("input", updateCalculatedCalories);
+  otherProteinInput.addEventListener("input", updateCalculatedCalories);
+  otherCarbsInput.addEventListener("input", updateCalculatedCalories);
+  otherFatInput.addEventListener("input", updateCalculatedCalories);
   logDateInput.addEventListener("change", async function () {
     const selected = logDateInput.value;
     if (!selected) return;
+    
+    // Don't fetch if we're already viewing this date
+    if (selected === currentlyViewingDate) {
+      return;
+    }
+
     try {
       const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(selected));
       if (!resp.ok) throw new Error('Could not load data for selected date.');
@@ -300,6 +413,9 @@
       water = Number(data.initial_water || 0);
       waterByDate = data.water_by_date || {};
       waterLoggedDates = data.water_logged_dates || {};
+      Object.assign(foodMacros, data.food_macros || {});
+      Object.assign(foodCalories, data.food_calories || {});
+      currentlyViewingDate = selected;  // Update currently viewing date
       // keep server today if provided
       renderWaterCount();
       renderFoodLog();
@@ -317,9 +433,8 @@
     const isOtherFood = foodNameInput.value === "Others";
     const foodName = isOtherFood ? otherFoodNameInput.value.trim() : foodNameInput.value.trim();
     const quantity = Number(isOtherFood ? otherQuantityInput.value : quantityInput.value);
-    const caloriesPer100g = getCaloriesPer100g(foodName);
-    const calculatedCalories = calculateCalories(quantity, caloriesPer100g);
-    const feedback = document.getElementById("feedback").value;
+    const macrosPer100g = getMacrosPer100g(foodName);
+    const caloriesPer100g = macrosPer100g.calories;
     const comments = document.getElementById("comments").value.trim();
 
     if (!logDate || !mealType || !foodName || !Number.isFinite(quantity) || quantity <= 0) {
@@ -332,49 +447,74 @@
       return;
     }
 
+    if (!areValidMacros(macrosPer100g)) {
+      alert("Please enter valid calories, protein, carbohydrates, and fat values.");
+      return;
+    }
+
     try {
-      const savedEntry = await saveNutritionLog({
+      await saveNutritionLog({
         log_date: logDate,
         meal_type: mealType,
         food_name: foodName,
         quantity_g: quantity,
         calories_per_100g: caloriesPer100g,
-        notes: [feedback, comments].filter(Boolean).join(" - ")
+        protein_per_100g: macrosPer100g.protein,
+        carbs_per_100g: macrosPer100g.carbs,
+        fat_per_100g: macrosPer100g.fat,
+        notes: comments
       });
+
+      const normalizedFoodName = foodName.trim();
+      const foodKey = normalizedFoodName.toLowerCase();
+      const isNewFood = !Object.prototype.hasOwnProperty.call(foodCalories, foodKey);
+      foodCalories[foodKey] = caloriesPer100g;
+      foodMacros[foodKey] = macrosPer100g;
+      if (isNewFood) {
+        const newOption = document.createElement('option');
+        newOption.value = normalizedFoodName;
+        newOption.textContent = normalizedFoodName;
+        foodNameInput.insertBefore(newOption, foodNameInput.lastElementChild);
+      }
     } catch (error) {
       alert(error.message);
       return;
     }
 
-    entries.push({
-      id: savedEntry.log_id,
-      logDate,
-      mealType,
-      foodName,
-      quantity,
-      calculatedCalories,
-      feedback,
-      comments
-    });
-
-    foodForm.reset();
-    logDateInput.value = today;
-    water = Number(waterByDate[logDateInput.value] || 0);
-    toggleOtherFoodFields();
-    calculatedCaloriesInput.value = "0 kcal";
-    renderWaterCount();
+    window.location.href = "/nutrition?date=" + encodeURIComponent(logDate);
   });
 
   function calculateCalories(quantity, caloriesPer100g) {
     return Math.round((quantity / 100) * caloriesPer100g);
   }
 
-  function getCaloriesPer100g(foodName) {
+  function areValidMacros(macros) {
+    return ["calories", "protein", "carbs", "fat"].every(function (key) {
+      return Number.isFinite(macros[key]) && macros[key] >= 0;
+    });
+  }
+
+  function getMacrosPer100g(foodName) {
     if (foodNameInput.value === "Others" && otherFoodNameInput.value.trim()) {
-      return otherCaloriesInput.value === "" ? undefined : Number(otherCaloriesInput.value);
+      return {
+        calories: otherCaloriesInput.value === "" ? undefined : Number(otherCaloriesInput.value),
+        protein: otherProteinInput.value === "" ? undefined : Number(otherProteinInput.value),
+        carbs: otherCarbsInput.value === "" ? undefined : Number(otherCarbsInput.value),
+        fat: otherFatInput.value === "" ? undefined : Number(otherFatInput.value)
+      };
     }
 
-    return foodCalories[foodName.trim().toLowerCase()];
+    const foodKey = foodName.trim().toLowerCase();
+    return foodMacros[foodKey] || {
+      calories: foodCalories[foodKey],
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    };
+  }
+
+  function getCaloriesPer100g(foodName) {
+    return getMacrosPer100g(foodName).calories;
   }
 
   function updateCalculatedCalories() {
@@ -399,11 +539,17 @@
     otherFoodGroup.classList.toggle("d-none", !isOtherFood);
     otherQuantityGroup.classList.toggle("d-none", !isOtherFood);
     otherCaloriesGroup.classList.toggle("d-none", !isOtherFood);
+    otherProteinGroup.classList.toggle("d-none", !isOtherFood);
+    otherCarbsGroup.classList.toggle("d-none", !isOtherFood);
+    otherFatGroup.classList.toggle("d-none", !isOtherFood);
 
     quantityInput.required = !isOtherFood;
     otherFoodNameInput.required = isOtherFood;
     otherQuantityInput.required = isOtherFood;
     otherCaloriesInput.required = isOtherFood;
+    otherProteinInput.required = isOtherFood;
+    otherCarbsInput.required = isOtherFood;
+    otherFatInput.required = isOtherFood;
   }
 
   async function saveNutritionLog(payload) {
@@ -435,7 +581,7 @@
     if (allEntries.length === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 9;
+      emptyCell.colSpan = 11;
       emptyCell.className = "text-center text-secondary";
       emptyCell.textContent = "No food entries yet.";
       emptyRow.appendChild(emptyCell);
@@ -446,7 +592,7 @@
         const separatorRow = document.createElement("tr");
         separatorRow.className = "nutrition-table-separator";
         const separatorCell = document.createElement("td");
-        separatorCell.colSpan = 9;
+        separatorCell.colSpan = 11;
         separatorCell.textContent = "📅 Yesterday's Entries";
         separatorRow.appendChild(separatorCell);
         // Display previous day entries first
@@ -460,7 +606,9 @@
             entry.foodName,
             entry.quantity + "g",
             entry.calculatedCalories + " kcal",
-            entry.feedback,
+            formatGrams(entry.protein),
+            formatGrams(entry.carbs),
+            formatGrams(entry.fat),
             entry.comments || "No comment",
             createDeleteButton(entry, previousDayEntries)
           ];
@@ -487,7 +635,9 @@
           entry.foodName,
           entry.quantity + "g",
           entry.calculatedCalories + " kcal",
-          entry.feedback,
+          formatGrams(entry.protein),
+          formatGrams(entry.carbs),
+          formatGrams(entry.fat),
           entry.comments || "No comment",
           createDeleteButton(entry, entries)
         ];
@@ -507,10 +657,21 @@
       });
     }
 
-    const calorieTotal = entries.reduce((sum, entry) => sum + entry.calculatedCalories, 0);
+    const calorieTotal = entries.reduce((sum, entry) => sum + Number(entry.calculatedCalories || 0), 0);
+    const proteinTotal = entries.reduce((sum, entry) => sum + Number(entry.protein || 0), 0);
+    const carbsTotal = entries.reduce((sum, entry) => sum + Number(entry.carbs || 0), 0);
+    const fatTotal = entries.reduce((sum, entry) => sum + Number(entry.fat || 0), 0);
 
     totalCalories.textContent = calorieTotal + " kcal";
     foodCount.textContent = entries.length;
+    macroDateLabel.textContent = logDateInput.value || today;
+    macroCalories.textContent = calorieTotal + " kcal";
+    macroProtein.textContent = formatGrams(proteinTotal);
+    macroCarbs.textContent = formatGrams(carbsTotal);
+    macroFat.textContent = formatGrams(fatTotal);
+    macroSummaryNote.textContent = entries.length
+      ? "Saved totals for " + (logDateInput.value || today) + " from " + entries.length + " food " + (entries.length === 1 ? "entry." : "entries.")
+      : "No saved food entries for this date yet.";
 
     // sync hero card
     heroCalories.textContent = calorieTotal + " kcal";
@@ -535,6 +696,11 @@
     waterByDate[logDateInput.value || today] = water;
     renderFoodLog();
     updateWaterWarning();
+  }
+
+  function formatGrams(value) {
+    const amount = Math.round(Number(value || 0) * 10) / 10;
+    return amount + "g";
   }
 
   function getEntryDates() {
@@ -585,6 +751,8 @@
     row.className = "nutrition-table-row--hydration";
     const values = [
       logDate || "N/A",
+      "Not entered",
+      "Not entered",
       "Not entered",
       "Not entered",
       "Not entered",
