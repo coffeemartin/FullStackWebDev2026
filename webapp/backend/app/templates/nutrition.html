@@ -188,11 +188,11 @@
       <thead>
         <tr>
             <th>Date</th><th>Meal</th><th>Food</th><th>Quantity</th>
-            <th>Calories</th><th>Water</th><th>Feedback</th><th>Comments</th>
+            <th>Calories</th><th>Water</th><th>Feedback</th><th>Comments</th><th>Actions</th>
           </tr>
         </thead>
         <tbody id="foodTable">
-          <tr><td colspan="8" class="nutrition-table-empty">No food entries yet.</td></tr>
+          <tr><td colspan="9" class="nutrition-table-empty">No food entries yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -312,7 +312,7 @@
     }
 
     try {
-      await saveNutritionLog({
+      const savedEntry = await saveNutritionLog({
         log_date: logDate,
         meal_type: mealType,
         food_name: foodName,
@@ -326,6 +326,7 @@
     }
 
     entries.push({
+      id: savedEntry.log_id,
       logDate,
       mealType,
       foodName,
@@ -409,19 +410,19 @@
     if (allEntries.length === 0) {
       const emptyRow = document.createElement("tr");
       const emptyCell = document.createElement("td");
-      emptyCell.colSpan = 8;
+      emptyCell.colSpan = 9;
       emptyCell.className = "text-center text-secondary";
       emptyCell.textContent = "No food entries yet.";
       emptyRow.appendChild(emptyCell);
       foodTable.appendChild(emptyRow);
     } else {
       // Add separator for previous day entries if they exist
-      if (previousDayEntries.length > 0 && entries.length > 0) {
+      if (previousDayEntries.length > 0) {
         const separatorRow = document.createElement("tr");
         separatorRow.style.fontWeight = "bold";
         separatorRow.style.backgroundColor = "#f0f0f0";
         const separatorCell = document.createElement("td");
-        separatorCell.colSpan = 8;
+        separatorCell.colSpan = 9;
         separatorCell.textContent = "📅 Yesterday's Entries";
         separatorCell.style.textAlign = "center";
         separatorCell.style.padding = "10px";
@@ -440,7 +441,8 @@
             entry.calculatedCalories + " kcal",
             createWaterStatus(entry.logDate),
             entry.feedback,
-            entry.comments || "No comment"
+            entry.comments || "No comment",
+            createDeleteButton(entry, previousDayEntries)
           ];
 
           values.forEach(function (value) {
@@ -466,7 +468,8 @@
           entry.calculatedCalories + " kcal",
           createWaterStatus(entry.logDate),
           entry.feedback,
-          entry.comments || "No comment"
+          entry.comments || "No comment",
+          createDeleteButton(entry, entries)
         ];
 
         values.forEach(function (value) {
@@ -514,6 +517,49 @@
       cell.appendChild(value);
     } else {
       cell.textContent = value;
+    }
+  }
+
+  function createDeleteButton(entry, entryList) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "nutrition-delete-btn";
+    button.textContent = "Delete";
+    button.addEventListener("click", function () {
+      deleteFoodEntry(entry, entryList);
+    });
+    return button;
+  }
+
+  async function deleteFoodEntry(entry, entryList) {
+    if (!entry.id) {
+      alert("This food entry cannot be deleted until the page is refreshed.");
+      return;
+    }
+
+    if (!confirm("Delete this food entry?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/nutrition/log/" + entry.id, {
+        method: "DELETE"
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Food entry could not be deleted.");
+      }
+
+      const entryIndex = entryList.findIndex(function (item) {
+        return item.id === entry.id;
+      });
+      if (entryIndex !== -1) {
+        entryList.splice(entryIndex, 1);
+      }
+      renderFoodLog();
+    } catch (error) {
+      alert(error.message);
     }
   }
 
