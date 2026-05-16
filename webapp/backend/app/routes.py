@@ -147,6 +147,83 @@ def get_latest_nutrition_summary(user_id):
     }
 
 
+def serialize_nutrition_log(log, is_previous_day=False):
+    quantity_ratio = (log.quantity_g or 0) / 100
+    food = log.food
+    return {
+        "id": log.id,
+        "mealType": log.meal_type or "",
+        "foodName": food.name if food else "",
+        "quantity": log.quantity_g or 0,
+        "calculatedCalories": round(quantity_ratio * (food.calories_per_100g or 0)) if food else 0,
+        "protein": round(quantity_ratio * (food.protein_per_100g or 0), 1) if food else 0,
+        "carbs": round(quantity_ratio * (food.carbs_per_100g or 0), 1) if food else 0,
+        "fat": round(quantity_ratio * (food.fat_per_100g or 0), 1) if food else 0,
+        "comments": log.notes or "",
+        "logDate": log.log_date.isoformat(),
+        "isPreviousDay": is_previous_day,
+    }
+
+
+def get_nutrition_relative_label(log_date):
+    day_delta = (log_date - get_app_today()).days
+    if day_delta == 0:
+        return "Today"
+    if day_delta == -1:
+        return "Yesterday"
+    if day_delta == 1:
+        return "Tomorrow"
+    return None
+
+
+def build_grouped_recent_nutrition_logs(user_id, limit=10):
+    recent_logs = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == user_id)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.log_date.desc(), NutritionLog.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+    grouped_logs = []
+    grouped_logs_by_date = {}
+
+    for log in recent_logs:
+        day_group = grouped_logs_by_date.get(log.log_date)
+        if day_group is None:
+            water_total = (
+                db.session.query(func.sum(NutritionLog.water_glasses))
+                .filter_by(user_id=user_id, log_date=log.log_date, meal_type="Water")
+                .scalar()
+            ) or 0
+
+            day_group = {
+                "log_date": log.log_date,
+                "relative_label": get_nutrition_relative_label(log.log_date),
+                "entries": [],
+                "food_count": 0,
+                "total_calories": 0,
+                "total_protein": 0,
+                "total_carbs": 0,
+                "total_fat": 0,
+                "water_glasses": int(water_total),
+            }
+            grouped_logs_by_date[log.log_date] = day_group
+            grouped_logs.append(day_group)
+
+        entry = serialize_nutrition_log(log)
+        day_group["entries"].append(entry)
+        day_group["food_count"] += 1
+        day_group["total_calories"] += entry["calculatedCalories"]
+        day_group["total_protein"] += entry["protein"]
+        day_group["total_carbs"] += entry["carbs"]
+        day_group["total_fat"] += entry["fat"]
+
+    return grouped_logs
+
+
 def get_latest_workout_summary(user_id):
     return (
         ExerciseLog.query
@@ -323,6 +400,19 @@ def nutrition():
     water_by_date[selected_date_str] = initial_water
     water_logged_dates[selected_date_str] = water_log is not None
 
+    foods = Food.query.order_by(Food.name).all()
+    food_options = [food.name for food in foods if food.name.lower() != "water"]
+    food_calories = {food.name.lower(): food.calories_per_100g or 0 for food in foods}
+    food_macros = {
+        food.name.lower(): {
+            "calories": food.calories_per_100g or 0,
+            "protein": food.protein_per_100g or 0,
+            "carbs": food.carbs_per_100g or 0,
+            "fat": food.fat_per_100g or 0,
+        }
+        for food in foods
+    }
+
     nutrition_logs = (
         NutritionLog.query
         .filter(NutritionLog.user_id == current_user.id)
@@ -332,20 +422,7 @@ def nutrition():
         .order_by(NutritionLog.id.asc())
         .all()
     )
-    food_entries = [
-        {
-            "id": log.id,
-            "mealType": log.meal_type or "",
-            "foodName": log.food.name if log.food else "",
-            "quantity": log.quantity_g or 0,
-            "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
-            "feedback": "",
-            "comments": log.notes or "",
-            "logDate": log.log_date.isoformat(),
-            "isPreviousDay": False,
-        }
-        for log in nutrition_logs
-    ]
+    food_entries = [serialize_nutrition_log(log) for log in nutrition_logs]
 
     # Fetch previous day's food entries if viewing today
     if selected_date_date == today:
@@ -371,20 +448,9 @@ def nutrition():
             .order_by(NutritionLog.id.asc())
             .all()
         )
-        previous_day_entries = [
-            {
-                "id": log.id,
-                "mealType": log.meal_type or "",
-                "foodName": log.food.name if log.food else "",
-                "quantity": log.quantity_g or 0,
-                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
-                "feedback": "",
-                "comments": log.notes or "",
-                "logDate": log.log_date.isoformat(),
-                "isPreviousDay": True,
-            }
-            for log in previous_logs
-        ]
+        previous_day_entries = [serialize_nutrition_log(log, True) for log in previous_logs]
+
+    grouped_recent_nutrition_logs = build_grouped_recent_nutrition_logs(current_user.id)
 
     return render_template(
         'nutrition.html',
@@ -398,6 +464,10 @@ def nutrition():
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
         server_today=today.isoformat(),
+        food_options=food_options,
+        food_calories=food_calories,
+        food_macros=food_macros,
+        grouped_recent_nutrition_logs=grouped_recent_nutrition_logs,
     )
 
 
@@ -422,6 +492,19 @@ def nutrition_data():
     water_by_date = {}
     water_logged_dates = {}
 
+    foods = Food.query.order_by(Food.name).all()
+    food_options = [food.name for food in foods if food.name.lower() != "water"]
+    food_calories = {food.name.lower(): food.calories_per_100g or 0 for food in foods}
+    food_macros = {
+        food.name.lower(): {
+            "calories": food.calories_per_100g or 0,
+            "protein": food.protein_per_100g or 0,
+            "carbs": food.carbs_per_100g or 0,
+            "fat": food.fat_per_100g or 0,
+        }
+        for food in foods
+    }
+
     water_log = (
         NutritionLog.query
         .filter_by(user_id=current_user.id, log_date=selected_date_date, meal_type="Water")
@@ -442,20 +525,7 @@ def nutrition_data():
         .order_by(NutritionLog.id.asc())
         .all()
     )
-    food_entries = [
-        {
-            "id": log.id,
-            "mealType": log.meal_type or "",
-            "foodName": log.food.name if log.food else "",
-            "quantity": log.quantity_g or 0,
-            "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
-            "feedback": "",
-            "comments": log.notes or "",
-            "logDate": log.log_date.isoformat(),
-            "isPreviousDay": False,
-        }
-        for log in nutrition_logs
-    ]
+    food_entries = [serialize_nutrition_log(log) for log in nutrition_logs]
 
     # Fetch previous day's food entries if viewing today
     if selected_date_date == today:
@@ -481,20 +551,7 @@ def nutrition_data():
             .order_by(NutritionLog.id.asc())
             .all()
         )
-        previous_day_entries = [
-            {
-                "id": log.id,
-                "mealType": log.meal_type or "",
-                "foodName": log.food.name if log.food else "",
-                "quantity": log.quantity_g or 0,
-                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
-                "feedback": "",
-                "comments": log.notes or "",
-                "logDate": log.log_date.isoformat(),
-                "isPreviousDay": True,
-            }
-            for log in previous_logs
-        ]
+        previous_day_entries = [serialize_nutrition_log(log, True) for log in previous_logs]
 
     return jsonify({
         "food_entries": food_entries,
@@ -504,6 +561,9 @@ def nutrition_data():
         "water_logged_dates": water_logged_dates,
         "selected_date": selected_date_str,
         "server_today": today.isoformat(),
+        "food_options": food_options,
+        "food_calories": food_calories,
+        "food_macros": food_macros,
     })
 
 
@@ -518,6 +578,9 @@ def save_nutrition_log():
     log_date = data.get("log_date")
     notes = (data.get("notes") or "").strip()
     calories_per_100g = data.get("calories_per_100g")
+    protein_per_100g = data.get("protein_per_100g", 0)
+    carbs_per_100g = data.get("carbs_per_100g", 0)
+    fat_per_100g = data.get("fat_per_100g", 0)
 
     if log_date:
         try:
@@ -533,11 +596,22 @@ def save_nutrition_log():
     try:
         quantity_g = float(quantity_g)
         calories_per_100g = float(calories_per_100g)
+        protein_per_100g = float(protein_per_100g or 0)
+        carbs_per_100g = float(carbs_per_100g or 0)
+        fat_per_100g = float(fat_per_100g or 0)
     except (TypeError, ValueError):
-        return jsonify({"error": "Quantity and calories must be valid numbers."}), 400
+        return jsonify({"error": "Quantity, calories, and macros must be valid numbers."}), 400
 
-    if not meal_type or not food_name or quantity_g <= 0 or calories_per_100g < 0:
-        return jsonify({"error": "Meal type, food name, and quantity are required."}), 400
+    if (
+        not meal_type
+        or not food_name
+        or quantity_g <= 0
+        or calories_per_100g < 0
+        or protein_per_100g < 0
+        or carbs_per_100g < 0
+        or fat_per_100g < 0
+    ):
+        return jsonify({"error": "Meal type, food name, quantity, and non-negative nutrition values are required."}), 400
 
     food = Food.query.filter(db.func.lower(Food.name) == food_name.lower()).first()
     if food is None:
@@ -545,6 +619,9 @@ def save_nutrition_log():
         db.session.add(food)
 
     food.calories_per_100g = calories_per_100g
+    food.protein_per_100g = protein_per_100g
+    food.carbs_per_100g = carbs_per_100g
+    food.fat_per_100g = fat_per_100g
 
     nutrition_log = NutritionLog(
         user_id=current_user.id,
@@ -563,6 +640,9 @@ def save_nutrition_log():
         "food_name": food.name,
         "quantity_g": nutrition_log.quantity_g,
         "calories": round((quantity_g / 100) * calories_per_100g),
+        "protein": round((quantity_g / 100) * protein_per_100g, 1),
+        "carbs": round((quantity_g / 100) * carbs_per_100g, 1),
+        "fat": round((quantity_g / 100) * fat_per_100g, 1),
         "log_date": nutrition_log.log_date.isoformat(),
     })
 
