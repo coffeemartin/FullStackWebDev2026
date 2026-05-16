@@ -279,8 +279,28 @@ def login():
         confirm_password = request.form.get('confirm_password', '')
 
         try:
-            if not form_data['username'] or not form_data['email'] or not password:
-                raise ValueError("Please enter a login ID, email, and password.")
+            required_fields = {
+                'username': 'login ID',
+                'email': 'email',
+                'name': 'full name',
+                'age': 'age',
+                'gender': 'gender',
+                'height_cm': 'height',
+                'weight_kg': 'weight',
+                'goal': 'fitness goal',
+                'activity_level': 'activity level',
+                'injury_notes': 'injury notes'
+            }
+            missing_fields = [
+                label for key, label in required_fields.items()
+                if not form_data[key]
+            ]
+            if not password:
+                missing_fields.append('password')
+            if not confirm_password:
+                missing_fields.append('confirm password')
+            if missing_fields:
+                raise ValueError("Please complete every profile field before creating your account.")
             if password != confirm_password:
                 raise ValueError("Passwords do not match.")
             if User.query.filter_by(username=form_data['username']).first():
@@ -311,6 +331,7 @@ def login():
 
             login_user(user)
             flash("Profile created successfully.")
+            return redirect(url_for('myprofile'))
         except ValueError as error:
             flash(str(error))
         except SQLAlchemyError:

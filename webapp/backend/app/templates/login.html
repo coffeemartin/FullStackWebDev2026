@@ -69,7 +69,7 @@
       <div class="auth-panel auth-panel--hidden" id="panelSignUp" role="tabpanel">
         <p class="auth-panel-sub">Set up your profile once — FitTrack does the rest.</p>
 
-        <form action="{{ url_for('login') }}" method="post" novalidate>
+        <form action="{{ url_for('login') }}" method="post" id="signupForm">
           <input type="hidden" name="form_type" value="new_user">
 
           <div class="auth-signup-grid">
@@ -136,20 +136,20 @@
               <label class="auth-label" for="height_cm">Height (cm)</label>
               <input class="auth-input" id="height_cm" name="height_cm" type="number"
                      min="80" max="250" step="0.1"
-                     value="{{ form_data.get('height_cm', '') }}" placeholder="175">
+                     value="{{ form_data.get('height_cm', '') }}" placeholder="175" required>
             </div>
 
             <div class="auth-field">
               <label class="auth-label" for="weight_kg">Weight (kg)</label>
               <input class="auth-input" id="weight_kg" name="weight_kg" type="number"
                      min="25" max="300" step="0.1"
-                     value="{{ form_data.get('weight_kg', '') }}" placeholder="70">
+                     value="{{ form_data.get('weight_kg', '') }}" placeholder="70" required>
             </div>
 
             <div class="auth-field auth-field--full">
               <label class="auth-label" for="goal">Fitness Goal</label>
               {% set selected_goal = form_data.get('goal', '') %}
-              <select class="auth-input" id="goal" name="goal">
+              <select class="auth-input" id="goal" name="goal" required>
                 <option value="" {% if not selected_goal %}selected{% endif %}>Choose your goal</option>
                 <option value="Lose weight"        {% if selected_goal == 'Lose weight' %}selected{% endif %}>Lose weight</option>
                 <option value="Build muscle"       {% if selected_goal == 'Build muscle' %}selected{% endif %}>Build muscle</option>
@@ -162,7 +162,7 @@
             <div class="auth-field auth-field--full">
               <label class="auth-label" for="activity_level">Activity Level</label>
               {% set selected_activity = form_data.get('activity_level', '') %}
-              <select class="auth-input" id="activity_level" name="activity_level">
+              <select class="auth-input" id="activity_level" name="activity_level" required>
                 <option value="" {% if not selected_activity %}selected{% endif %}>Choose activity level</option>
                 <option value="Beginner"       {% if selected_activity == 'Beginner' %}selected{% endif %}>Beginner</option>
                 <option value="Lightly active" {% if selected_activity == 'Lightly active' %}selected{% endif %}>Lightly active</option>
@@ -172,10 +172,10 @@
             </div>
 
             <div class="auth-field auth-field--full">
-              <label class="auth-label" for="injury_notes">Injury Notes <span class="auth-optional">(optional)</span></label>
+              <label class="auth-label" for="injury_notes">Injury Notes</label>
               <input class="auth-input" id="injury_notes" name="injury_notes" type="text"
                      value="{{ form_data.get('injury_notes', '') }}"
-                     placeholder="e.g. knee pain, shoulder injury, or none">
+                     placeholder="e.g. knee pain, shoulder injury, or none" required>
             </div>
 
           </div>
@@ -234,6 +234,30 @@
       btn.textContent = show ? "Hide" : "Show";
     });
   });
+
+  const signupForm = document.getElementById("signupForm");
+  if (signupForm) {
+    const getSignupFields = () => Array.from(
+      signupForm.querySelectorAll("input:not([type='hidden']), select")
+    ).filter((field) => !field.disabled);
+
+    signupForm.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+
+      const signupFields = getSignupFields();
+      const currentIndex = signupFields.indexOf(event.target);
+      if (currentIndex === -1) return;
+
+      const isLastField = currentIndex === signupFields.length - 1;
+      event.preventDefault();
+
+      if (isLastField) {
+        return;
+      }
+
+      signupFields[currentIndex + 1].focus();
+    });
+  }
 })();
 </script>
 {% endblock %}
