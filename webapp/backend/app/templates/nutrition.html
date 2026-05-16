@@ -77,6 +77,7 @@
   </div>
   <div class="nutrition-stat-card nutrition-stat-card--water">
     <span class="nutrition-stat-label">Water Intake</span>
+    <small style="font-size: 0.75em; color: #666; display: block; margin-bottom: 4px;">(1 glass = 250mL)</small>
     <strong class="nutrition-stat-value" id="waterCount">
       {{ safe_initial_water }}
       {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
@@ -247,7 +248,7 @@
   let water = nutritionInitialData.initial_water;
   let waterByDate = nutritionInitialData.water_by_date || {};
   let waterLoggedDates = nutritionInitialData.water_logged_dates || {};
-  const dailyWaterTarget = 8;
+  const dailyWaterTarget = 12;  // Daily target is 8-12 glasses (2-3 litres)
 
   function formatLocalDate(date) {
     const year = date.getFullYear();
@@ -286,9 +287,26 @@
   otherFoodNameInput.addEventListener("input", updateCalculatedCalories);
   otherQuantityInput.addEventListener("input", updateCalculatedCalories);
   otherCaloriesInput.addEventListener("input", updateCalculatedCalories);
-  logDateInput.addEventListener("change", function () {
-    water = Number(waterByDate[logDateInput.value] || 0);
-    renderWaterCount();
+  logDateInput.addEventListener("change", async function () {
+    const selected = logDateInput.value;
+    if (!selected) return;
+    try {
+      const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(selected));
+      if (!resp.ok) throw new Error('Could not load data for selected date.');
+      const data = await resp.json();
+      // Update local state and re-render
+      entries = data.food_entries || [];
+      previousDayEntries = data.previous_day_entries || [];
+      water = Number(data.initial_water || 0);
+      waterByDate = data.water_by_date || {};
+      waterLoggedDates = data.water_logged_dates || {};
+      // keep server today if provided
+      renderWaterCount();
+      renderFoodLog();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to load entries for that date.');
+    }
   });
 
   foodForm.addEventListener("submit", async function (event) {
@@ -426,20 +444,16 @@
       // Add separator for previous day entries if they exist
       if (previousDayEntries.length > 0) {
         const separatorRow = document.createElement("tr");
-        separatorRow.style.fontWeight = "bold";
-        separatorRow.style.backgroundColor = "#f0f0f0";
+        separatorRow.className = "nutrition-table-separator";
         const separatorCell = document.createElement("td");
         separatorCell.colSpan = 9;
         separatorCell.textContent = "📅 Yesterday's Entries";
-        separatorCell.style.textAlign = "center";
-        separatorCell.style.padding = "10px";
         separatorRow.appendChild(separatorCell);
         // Display previous day entries first
         for (let i = previousDayEntries.length - 1; i >= 0; i--) {
           const entry = previousDayEntries[i];
           const row = document.createElement("tr");
-          row.style.opacity = "0.7";
-          row.style.backgroundColor = "#fafafa";
+          row.className = "nutrition-table-row--previous";
           const values = [
             entry.logDate || "N/A",
             entry.mealType,
@@ -460,7 +474,7 @@
 
           foodTable.appendChild(row);
         }
-        
+
         foodTable.appendChild(separatorRow);
       }
 
@@ -642,28 +656,31 @@
   }
 
   function getWaterLevel(glasses) {
-    const remaining = Math.max(0, dailyWaterTarget - glasses);
+    // Daily target range: 8-12 glasses (2-3 litres)
+    const minTarget = 8;
+    const maxTarget = 12;
+    const remaining = Math.max(0, minTarget - glasses);
     const remainingText = remaining === 1 ? "1 more glass" : remaining + " more glasses";
 
-    if (glasses < 4) {
+    if (glasses < minTarget) {
       return {
         className: "water-table-status water-table-status--low",
-        label: "Low; need " + remainingText + " today",
+        label: "Low; need " + remainingText + " to reach daily target",
         icon: "\u26A0"
       };
     }
 
-    if (glasses < dailyWaterTarget) {
+    if (glasses < maxTarget) {
       return {
         className: "water-table-status water-table-status--ok",
-        label: "OK; need " + remainingText + " today",
+        label: "Good! Continue drinking",
         icon: ""
       };
     }
 
     return {
       className: "water-table-status water-table-status--sufficient",
-      label: "Sufficient for today",
+      label: "Excellent! Daily target met (8-12 glasses)",
       icon: ""
     };
   }

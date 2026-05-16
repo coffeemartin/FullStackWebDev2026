@@ -380,6 +380,112 @@ def nutrition():
     )
 
 
+@app.route("/nutrition/data")
+@login_required
+def nutrition_data():
+    # Return nutrition data for a given date as JSON (used by client-side date picker)
+    selected_date = request.args.get("date", "")
+    today = get_app_today()
+    try:
+        selected_date_date = date.fromisoformat(selected_date) if selected_date else today
+    except ValueError:
+        selected_date_date = today
+    if selected_date_date > today:
+        selected_date_date = today
+
+    selected_date_str = selected_date_date.isoformat()
+
+    initial_water = 0
+    food_entries = []
+    previous_day_entries = []
+    water_by_date = {}
+    water_logged_dates = {}
+
+    water_log = (
+        NutritionLog.query
+        .filter_by(user_id=current_user.id, log_date=selected_date_date, meal_type="Water")
+        .order_by(NutritionLog.id.desc())
+        .first()
+    )
+    if water_log and water_log.water_glasses:
+        initial_water = water_log.water_glasses
+    water_by_date[selected_date_str] = initial_water
+    water_logged_dates[selected_date_str] = water_log is not None
+
+    nutrition_logs = (
+        NutritionLog.query
+        .filter(NutritionLog.user_id == current_user.id)
+        .filter(NutritionLog.log_date == selected_date_date)
+        .filter(NutritionLog.meal_type != "Water")
+        .join(Food)
+        .order_by(NutritionLog.id.asc())
+        .all()
+    )
+    food_entries = [
+        {
+            "id": log.id,
+            "mealType": log.meal_type or "",
+            "foodName": log.food.name if log.food else "",
+            "quantity": log.quantity_g or 0,
+            "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
+            "feedback": "",
+            "comments": log.notes or "",
+            "logDate": log.log_date.isoformat(),
+            "isPreviousDay": False,
+        }
+        for log in nutrition_logs
+    ]
+
+    # Fetch previous day's food entries if viewing today
+    if selected_date_date == today:
+        previous_date = selected_date_date - timedelta(days=1)
+        previous_water_log = (
+            NutritionLog.query
+            .filter_by(user_id=current_user.id, log_date=previous_date, meal_type="Water")
+            .order_by(NutritionLog.id.desc())
+            .first()
+        )
+        water_by_date[previous_date.isoformat()] = (
+            previous_water_log.water_glasses
+            if previous_water_log and previous_water_log.water_glasses
+            else 0
+        )
+        water_logged_dates[previous_date.isoformat()] = previous_water_log is not None
+        previous_logs = (
+            NutritionLog.query
+            .filter(NutritionLog.user_id == current_user.id)
+            .filter(NutritionLog.log_date == previous_date)
+            .filter(NutritionLog.meal_type != "Water")
+            .join(Food)
+            .order_by(NutritionLog.id.asc())
+            .all()
+        )
+        previous_day_entries = [
+            {
+                "id": log.id,
+                "mealType": log.meal_type or "",
+                "foodName": log.food.name if log.food else "",
+                "quantity": log.quantity_g or 0,
+                "calculatedCalories": round(((log.quantity_g or 0) / 100) * (log.food.calories_per_100g or 0)) if log.food else 0,
+                "feedback": "",
+                "comments": log.notes or "",
+                "logDate": log.log_date.isoformat(),
+                "isPreviousDay": True,
+            }
+            for log in previous_logs
+        ]
+
+    return jsonify({
+        "food_entries": food_entries,
+        "previous_day_entries": previous_day_entries,
+        "initial_water": initial_water,
+        "water_by_date": water_by_date,
+        "water_logged_dates": water_logged_dates,
+        "selected_date": selected_date_str,
+        "server_today": today.isoformat(),
+    })
+
+
 @app.route("/nutrition/log", methods=["POST"])
 @login_required
 def save_nutrition_log():

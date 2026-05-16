@@ -702,6 +702,26 @@ body:has(.nutrition-floating-foods) {
   background: rgba(45, 212, 191, 0.04);
 }
 
+/* Previous-day rows: remove white highlight and use subtle muted text */
+.nutrition-table-row--previous {
+  background: transparent;
+  color: var(--n-muted);
+  opacity: 0.95;
+}
+.nutrition-table-row--previous td {
+  color: var(--n-muted);
+}
+
+/* Separator row between yesterday and today: subtle, theme-matching */
+.nutrition-table-separator td {
+  background: transparent;
+  color: var(--n-muted);
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  border-top: 1px dashed rgba(255,255,255,0.04);
+}
+
 .nutrition-table td {
   padding: 0.75rem 1rem;
   color: var(--n-text);
