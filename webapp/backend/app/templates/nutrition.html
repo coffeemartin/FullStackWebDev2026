@@ -607,10 +607,13 @@
   }
 
   function getWaterLevel(glasses) {
+    const remaining = Math.max(0, dailyWaterTarget - glasses);
+    const remainingText = remaining === 1 ? "1 more glass" : remaining + " more glasses";
+
     if (glasses < 4) {
       return {
         className: "water-table-status water-table-status--low",
-        label: "Intake low",
+        label: "Low; need " + remainingText + " today",
         icon: "\u26A0"
       };
     }
@@ -618,14 +621,14 @@
     if (glasses < dailyWaterTarget) {
       return {
         className: "water-table-status water-table-status--ok",
-        label: "OK",
+        label: "OK; need " + remainingText + " today",
         icon: ""
       };
     }
 
     return {
       className: "water-table-status water-table-status--sufficient",
-      label: "Sufficient",
+      label: "Sufficient for today",
       icon: ""
     };
   }
