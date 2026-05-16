@@ -1046,11 +1046,24 @@ body:has(.nutrition-floating-foods) {
   padding: 1rem;
 }
 
+.nutrition-history-card[open] {
+  border-color: var(--n-border-hi);
+}
+
 .nutrition-history-day-header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  cursor: pointer;
+  list-style: none;
+}
+
+.nutrition-history-day-header::-webkit-details-marker {
+  display: none;
+}
+
+.nutrition-history-card[open] .nutrition-history-day-header {
   padding-bottom: 0.9rem;
   border-bottom: 1px solid var(--n-border);
 }
@@ -1096,6 +1109,7 @@ body:has(.nutrition-floating-foods) {
   flex-wrap: wrap;
   gap: 0.45rem;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .nutrition-history-summary span {
@@ -1106,6 +1120,38 @@ body:has(.nutrition-floating-foods) {
   font-size: 0.78rem;
   font-weight: 700;
   padding: 0.38rem 0.65rem;
+}
+
+.nutrition-history-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.nutrition-history-toggle::before,
+.nutrition-history-toggle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.7rem;
+  height: 2px;
+  background: var(--n-blue);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.nutrition-history-toggle::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+  transition: opacity var(--n-transition);
+}
+
+.nutrition-history-card[open] .nutrition-history-toggle::after {
+  opacity: 0;
 }
 
 .nutrition-history-list {
@@ -1160,14 +1206,17 @@ body:has(.nutrition-floating-foods) {
 }
 
 @media (max-width: 767.98px) {
-  .nutrition-history-day-header,
   .nutrition-history-entry {
     grid-template-columns: 1fr;
-    flex-direction: column;
+  }
+
+  .nutrition-history-day-header {
+    flex-wrap: wrap;
   }
 
   .nutrition-history-summary {
     justify-content: flex-start;
+    margin-left: 0;
   }
 
   .nutrition-history-macros {

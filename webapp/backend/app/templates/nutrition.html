@@ -234,8 +234,8 @@
   {% if grouped_recent_nutrition_logs %}
     <div class="nutrition-history-stack">
       {% for day in grouped_recent_nutrition_logs %}
-        <article class="nutrition-history-card">
-          <div class="nutrition-history-day-header">
+        <details class="nutrition-history-card" {% if loop.first %}open{% endif %}>
+          <summary class="nutrition-history-day-header">
             <div>
               <div class="nutrition-history-meta">
                 {% if day.relative_label %}
@@ -252,7 +252,8 @@
               <span>{{ "%.1f"|format(day.total_protein) }}g protein</span>
               <span>{{ day.water_glasses }} glass{{ "" if day.water_glasses == 1 else "es" }} water</span>
             </div>
-          </div>
+            <span class="nutrition-history-toggle" aria-hidden="true"></span>
+          </summary>
 
           {% if day.entries %}
             <div class="nutrition-history-list">
@@ -277,7 +278,7 @@
           {% else %}
             <p class="nutrition-history-empty">Water was logged for this date, but no foods were added.</p>
           {% endif %}
-        </article>
+        </details>
       {% endfor %}
     </div>
   {% else %}
