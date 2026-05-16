@@ -145,7 +145,8 @@
         <div class="exercise-empty-state">
           No exercise suggestions yet because BMI data has not been set.
         </div>
-      {% endif %}
+      </div>
+    {% endif %}
   </section>
 
   {% if recommendation %}
@@ -554,7 +555,6 @@
       dropdown.style.display = "block";
     };
 
-    // Set initial display value if form already has a selection
     const preselected = allExercises.find((e) => e.id == exerciseHidden.value);
     if (preselected) {
       exerciseSearch.value = preselected.name;
@@ -576,10 +576,11 @@
     });
 
     exerciseSearch.addEventListener("blur", () => {
-      setTimeout(() => { dropdown.style.display = "none"; }, 150);
+      setTimeout(() => {
+        dropdown.style.display = "none";
+      }, 150);
     });
 
-    // Log This Exercise shortcut buttons from modals
     document.querySelectorAll(".exercise-log-shortcut").forEach((button) => {
       button.addEventListener("click", () => {
         const targetName = button.dataset.exerciseName;
@@ -596,7 +597,6 @@
       });
     });
 
-    // Stop YouTube video when modal is closed
     document.querySelectorAll(".exercise-modal").forEach((modal) => {
       modal.addEventListener("hidden.bs.modal", () => {
         const iframe = modal.querySelector("iframe");
