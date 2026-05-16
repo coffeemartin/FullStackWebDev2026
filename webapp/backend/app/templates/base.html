@@ -26,7 +26,7 @@
       {% elif request.endpoint == 'exercise' %}
         {% set current_page = 'Exercise' %}
       {% elif request.endpoint == 'AI' %}
-        {% set current_page = 'AI Coach' %}
+        {% set current_page = 'My Plans' %}
       {% elif request.endpoint == 'friend_profile' %}
         {% set current_page = 'Friend Profile' %}
       {% endif %}
@@ -92,7 +92,7 @@
 
             <li class="nav-item">
               <a class="nav-link nav-link-ai {% if request.endpoint == 'AI' %}active{% endif %}" href="{{ url_for('AI') }}">
-                AI
+                My Plans
               </a>
             </li>
           </ul>
