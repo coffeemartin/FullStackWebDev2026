@@ -17,6 +17,7 @@
 {% set safe_water_logged_dates = water_logged_dates|default({}) %}
 {% set safe_selected_date = selected_date|default('') %}
 {% set safe_server_today = server_today|default('') %}
+{% set safe_food_calories = food_calories|default({}) %}
 
 <section class="nutrition-page">
 
@@ -139,11 +140,10 @@
           <label class="nutrition-label" for="foodName">Food Name</label>
           <select id="foodName" class="nutrition-input" required>
             <option value="">Choose food</option>
-            <option>Apple</option><option>Banana</option><option>Boiled Egg</option>
-            <option>Brown Rice</option><option>Chicken Breast</option><option>Greek Yogurt</option>
-            <option>Oats</option><option>Pasta</option><option>Potato</option>
-            <option>Rice</option><option>Salmon</option><option>Tofu</option>
-            <option>White Rice</option><option>Whole Wheat Bread</option><option>Others</option>
+            {% for food_name in food_options %}
+            <option value="{{ food_name }}">{{ food_name }}</option>
+            {% endfor %}
+            <option>Others</option>
           </select>
         </div>
         <div class="col-md-6" id="standardQuantityGroup">
@@ -214,7 +214,8 @@
     "water_by_date": safe_water_by_date,
     "water_logged_dates": safe_water_logged_dates,
     "selected_date": safe_selected_date,
-    "server_today": safe_server_today
+    "server_today": safe_server_today,
+    "food_calories": safe_food_calories
   }|tojson }}
 </script>
 
@@ -242,12 +243,14 @@
   const otherQuantityInput = document.getElementById("otherQuantity");
   const otherCaloriesInput = document.getElementById("otherCalories");
   const calculatedCaloriesInput = document.getElementById("calculatedCalories");
+  const foodCalories = nutritionInitialData.food_calories || {};
 
   let entries = nutritionInitialData.food_entries;
   let previousDayEntries = nutritionInitialData.previous_day_entries;
   let water = nutritionInitialData.initial_water;
   let waterByDate = nutritionInitialData.water_by_date || {};
   let waterLoggedDates = nutritionInitialData.water_logged_dates || {};
+  let currentlyViewingDate = nutritionInitialData.selected_date;  // Track currently displayed date
   const dailyWaterTarget = 12;  // Daily target is 8-12 glasses (2-3 litres)
 
   function formatLocalDate(date) {
@@ -261,23 +264,7 @@
   const today = nutritionInitialData.server_today || formatLocalDate(new Date());
   logDateInput.value = nutritionInitialData.selected_date || today;
   logDateInput.max = today;
-
-  const foodCalories = {
-    "apple": 52,
-    "banana": 89,
-    "boiled egg": 155,
-    "brown rice": 111,
-    "chicken breast": 165,
-    "greek yogurt": 59,
-    "oats": 389,
-    "pasta": 131,
-    "potato": 77,
-    "rice": 130,
-    "salmon": 208,
-    "tofu": 76,
-    "white rice": 130,
-    "whole wheat bread": 247
-  };
+  currentlyViewingDate = logDateInput.value;
 
   foodNameInput.addEventListener("change", function () {
     toggleOtherFoodFields();
@@ -290,6 +277,12 @@
   logDateInput.addEventListener("change", async function () {
     const selected = logDateInput.value;
     if (!selected) return;
+    
+    // Don't fetch if we're already viewing this date
+    if (selected === currentlyViewingDate) {
+      return;
+    }
+
     try {
       const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(selected));
       if (!resp.ok) throw new Error('Could not load data for selected date.');
@@ -300,6 +293,7 @@
       water = Number(data.initial_water || 0);
       waterByDate = data.water_by_date || {};
       waterLoggedDates = data.water_logged_dates || {};
+      currentlyViewingDate = selected;  // Update currently viewing date
       // keep server today if provided
       renderWaterCount();
       renderFoodLog();
@@ -341,6 +335,16 @@
         calories_per_100g: caloriesPer100g,
         notes: [feedback, comments].filter(Boolean).join(" - ")
       });
+
+      const normalizedFoodName = foodName.trim();
+      const foodKey = normalizedFoodName.toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(foodCalories, foodKey)) {
+        foodCalories[foodKey] = caloriesPer100g;
+        const newOption = document.createElement('option');
+        newOption.value = normalizedFoodName;
+        newOption.textContent = normalizedFoodName;
+        foodNameInput.insertBefore(newOption, foodNameInput.lastElementChild);
+      }
     } catch (error) {
       alert(error.message);
       return;
@@ -359,10 +363,27 @@
 
     foodForm.reset();
     logDateInput.value = today;
-    water = Number(waterByDate[logDateInput.value] || 0);
     toggleOtherFoodFields();
     calculatedCaloriesInput.value = "0 kcal";
+    
+    // Fetch fresh data from server and re-render to ensure entry displays
+    try {
+      const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(today));
+      if (resp.ok) {
+        const data = await resp.json();
+        entries = data.food_entries || [];
+        previousDayEntries = data.previous_day_entries || [];
+        water = Number(data.initial_water || 0);
+        waterByDate = data.water_by_date || {};
+        waterLoggedDates = data.water_logged_dates || {};
+        currentlyViewingDate = today;
+      }
+    } catch (err) {
+      console.error('Failed to refresh entries after save:', err);
+    }
+    
     renderWaterCount();
+    renderFoodLog();
   });
 
   function calculateCalories(quantity, caloriesPer100g) {

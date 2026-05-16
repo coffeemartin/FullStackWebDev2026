@@ -302,6 +302,10 @@ def nutrition():
     water_by_date[selected_date_str] = initial_water
     water_logged_dates[selected_date_str] = water_log is not None
 
+    foods = Food.query.order_by(Food.name).all()
+    food_options = [food.name for food in foods if food.name.lower() != "water"]
+    food_calories = {food.name.lower(): food.calories_per_100g or 0 for food in foods}
+
     nutrition_logs = (
         NutritionLog.query
         .filter(NutritionLog.user_id == current_user.id)
@@ -377,6 +381,8 @@ def nutrition():
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
         server_today=today.isoformat(),
+        food_options=food_options,
+        food_calories=food_calories,
     )
 
 
@@ -400,6 +406,10 @@ def nutrition_data():
     previous_day_entries = []
     water_by_date = {}
     water_logged_dates = {}
+
+    foods = Food.query.order_by(Food.name).all()
+    food_options = [food.name for food in foods if food.name.lower() != "water"]
+    food_calories = {food.name.lower(): food.calories_per_100g or 0 for food in foods}
 
     water_log = (
         NutritionLog.query
@@ -483,6 +493,8 @@ def nutrition_data():
         "water_logged_dates": water_logged_dates,
         "selected_date": selected_date_str,
         "server_today": today.isoformat(),
+        "food_options": food_options,
+        "food_calories": food_calories,
     })
 
 
