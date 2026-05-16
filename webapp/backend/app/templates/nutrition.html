@@ -189,7 +189,7 @@
       <thead>
         <tr>
             <th>Date</th><th>Meal</th><th>Food</th><th>Quantity</th>
-            <th>Calories</th><th>Water</th><th>Feedback</th><th>Comments</th><th>Actions</th>
+            <th>Calories</th><th>Feedback</th><th>Comments</th><th>Actions</th><th>Water</th>
           </tr>
         </thead>
         <tbody id="foodTable">
@@ -443,10 +443,10 @@
             entry.foodName,
             entry.quantity + "g",
             entry.calculatedCalories + " kcal",
-            "-",
             entry.feedback,
             entry.comments || "No comment",
-            createDeleteButton(entry, previousDayEntries)
+            createDeleteButton(entry, previousDayEntries),
+            "-"
           ];
 
           values.forEach(function (value) {
@@ -470,10 +470,10 @@
           entry.foodName,
           entry.quantity + "g",
           entry.calculatedCalories + " kcal",
-          "-",
           entry.feedback,
           entry.comments || "No comment",
-          createDeleteButton(entry, entries)
+          createDeleteButton(entry, entries),
+          "-"
         ];
 
         values.forEach(function (value) {
@@ -521,6 +521,10 @@
   }
 
   function getHydrationRows() {
+    if (water > 0) {
+      waterLoggedDates[logDateInput.value || today] = true;
+    }
+
     return Object.keys(waterLoggedDates)
       .filter(function (logDate) {
         return waterLoggedDates[logDate];
@@ -540,10 +544,10 @@
       "Not entered",
       "Not entered",
       "Not entered",
-      createWaterStatus(logDate),
       "Not entered",
       "Not entered",
-      "-"
+      "-",
+      createWaterStatus(logDate)
     ];
 
     values.forEach(function (value) {
