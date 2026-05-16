@@ -289,6 +289,7 @@ def nutrition():
     food_entries = []
     previous_day_entries = []
     water_by_date = {}
+    water_logged_dates = {}
 
     water_log = (
         NutritionLog.query
@@ -299,6 +300,7 @@ def nutrition():
     if water_log and water_log.water_glasses:
         initial_water = water_log.water_glasses
     water_by_date[selected_date_str] = initial_water
+    water_logged_dates[selected_date_str] = water_log is not None
 
     nutrition_logs = (
         NutritionLog.query
@@ -338,6 +340,7 @@ def nutrition():
             if previous_water_log and previous_water_log.water_glasses
             else 0
         )
+        water_logged_dates[previous_date.isoformat()] = previous_water_log is not None
         previous_logs = (
             NutritionLog.query
             .filter(NutritionLog.user_id == current_user.id)
@@ -369,6 +372,7 @@ def nutrition():
         food_entries=food_entries,
         previous_day_entries=previous_day_entries,
         water_by_date=water_by_date,
+        water_logged_dates=water_logged_dates,
         nutrition_logs=nutrition_logs,
         selected_date=selected_date_str,
         selected_date_label=selected_date_label,
