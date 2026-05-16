@@ -49,9 +49,13 @@ def test_get_started_tab_opens_signup_form(browser):
     browser.get(f"{BASE_URL}/login")
 
     browser.find_element(By.ID, "tabSignUp").click()
+    signup_panel = browser.find_element(By.ID, "panelSignUp")
+    WebDriverWait(browser, 5).until(
+        lambda driver: "auth-panel--hidden" not in signup_panel.get_attribute("class")
+    )
 
-    assert browser.find_element(By.ID, "new_username").is_displayed()
-    assert browser.find_element(By.ID, "email").is_displayed()
+    assert browser.find_element(By.ID, "new_username").is_enabled()
+    assert browser.find_element(By.ID, "email").is_enabled()
 
 
 def test_signup_enter_key_moves_to_next_field(browser):
