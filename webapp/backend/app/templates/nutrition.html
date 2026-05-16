@@ -443,7 +443,7 @@
             entry.foodName,
             entry.quantity + "g",
             entry.calculatedCalories + " kcal",
-            createWaterStatus(entry.logDate),
+            "-",
             entry.feedback,
             entry.comments || "No comment",
             createDeleteButton(entry, previousDayEntries)
@@ -470,7 +470,7 @@
           entry.foodName,
           entry.quantity + "g",
           entry.calculatedCalories + " kcal",
-          createWaterStatus(entry.logDate),
+          "-",
           entry.feedback,
           entry.comments || "No comment",
           createDeleteButton(entry, entries)
@@ -521,14 +521,11 @@
   }
 
   function getHydrationRows() {
-    const entryDates = new Set([...entries, ...previousDayEntries].map(function (entry) {
-      return entry.logDate;
-    }));
-
     return Object.keys(waterLoggedDates)
       .filter(function (logDate) {
-        return waterLoggedDates[logDate] && !entryDates.has(logDate);
+        return waterLoggedDates[logDate];
       })
+      .sort()
       .map(function (logDate) {
         return { logDate };
       });
