@@ -22,13 +22,6 @@
 
 <section class="nutrition-page">
 
-<div class="nutrition-floating-foods" aria-hidden="true">
-  <span>&#129382;</span><span>&#127822;</span><span>&#129365;</span>
-  <span>&#129367;</span><span>&#127820;</span><span>&#127827;</span>
-  <span>&#129361;</span><span>&#127834;</span><span>&#127815;</span>
-  <span>&#129370;</span>
-</div>
-
 <section class="nutrition-hero">
   <div class="nutrition-hero-content">
     <span class="nutrition-kicker">Your Daily Fuel Station</span>
@@ -79,7 +72,7 @@
   </div>
   <div class="nutrition-stat-card nutrition-stat-card--water">
     <span class="nutrition-stat-label">Water Intake</span>
-    <small style="font-size: 0.75em; color: #666; display: block; margin-bottom: 4px;">(1 glass = 250mL)</small>
+    <small class="water-serving-note">(1 glass = 250mL)</small>
     <strong class="nutrition-stat-value" id="waterCount">
       {{ safe_initial_water }}
       {% if safe_initial_water == 1 %}glass{% else %}glasses{% endif %}
@@ -300,11 +293,13 @@
           <tr><td colspan="11" class="nutrition-table-empty">No food entries yet.</td></tr>
         </tbody>
       </table>
-    </div>
-  <h2 class="nutrition-insight-title">💡 Your Daily Insight</h2>
-  <p id="nutritionMessage" class="nutrition-insight-msg">
-    Log your first meal and we'll serve up a personalised nutrition tip just for you.
-  </p>
+  </div>
+  <div class="nutrition-insight">
+    <h2 class="nutrition-insight-title">💡 Your Daily Insight</h2>
+    <p id="nutritionMessage" class="nutrition-insight-msg">
+      Log your first meal and we'll serve up a personalised nutrition tip just for you.
+    </p>
+  </div>
 </section>
 
 </section><!-- end .nutrition-page -->
