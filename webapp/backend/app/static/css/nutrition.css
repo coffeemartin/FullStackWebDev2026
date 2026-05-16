@@ -698,6 +698,10 @@ body:has(.nutrition-floating-foods) {
   background: rgba(96, 165, 250, 0.04);
 }
 
+.nutrition-table-row--hydration {
+  background: rgba(45, 212, 191, 0.04);
+}
+
 .nutrition-table td {
   padding: 0.75rem 1rem;
   color: var(--n-text);
