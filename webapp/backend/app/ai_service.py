@@ -34,7 +34,7 @@ def normalize_training_plan(plan: dict) -> dict:
                 exercise["name"] = normalize_exercise_name(exercise["name"])
     return plan
 
-# use the OpenAI client to generate a training and nutrition plan based on the user's profile and recent logs. 
+# Franco Notes: use the OpenAI client to generate a training and nutrition plan based on the user's profile and recent logs. 
 # The system prompt instructs the model to provide practical, safe, beginner-friendly advice and to format exercise
 # I have also particularly emphasized the need to use generic exercise names for the exercise.name field, 
 # and to move any modifiers into the exercise.notes field.
@@ -153,6 +153,6 @@ def generate_ai_plan(ai_input: dict, temperature: float = 0.0) -> dict:
     )
 
     plan = json.loads(response.output_text)
-    # Normalize exercise names to single values (not "x or y")
+    # Franco Notes: Normalize exercise names to single values (not "x or y")
     plan = normalize_training_plan(plan)
     return plan

@@ -105,6 +105,10 @@
   >
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="update_profile" />
+    <!-- Franco Notes: # The form fields are duplicated in both view and edit mode, with the edit fields hidden by default.
+    # name attributes on the input fields are used to identify which data is being updated when the form is submitted, 
+    # and data-profile-view-field attributes are used to link the view fields to the corresponding data fields for easy
+    # toggling between view and edit modes. -->
 
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-age">Age</label>
@@ -177,7 +181,7 @@
 
 <!-- ── Generate form ─────────────────────────────────────────── -->
 <div class="ai-generate-area">
-  <!-- This is a post form that triggers generation of a new plan using the LLM.
+  <!-- Franco Notes: This is a post form that triggers generation of a new plan using the LLM.
    It includes an input for how many days of history to include in the LLM input,
    which is sent to the backend and used to determine how many days of recent exercise logs to include in the data sent to the LLM.
    -->
@@ -244,7 +248,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
       {% if latest_recommendation %}
       <form
         method="post"
-        action="{{ url_for('save_ai_all') }}"
+        action="{{ url_for('main.save_ai_all') }}"
         id="training-save-all-form"
         class="m-0"
       >
@@ -452,7 +456,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
 
 {% if saved_recommendations %}
 <section class="mb-4 ai-section-panel ai-generated-panel">
-  <h2 class="text-center">Your Plan History</h2>
+  <h2 class="text-center">Manage Your Plans</h2>
 
   <div class="table-responsive ai-history-table-wrap">
     <table class="table table-dark table-hover align-middle mb-0 ai-history-table">

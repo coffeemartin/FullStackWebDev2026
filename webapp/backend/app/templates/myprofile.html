@@ -1,9 +1,10 @@
-{% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
-{% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
-{% endblock %}
-{% block content %}
+{% extends "base.html" %} {% block title %}My Profile{% endblock %} {% block
+extra_head %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/profile.css') }}"
+/>
+{% endblock %} {% block content %}
 <section class="profile-page">
   <section class="profile-hero profile-hero--bmi">
     <div>
@@ -14,9 +15,7 @@
 
     <div class="profile-bmi-card">
       <div class="profile-photo-wrap">
-        <div class="profile-photo">
-          {{ (user.name or user.username)[:1] }}
-        </div>
+        <div class="profile-photo">{{ (user.name or user.username)[:1] }}</div>
         <div>
           <span>Profile</span>
           <strong>{{ user.name or user.username }}</strong>
@@ -25,11 +24,11 @@
 
       <p class="profile-card-label">Current BMI</p>
       {% if bmi %}
-        <div class="profile-bmi-value">{{ bmi }}</div>
-        <strong>{{ bmi_category }}</strong>
+      <div class="profile-bmi-value">{{ bmi }}</div>
+      <strong>{{ bmi_category }}</strong>
       {% else %}
-        <div class="profile-bmi-value">--</div>
-        <strong>Profile details needed</strong>
+      <div class="profile-bmi-value">--</div>
+      <strong>Profile details needed</strong>
       {% endif %}
     </div>
   </section>
@@ -42,14 +41,44 @@
       </div>
 
       <div class="profile-info-list">
-        <div><span>Name</span><strong>{{ user.name | default('Not set', true) }}</strong></div>
-        <div><span>Age</span><strong>{{ user.age | default('Not set', true) }}</strong></div>
-        <div><span>Gender</span><strong>{{ user.gender | default('Not set', true) }}</strong></div>
-        <div><span>Height</span><strong>{% if user.height_cm %}{{ user.height_cm }} cm{% else %}Not set{% endif %}</strong></div>
-        <div><span>Weight</span><strong>{% if user.weight_kg %}{{ user.weight_kg }} kg{% else %}Not set{% endif %}</strong></div>
-        <div><span>Activity</span><strong>{{ user.activity_level | default('Not set', true) }}</strong></div>
-        <div><span>Goal</span><strong>{{ user.goal | default('Not set', true) }}</strong></div>
-        <div><span>Injury Notes</span><strong>{{ user.injury_notes | default('Not set', true) }}</strong></div>
+        <div>
+          <span>Name</span
+          ><strong>{{ user.name | default('Not set', true) }}</strong>
+        </div>
+        <div>
+          <span>Age</span
+          ><strong>{{ user.age | default('Not set', true) }}</strong>
+        </div>
+        <div>
+          <span>Gender</span
+          ><strong>{{ user.gender | default('Not set', true) }}</strong>
+        </div>
+        <div>
+          <span>Height</span
+          ><strong
+            >{% if user.height_cm %}{{ user.height_cm }} cm{% else %}Not set{%
+            endif %}</strong
+          >
+        </div>
+        <div>
+          <span>Weight</span
+          ><strong
+            >{% if user.weight_kg %}{{ user.weight_kg }} kg{% else %}Not set{%
+            endif %}</strong
+          >
+        </div>
+        <div>
+          <span>Activity</span
+          ><strong>{{ user.activity_level | default('Not set', true) }}</strong>
+        </div>
+        <div>
+          <span>Goal</span
+          ><strong>{{ user.goal | default('Not set', true) }}</strong>
+        </div>
+        <div>
+          <span>Injury Notes</span
+          ><strong>{{ user.injury_notes | default('Not set', true) }}</strong>
+        </div>
       </div>
     </div>
 
@@ -61,7 +90,7 @@
 
       <ol class="fitness-point-list">
         {% for point in fitness_points %}
-          <li>{{ point }}</li>
+        <li>{{ point }}</li>
         {% endfor %}
       </ol>
     </div>
@@ -101,17 +130,26 @@
       </div>
 
       <div class="profile-circle-row">
-        {% set visible_accepted = accepted_friends[:6] %}
-
-        {% for friend in visible_accepted %}
-          <a class="profile-circle-link" href="{{ url_for('friend_profile', user_id=friend.id) }}">
-            <span class="profile-circle-avatar">{{ (friend.name or friend.username)[:1] }}</span>
-            <small>{{ friend.name or friend.username }}</small>
-            <span class="profile-circle-view">View</span>
-          </a>
+        {% set visible_accepted = accepted_friends[:6] %} {% for friend in
+        visible_accepted %}
+        <a
+          class="profile-circle-link"
+          href="{{ url_for('main.friend_profile', user_id=friend.id) }}"
+        >
+          <span class="profile-circle-avatar"
+            >{{ (friend.name or friend.username)[:1] }}</span
+          >
+          <small>{{ friend.name or friend.username }}</small>
+          <span class="profile-circle-view">View</span>
+        </a>
         {% endfor %}
 
-        <button class="profile-circle-add" id="openFriendMenu" type="button" aria-label="Search and add friends">
+        <button
+          class="profile-circle-add"
+          id="openFriendMenu"
+          type="button"
+          aria-label="Search and add friends"
+        >
           <span>+</span>
           <small>Add</small>
         </button>
@@ -119,72 +157,120 @@
     </div>
 
     <div class="friend-menu-backdrop" id="friendMenuBackdrop" hidden></div>
-    <section class="friend-menu" id="friendMenu" aria-labelledby="friendMenuTitle" hidden>
+    <section
+      class="friend-menu"
+      id="friendMenu"
+      aria-labelledby="friendMenuTitle"
+      hidden
+    >
       <div class="friend-menu-header">
         <div>
           <span class="profile-card-label">Add Friends</span>
           <h3 id="friendMenuTitle">Find people</h3>
         </div>
-        <button class="friend-menu-close" id="closeFriendMenu" type="button" aria-label="Close friend search">x</button>
+        <button
+          class="friend-menu-close"
+          id="closeFriendMenu"
+          type="button"
+          aria-label="Close friend search"
+        >
+          x
+        </button>
       </div>
 
       <label class="friend-menu-search" for="friend_menu_search">
         <span>Search by name, login ID, or email</span>
-        <input id="friend_menu_search" type="search" placeholder="Start typing..." autocomplete="off">
+        <input
+          id="friend_menu_search"
+          type="search"
+          placeholder="Start typing..."
+          autocomplete="off"
+        />
       </label>
 
-      <p class="friend-menu-status" id="friendMenuStatus">Suggested friends are ready below.</p>
+      <p class="friend-menu-status" id="friendMenuStatus">
+        Suggested friends are ready below.
+      </p>
 
       <div class="friend-menu-results" id="friendMenuResults">
-        {% if suggested_friends %}
-          {% for person in suggested_friends[:6] %}
-            <form class="friend-menu-card" action="{{ url_for('myprofile') }}" method="post">
-              <input type="hidden" name="form_type" value="add_friend">
-              <input type="hidden" name="friend_username" value="{{ person.username }}">
-              <span class="friend-menu-avatar">{{ (person.name or person.username)[:1] }}</span>
-              <span class="friend-menu-details">
-                <strong>{{ person.name or person.username }}</strong>
-                <small>@{{ person.username }}</small>
-              </span>
-              <button type="submit">Add</button>
-            </form>
-          {% endfor %}
-        {% else %}
-          <article class="friend-menu-empty">
-            <strong>No suggestions right now</strong>
-            <span>Use search to find more people.</span>
-          </article>
+        {% if suggested_friends %} {% for person in suggested_friends[:6] %}
+        <form
+          class="friend-menu-card"
+          action="{{ url_for('main.myprofile') }}"
+          method="post"
+        >
+          <input type="hidden" name="form_type" value="add_friend" />
+          <input
+            type="hidden"
+            name="friend_username"
+            value="{{ person.username }}"
+          />
+          <span class="friend-menu-avatar"
+            >{{ (person.name or person.username)[:1] }}</span
+          >
+          <span class="friend-menu-details">
+            <strong>{{ person.name or person.username }}</strong>
+            <small>@{{ person.username }}</small>
+          </span>
+          <button type="submit">Add</button>
+        </form>
+        {% endfor %} {% else %}
+        <article class="friend-menu-empty">
+          <strong>No suggestions right now</strong>
+          <span>Use search to find more people.</span>
+        </article>
         {% endif %}
       </div>
     </section>
 
     {% if incoming_requests %}
-      <div class="friend-request-panel">
-        <h3>Friend Requests</h3>
-        {% for request_item in incoming_requests %}
-          <article class="friend-request-card">
-            <div class="friend-avatar">{{ (request_item.requester.name or request_item.requester.username)[:1] }}</div>
-            <div class="friend-details">
-              <h4>{{ request_item.requester.name or request_item.requester.username }}</h4>
-              <p>@{{ request_item.requester.username }}</p>
-            </div>
-            <div class="friend-request-actions">
-              <form action="{{ url_for('myprofile') }}" method="post">
-                <input type="hidden" name="form_type" value="accept_friend">
-                <input type="hidden" name="friendship_id" value="{{ request_item.id }}">
-                <input type="hidden" name="friend_search" value="{{ friend_search }}">
-                <button type="submit">Accept</button>
-              </form>
-              <form action="{{ url_for('myprofile') }}" method="post">
-                <input type="hidden" name="form_type" value="decline_friend">
-                <input type="hidden" name="friendship_id" value="{{ request_item.id }}">
-                <input type="hidden" name="friend_search" value="{{ friend_search }}">
-                <button class="friend-decline-button" type="submit">Decline</button>
-              </form>
-            </div>
-          </article>
-        {% endfor %}
-      </div>
+    <div class="friend-request-panel">
+      <h3>Friend Requests</h3>
+      {% for request_item in incoming_requests %}
+      <article class="friend-request-card">
+        <div class="friend-avatar">
+          {{ (request_item.requester.name or
+          request_item.requester.username)[:1] }}
+        </div>
+        <div class="friend-details">
+          <h4>
+            {{ request_item.requester.name or request_item.requester.username }}
+          </h4>
+          <p>@{{ request_item.requester.username }}</p>
+        </div>
+        <div class="friend-request-actions">
+          <form action="{{ url_for('main.myprofile') }}" method="post">
+            <input type="hidden" name="form_type" value="accept_friend" />
+            <input
+              type="hidden"
+              name="friendship_id"
+              value="{{ request_item.id }}"
+            />
+            <input
+              type="hidden"
+              name="friend_search"
+              value="{{ friend_search }}"
+            />
+            <button type="submit">Accept</button>
+          </form>
+          <form action="{{ url_for('main.myprofile') }}" method="post">
+            <input type="hidden" name="form_type" value="decline_friend" />
+            <input
+              type="hidden"
+              name="friendship_id"
+              value="{{ request_item.id }}"
+            />
+            <input
+              type="hidden"
+              name="friend_search"
+              value="{{ friend_search }}"
+            />
+            <button class="friend-decline-button" type="submit">Decline</button>
+          </form>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
     {% endif %}
   </section>
 </section>
@@ -200,17 +286,30 @@
     const status = document.getElementById("friendMenuStatus");
     const suggestedMarkup = results ? results.innerHTML : "";
 
-    if (!openButton || !closeButton || !menu || !backdrop || !searchInput || !results || !status) {
+    if (
+      !openButton ||
+      !closeButton ||
+      !menu ||
+      !backdrop ||
+      !searchInput ||
+      !results ||
+      !status
+    ) {
       return;
     }
 
-    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[char]));
+    const escapeHtml = (value) =>
+      String(value).replace(
+        /[&<>"']/g,
+        (char) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[char],
+      );
 
     const openMenu = () => {
       menu.hidden = false;
@@ -243,13 +342,18 @@
       }
 
       if (!users.length) {
-        renderEmpty("No matches found", "Try another name, login ID, or email.");
+        renderEmpty(
+          "No matches found",
+          "Try another name, login ID, or email.",
+        );
         status.textContent = "No users found.";
         return;
       }
 
-      results.innerHTML = users.map((user) => `
-        <form class="friend-menu-card" action="{{ url_for('myprofile') }}" method="post">
+      results.innerHTML = users
+        .map(
+          (user) => `
+        <form class="friend-menu-card" action="{{ url_for('main.myprofile') }}" method="post">
           <input type="hidden" name="form_type" value="add_friend">
           <input type="hidden" name="friend_username" value="${escapeHtml(user.username)}">
           <span class="friend-menu-avatar">${escapeHtml(user.initial)}</span>
@@ -259,7 +363,9 @@
           </span>
           <button type="submit">Add</button>
         </form>
-      `).join("");
+      `,
+        )
+        .join("");
       status.textContent = `${users.length} result${users.length === 1 ? "" : "s"} found.`;
     };
 
@@ -276,11 +382,16 @@
 
         try {
           status.textContent = "Searching...";
-          const response = await fetch(`{{ url_for('search_friends') }}?q=${encodeURIComponent(query)}`);
+          const response = await fetch(
+            `{{ url_for('main.search_friends') }}?q=${encodeURIComponent(query)}`,
+          );
           const data = await response.json();
           renderResults(data.results || [], query);
         } catch {
-          renderEmpty("Search is unavailable", "Please refresh the page and try again.");
+          renderEmpty(
+            "Search is unavailable",
+            "Please refresh the page and try again.",
+          );
           status.textContent = "Friend search could not load right now.";
         }
       }, 220);
