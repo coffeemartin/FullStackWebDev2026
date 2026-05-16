@@ -708,6 +708,10 @@ body:has(.nutrition-floating-foods) {
   vertical-align: top;
 }
 
+.nutrition-table td[rowspan] {
+  vertical-align: middle;
+}
+
 .nutrition-table-empty {
   text-align: center;
   color: var(--n-muted);
