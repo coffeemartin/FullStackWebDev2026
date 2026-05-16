@@ -14,6 +14,7 @@
 {% set safe_food_entries = food_entries|default([]) %}
 {% set safe_previous_day_entries = previous_day_entries|default([]) %}
 {% set safe_water_by_date = water_by_date|default({}) %}
+{% set safe_water_logged_dates = water_logged_dates|default({}) %}
 {% set safe_selected_date = selected_date|default('') %}
 {% set safe_server_today = server_today|default('') %}
 
@@ -210,6 +211,7 @@
     "previous_day_entries": safe_previous_day_entries,
     "initial_water": safe_initial_water,
     "water_by_date": safe_water_by_date,
+    "water_logged_dates": safe_water_logged_dates,
     "selected_date": safe_selected_date,
     "server_today": safe_server_today
   }|tojson }}
@@ -244,6 +246,7 @@
   let previousDayEntries = nutritionInitialData.previous_day_entries;
   let water = nutritionInitialData.initial_water;
   let waterByDate = nutritionInitialData.water_by_date || {};
+  let waterLoggedDates = nutritionInitialData.water_logged_dates || {};
   const dailyWaterTarget = 8;
 
   function formatLocalDate(date) {
@@ -405,7 +408,8 @@
   function renderFoodLog() {
     foodTable.innerHTML = "";
 
-    const allEntries = [...entries, ...previousDayEntries];
+    const hydrationRows = getHydrationRows();
+    const allEntries = [...entries, ...previousDayEntries, ...hydrationRows];
 
     if (allEntries.length === 0) {
       const emptyRow = document.createElement("tr");
@@ -480,6 +484,10 @@
 
         foodTable.appendChild(row);
       });
+
+      hydrationRows.forEach(function (hydrationRow) {
+        foodTable.appendChild(createHydrationRow(hydrationRow.logDate));
+      });
     }
 
     const calorieTotal = entries.reduce((sum, entry) => sum + entry.calculatedCalories, 0);
@@ -510,6 +518,44 @@
     waterByDate[logDateInput.value || today] = water;
     renderFoodLog();
     updateWaterWarning();
+  }
+
+  function getHydrationRows() {
+    const entryDates = new Set([...entries, ...previousDayEntries].map(function (entry) {
+      return entry.logDate;
+    }));
+
+    return Object.keys(waterLoggedDates)
+      .filter(function (logDate) {
+        return waterLoggedDates[logDate] && !entryDates.has(logDate);
+      })
+      .map(function (logDate) {
+        return { logDate };
+      });
+  }
+
+  function createHydrationRow(logDate) {
+    const row = document.createElement("tr");
+    row.className = "nutrition-table-row--hydration";
+    const values = [
+      logDate || "N/A",
+      "Hydration",
+      "Water",
+      "0g",
+      "0 kcal",
+      createWaterStatus(logDate),
+      "Hydration logged",
+      "Saved water intake",
+      "-"
+    ];
+
+    values.forEach(function (value) {
+      const cell = document.createElement("td");
+      appendCellValue(cell, value);
+      row.appendChild(cell);
+    });
+
+    return row;
   }
 
   function appendCellValue(cell, value) {
@@ -654,6 +700,7 @@
 
       water = data.water_glasses;
       waterByDate[logDateInput.value || today] = water;
+      waterLoggedDates[logDateInput.value || today] = true;
       renderWaterCount();
       if (water < dailyWaterTarget) {
         waterSaveStatus.textContent = "Water intake saved. Dehydration risk: drink more water today.";
