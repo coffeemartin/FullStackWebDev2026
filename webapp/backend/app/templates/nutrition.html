@@ -326,8 +326,9 @@
       return;
     }
 
+    let savedEntry;
     try {
-      const savedEntry = await saveNutritionLog({
+      savedEntry = await saveNutritionLog({
         log_date: logDate,
         meal_type: mealType,
         food_name: foodName,
@@ -362,13 +363,13 @@
     });
 
     foodForm.reset();
-    logDateInput.value = today;
+    logDateInput.value = logDate;
     toggleOtherFoodFields();
     calculatedCaloriesInput.value = "0 kcal";
     
-    // Fetch fresh data from server and re-render to ensure entry displays
+    // Fetch fresh data for the submitted date and re-render so the saved entry appears immediately.
     try {
-      const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(today));
+      const resp = await fetch('/nutrition/data?date=' + encodeURIComponent(logDate));
       if (resp.ok) {
         const data = await resp.json();
         entries = data.food_entries || [];
@@ -376,7 +377,7 @@
         water = Number(data.initial_water || 0);
         waterByDate = data.water_by_date || {};
         waterLoggedDates = data.water_logged_dates || {};
-        currentlyViewingDate = today;
+        currentlyViewingDate = logDate;
       }
     } catch (err) {
       console.error('Failed to refresh entries after save:', err);
