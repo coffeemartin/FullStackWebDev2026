@@ -408,7 +408,9 @@
   function renderFoodLog() {
     foodTable.innerHTML = "";
 
-    const hydrationRows = getHydrationRows();
+    const entryDates = getEntryDates();
+    const waterDatesShown = new Set();
+    const hydrationRows = getHydrationRows(entryDates);
     const allEntries = [...entries, ...previousDayEntries, ...hydrationRows];
 
     if (allEntries.length === 0) {
@@ -446,7 +448,7 @@
             entry.feedback,
             entry.comments || "No comment",
             createDeleteButton(entry, previousDayEntries),
-            "-"
+            getDailyWaterCell(entry.logDate, waterDatesShown)
           ];
 
           values.forEach(function (value) {
@@ -473,7 +475,7 @@
           entry.feedback,
           entry.comments || "No comment",
           createDeleteButton(entry, entries),
-          "-"
+          getDailyWaterCell(entry.logDate, waterDatesShown)
         ];
 
         values.forEach(function (value) {
@@ -520,19 +522,34 @@
     updateWaterWarning();
   }
 
-  function getHydrationRows() {
+  function getEntryDates() {
+    return new Set([...entries, ...previousDayEntries].map(function (entry) {
+      return entry.logDate;
+    }));
+  }
+
+  function getHydrationRows(entryDates) {
     if (water > 0) {
       waterLoggedDates[logDateInput.value || today] = true;
     }
 
     return Object.keys(waterLoggedDates)
       .filter(function (logDate) {
-        return waterLoggedDates[logDate];
+        return waterLoggedDates[logDate] && !entryDates.has(logDate);
       })
       .sort()
       .map(function (logDate) {
         return { logDate };
       });
+  }
+
+  function getDailyWaterCell(logDate, waterDatesShown) {
+    if (!waterLoggedDates[logDate] || waterDatesShown.has(logDate)) {
+      return "-";
+    }
+
+    waterDatesShown.add(logDate);
+    return createWaterStatus(logDate);
   }
 
   function createHydrationRow(logDate) {
