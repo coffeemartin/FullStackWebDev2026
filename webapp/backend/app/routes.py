@@ -11,6 +11,7 @@ from app.exercise_recommendation import get_exercise_plan
 from sqlalchemy import and_, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 from app.controllers import calculate_bmi_result, get_bmi_fitness_points 
+from app.controllers import calculate_bmi_result,get_bmi_fitness_points,normalise_ai_generation_options
 
 
 
@@ -854,26 +855,11 @@ def AI():
         # Franco Notes: If form_action is not profile update, proceed to generate new plan. 
         # This allows user to update their profile and immediately see the impact of their changes on the generated plan in one seamless flow.
         # allow user to specify number of days of history (cap to 90, default to 30) to include in LLM input when generating plan
-        try:
-            days = int(request.form.get("history_days", 30))
-        except (TypeError, ValueError):
-            days = 30
-
-        if days < 1:
-            days = 1
-        if days > MAX_HISTORY_DAYS:
-            days = MAX_HISTORY_DAYS
-
-        # allow user to control creativity, clamp to [0, 1], default 0
-        try:
-            temperature = float(request.form.get("temperature", 0))
-        except (TypeError, ValueError):
-            temperature = 0.0
-
-        if temperature < 0:
-            temperature = 0.0
-        if temperature > 1:
-            temperature = 1.0
+        days, temperature = normalise_ai_generation_options(
+        request.form.get("history_days", 30),
+        request.form.get("temperature", 0),
+        max_history_days=MAX_HISTORY_DAYS,
+        )
 
         ai_input = build_ai_input(current_user, days=days)
         ai_response = generate_ai_plan(ai_input, temperature=temperature)

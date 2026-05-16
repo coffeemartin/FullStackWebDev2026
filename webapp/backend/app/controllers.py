@@ -1,7 +1,33 @@
 from app import db
 from app.models import LLMRecommendation, Exercise
 import json
+from unittest import TestCase
 
+
+# Franco Notes: Refactor the code in routes.py to controllers.py, so that the logic is separated from the route handling.
+# logic originally in the AI routes
+def normalise_ai_generation_options(history_days, temperature, max_history_days=90):
+    try:
+        days = int(history_days)
+    except (TypeError, ValueError):
+        days = 30
+
+    if days < 1:
+        days = 1
+    if days > max_history_days:
+        days = max_history_days
+
+    try:
+        temperature_value = float(temperature)
+    except (TypeError, ValueError):
+        temperature_value = 0.0
+
+    if temperature_value < 0:
+        temperature_value = 0.0
+    if temperature_value > 1:
+        temperature_value = 1.0
+
+    return days, temperature_value
 
 def calculate_bmi_result(height_cm, weight_kg):
     height = float(height_cm)
@@ -62,80 +88,3 @@ def get_bmi_fitness_points(category):
 
 
 
-def save_ai_all_controller(recommendation_id, user_id, training_plan_json, mark_saved=False):
-    """
-    Franco notes: this is a refactored version of the save_ai_all function from routes.py, modified to be suitable for unit testing. It
-    removed request / flash / redirect / url_for / current_user dependencies, and instead takes in the necessary parameters directly. 
-    
-
-    This routes does two things : 
-    
-    1. Saves edited AI training plan 
-    2. Inserts new exercises into Exercise dimension table. (If AI returns new excercises that are not in the database, 
-    I need to add them to the Exercise dimension table.
-
-    """
-
-    if recommendation_id is None or not training_plan_json:
-        return {
-            "success": False,
-            "message": "Could not save that plan."
-        }
-
-    recommendation = LLMRecommendation.query.filter_by(
-        id=recommendation_id,
-        user_id=user_id,
-    ).first()
-
-    if recommendation is None:
-        return {
-            "success": False,
-            "message": "Could not find that AI plan."
-        }
-
-    try:
-        training_plan = json.loads(training_plan_json)
-    except Exception:
-        return {
-            "success": False,
-            "message": "Invalid plan data."
-        }
-
-    recommendation.set_training_plan(training_plan)
-
-    warning_message = None
-
-    try:
-        for day in training_plan:
-            for exercise in day.get("exercises", []):
-                exercise_name = exercise.get("name", "").strip()
-
-                if exercise_name:
-                    existing_exercise = Exercise.query.filter(
-                        db.func.lower(Exercise.name) == exercise_name.lower()
-                    ).first()
-
-                    if existing_exercise is None:
-                        new_exercise = Exercise(
-                            name=exercise_name,
-                            category=None,
-                            muscle_group=None,
-                            equipment=None,
-                        )
-                        db.session.add(new_exercise)
-
-    except Exception as e:
-        warning_message = f"Warning: Could not add some exercises: {str(e)}"
-
-    if mark_saved:
-        recommendation.user_saved = True
-
-    db.session.commit()
-
-    return {
-        "success": True,
-        "message": "All edits saved.",
-        "mark_saved": mark_saved,
-        "warning": warning_message,
-        "recommendation_id": recommendation.id,
-    }
