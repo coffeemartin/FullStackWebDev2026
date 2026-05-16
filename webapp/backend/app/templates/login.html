@@ -34,7 +34,7 @@
       <div class="auth-panel" id="panelSignIn" role="tabpanel">
         <p class="auth-panel-sub">Welcome back — let's pick up where you left off.</p>
 
-        <form action="{{ url_for('login') }}" method="post" novalidate>
+        <form action="{{ url_for('main.login') }}" method="post" novalidate>
           {{ form.hidden_tag() }}
           <input type="hidden" name="form_type" value="login">
 
@@ -69,7 +69,7 @@
       <div class="auth-panel auth-panel--hidden" id="panelSignUp" role="tabpanel">
         <p class="auth-panel-sub">Set up your profile once — FitTrack does the rest.</p>
 
-        <form action="{{ url_for('login') }}" method="post" id="signupForm">
+        <form action="{{ url_for('main.login') }}" method="post" id="signupForm">
           <input type="hidden" name="form_type" value="new_user">
 
           <div class="auth-signup-grid">

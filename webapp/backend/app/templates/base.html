@@ -18,19 +18,13 @@
   </head>
 
   <body>
-    {% set current_page = 'Login' %}
-    {% if current_user.is_authenticated %}
-      {% set current_page = 'My Profile' %}
-      {% if request.endpoint == 'nutrition' %}
-        {% set current_page = 'Nutrition' %}
-      {% elif request.endpoint == 'exercise' %}
-        {% set current_page = 'Exercise' %}
-      {% elif request.endpoint == 'AI' %}
-        {% set current_page = 'AI Coach' %}
-      {% elif request.endpoint == 'friend_profile' %}
-        {% set current_page = 'Friend Profile' %}
-      {% endif %}
-    {% endif %}
+    {% set current_page = 'Login' %} {% if current_user.is_authenticated %} {%
+    set current_page = 'My Profile' %} {% if request.endpoint ==
+    'main.nutrition' %} {% set current_page = 'Nutrition' %} {% elif
+    request.endpoint == 'main.exercise' %} {% set current_page = 'Exercise' %}
+    {% elif request.endpoint == 'main.AI' %} {% set current_page = 'AI Coach' %}
+    {% elif request.endpoint == 'main.friend_profile' %} {% set current_page =
+    'Friend Profile' %} {% endif %} {% endif %}
 
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <nav class="navbar navbar-expand-sm navbar-dark custom-navbar">
@@ -38,7 +32,7 @@
         <div class="nav-brand-row">
           <a
             class="nav-brand-link"
-            href="{{ url_for('myprofile') if current_user.is_authenticated else url_for('login') }}"
+            href="{{ url_for('main.myprofile') if current_user.is_authenticated else url_for('main.login') }}"
           >
             <span class="nav-brand">FitTrack</span>
           </a>
@@ -65,8 +59,8 @@
           <ul class="navbar-nav custom-nav-links">
             <li class="nav-item">
               <a
-                class="nav-link nav-link-myprofile {% if request.endpoint == 'myprofile' %}active{% endif %}"
-                href="{{ url_for('myprofile') }}"
+                class="nav-link nav-link-myprofile {% if request.endpoint == 'main.myprofile' %}active{% endif %}"
+                href="{{ url_for('main.myprofile') }}"
               >
                 My Profile
               </a>
@@ -74,8 +68,8 @@
 
             <li class="nav-item">
               <a
-                class="nav-link nav-link-nutrition {% if request.endpoint == 'nutrition' %}active{% endif %}"
-                href="{{ url_for('nutrition') }}"
+                class="nav-link nav-link-nutrition {% if request.endpoint == 'main.nutrition' %}active{% endif %}"
+                href="{{ url_for('main.nutrition') }}"
               >
                 Nutrition
               </a>
@@ -83,15 +77,18 @@
 
             <li class="nav-item">
               <a
-                class="nav-link nav-link-exercise {% if request.endpoint == 'exercise' %}active{% endif %}"
-                href="{{ url_for('exercise') }}"
+                class="nav-link nav-link-exercise {% if request.endpoint == 'main.exercise' %}active{% endif %}"
+                href="{{ url_for('main.exercise') }}"
               >
                 Exercise
               </a>
             </li>
 
             <li class="nav-item">
-              <a class="nav-link nav-link-ai {% if request.endpoint == 'AI' %}active{% endif %}" href="{{ url_for('AI') }}">
+              <a
+                class="nav-link nav-link-ai {% if request.endpoint == 'main.AI' %}active{% endif %}"
+                href="{{ url_for('main.AI') }}"
+              >
                 AI
               </a>
             </li>
@@ -102,14 +99,21 @@
           <ul class="navbar-nav ms-auto">
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-              <span class="nav-link nav-greeting">👋 <span class="nav-username">{{ current_user.username }}</span></span>
+              <span class="nav-link nav-greeting"
+                >👋
+                <span class="nav-username"
+                  >{{ current_user.username }}</span
+                ></span
+              >
             </li>
             <li class="nav-item">
-              <a class="nav-link nav-logout" href="{{ url_for('logout') }}">Logout</a>
+              <a class="nav-link nav-logout" href="{{ url_for('main.logout') }}"
+                >Logout</a
+              >
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+              <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
             </li>
             {% endif %}
           </ul>

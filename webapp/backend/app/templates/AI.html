@@ -248,7 +248,7 @@ nutrition_plan = latest_recommendation.get_nutrition_plan() %}
       {% if latest_recommendation %}
       <form
         method="post"
-        action="{{ url_for('save_ai_all') }}"
+        action="{{ url_for('main.save_ai_all') }}"
         id="training-save-all-form"
         class="m-0"
       >

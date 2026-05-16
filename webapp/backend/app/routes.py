@@ -1,7 +1,8 @@
 from datetime import date, datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 
-from app import app, db
+from app import db
+from app.blueprints import main
 from flask import jsonify, render_template, flash, redirect, url_for, request
 from flask_login import login_user, logout_user, current_user, login_required
 from app.forms import LoginForm, ExerciseLogForm, CSRFOnlyForm
@@ -9,64 +10,9 @@ from app.models import User, Exercise, ExerciseLog, Food, Friendship, LoginEvent
 from app.exercise_recommendation import get_exercise_plan
 from sqlalchemy import and_, or_, func
 from sqlalchemy.exc import SQLAlchemyError
+from app.controllers import calculate_bmi_result, get_bmi_fitness_points 
 
 
-def calculate_bmi_result(height_cm, weight_kg):
-    height = float(height_cm)
-    weight = float(weight_kg)
-    if height <= 0 or weight <= 0:
-        raise ValueError("Please enter a valid height and weight.")
-
-    height_m = height / 100
-    bmi = round(weight / (height_m ** 2), 1)
-
-    if bmi < 18.5:
-        return bmi, "Underweight", "Start building strength and nourish your body!"
-    if bmi < 25:
-        return bmi, "Healthy weight", "Great shape! Keep maintaining your healthy lifestyle!"
-    if bmi < 30:
-        return bmi, "Overweight", "You are doing well. Let us improve fitness step by step!"
-    return bmi, "Obese", "Start your fitness journey today. Small steps make big changes!"
-
-
-def get_bmi_fitness_points(category):
-    points_by_category = {
-        "Underweight": [
-            "Prioritise balanced meals with enough protein and healthy carbohydrates.",
-            "Use strength training to build muscle gradually.",
-            "Keep cardio light to moderate while you focus on healthy weight gain.",
-            "Track energy levels so workouts support recovery, not exhaustion.",
-            "Speak with a health professional if weight gain is difficult."
-        ],
-        "Healthy weight": [
-            "Maintain your current habits with consistent weekly movement.",
-            "Mix strength, cardio, mobility, and recovery for balance.",
-            "Keep protein, vegetables, hydration, and sleep in your routine.",
-            "Set performance goals such as more reps, better pace, or flexibility.",
-            "Use your BMI as one guide, not the only measure of progress."
-        ],
-        "Overweight": [
-            "Start with realistic sessions such as walking, cycling, or full-body circuits.",
-            "Add strength training to support metabolism and protect joints.",
-            "Choose small nutrition changes you can repeat every week.",
-            "Increase workout time slowly instead of jumping into intense plans.",
-            "Celebrate consistency before focusing only on the scale."
-        ],
-        "Obese": [
-            "Begin with low-impact exercise to protect knees, hips, and back.",
-            "Aim for short, repeatable movement sessions throughout the week.",
-            "Pair activity with simple meal planning and regular hydration.",
-            "Use strength exercises at a comfortable level to build confidence.",
-            "Consider professional guidance for a safe long-term plan."
-        ]
-    }
-    return points_by_category.get(category, [
-        "Add height and weight to unlock BMI-based fitness guidance.",
-        "Begin with simple movement you can repeat consistently.",
-        "Balance exercise with sleep, hydration, and nutrition.",
-        "Avoid comparing your progress with someone else's journey.",
-        "Small improvements each week can become lasting habits."
-    ])
 
 
 def find_friendship_between(user_id, other_user_id):
@@ -248,11 +194,11 @@ def get_app_today():
 
 
 
-@app.route("/", methods=['GET', 'POST'])
-@app.route("/login", methods=['GET', 'POST'])
+@main.route("/", methods=['GET', 'POST'])
+@main.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('myprofile'))
+        return redirect(url_for('main.myprofile'))
 
     form = LoginForm()
     show_signup = False
@@ -331,7 +277,7 @@ def login():
 
             login_user(user)
             flash("Profile created successfully.")
-            return redirect(url_for('myprofile'))
+            return redirect(url_for('main.myprofile'))
         except ValueError as error:
             flash(str(error))
         except SQLAlchemyError:
@@ -342,14 +288,14 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
-            return redirect(url_for('login'))
+            return redirect(url_for('main.login'))
 
         login_user(user, remember=form.remember_me.data)
         flash('Logged in successfully as {}'.format(user.username))
         login_event = LoginEvent(user_id=user.id)
         db.session.add(login_event)
         db.session.commit()
-        return redirect(url_for('myprofile'))
+        return redirect(url_for('main.myprofile'))
 
     return render_template(
         'login.html',
@@ -364,7 +310,7 @@ def login():
 
 
 # Nutrion page route
-@app.route("/nutrition")
+@main.route("/nutrition")
 @login_required
 def nutrition():
     selected_date = request.args.get("date", "")
@@ -471,7 +417,7 @@ def nutrition():
     )
 
 
-@app.route("/nutrition/data")
+@main.route("/nutrition/data")
 @login_required
 def nutrition_data():
     # Return nutrition data for a given date as JSON (used by client-side date picker)
@@ -567,7 +513,7 @@ def nutrition_data():
     })
 
 
-@app.route("/nutrition/log", methods=["POST"])
+@main.route("/nutrition/log", methods=["POST"])
 @login_required
 def save_nutrition_log():
     data = request.get_json() or {}
@@ -647,7 +593,7 @@ def save_nutrition_log():
     })
 
 
-@app.route("/nutrition/log/<int:log_id>", methods=["DELETE"])
+@main.route("/nutrition/log/<int:log_id>", methods=["DELETE"])
 @login_required
 def delete_nutrition_log(log_id):
     nutrition_log = (
@@ -665,7 +611,7 @@ def delete_nutrition_log(log_id):
     return jsonify({"deleted": True, "log_id": log_id})
 
 
-@app.route("/nutrition/water", methods=["POST"])
+@main.route("/nutrition/water", methods=["POST"])
 @login_required
 def save_water_log():
     data = request.get_json() or {}
@@ -733,7 +679,7 @@ def save_water_log():
 # Nutrition Page end
 
 
-@app.route("/exercise", methods=['GET', 'POST'])
+@main.route("/exercise", methods=['GET', 'POST'])
 @login_required
 def exercise():
     user = current_user
@@ -769,7 +715,7 @@ def exercise():
 
         chosen = db.session.get(Exercise, form.exercise_id.data)
         flash(f"Workout logged: {chosen.name}")
-        return redirect(url_for('exercise'))
+        return redirect(url_for('main.exercise'))
 
     # Pull the user's recent workouts from the database
     recent_logs = (
@@ -877,7 +823,7 @@ def exercise():
 # Franco Notes: this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
 # all in one flow. If user want to update the generated plan, that will be handled by a separate route /AI/save-all 
 # which only updates the training plan of the latest recommendation.
-@app.route("/AI", methods=["GET", "POST"])
+@main.route("/AI", methods=["GET", "POST"])
 @login_required
 def AI():
     csrf_form = CSRFOnlyForm()
@@ -887,7 +833,7 @@ def AI():
     if request.method == "POST":
         if not csrf_form.validate_on_submit():
             flash("Your session expired. Please try again.")
-            return redirect(url_for("AI"))
+            return redirect(url_for("main.AI"))
        
         form_action = request.form.get("form_action", "generate")
         # Franco Notes: If user submitted the profile update form, update the user's profile and return without generating new plan
@@ -902,7 +848,7 @@ def AI():
 
             db.session.commit()
             flash("Your profile has been updated.")
-            return redirect(url_for("AI"))
+            return redirect(url_for("main.AI"))
 
 
         # Franco Notes: If form_action is not profile update, proceed to generate new plan. 
@@ -948,7 +894,7 @@ def AI():
         ## Franco Notes: Updated this to inlcude the new recommendation id as query param,
         ## so that after generation, the page will show the newly generated plan 
         # instead of defaulting back to the most recent saved plan.
-        return redirect(url_for("AI", recommendation_id=recommendation.id))
+        return redirect(url_for("main.AI", recommendation_id=recommendation.id))
 
 
     recommendation_id = request.args.get("recommendation_id", type=int)
@@ -1009,20 +955,20 @@ def _coerce_float(value):
         return None
     return float(value)
 
-@app.route("/AI/save-all", methods=["POST"]) 
+@main.route("/AI/save-all", methods=["POST"]) 
 @login_required
 def save_ai_all():
     csrf_form = CSRFOnlyForm()
     if not csrf_form.validate_on_submit():
         flash("Your edit session expired. Please try again.")
-        return redirect(url_for("AI"))
+        return redirect(url_for("main.AI"))
 
     recommendation_id = request.form.get("recommendation_id", type=int)
     training_plan_json = request.form.get("training_plan_json", "")
 
     if recommendation_id is None or not training_plan_json:
         flash("Could not save that plan.")
-        return redirect(url_for("AI"))
+        return redirect(url_for("main.AI"))
 
     recommendation = LLMRecommendation.query.filter_by(
         id=recommendation_id,
@@ -1031,13 +977,13 @@ def save_ai_all():
 
     if recommendation is None:
         flash("Could not find that AI plan.")
-        return redirect(url_for("AI"))
+        return redirect(url_for("main.AI"))
 
     try:
         training_plan = json.loads(training_plan_json)
     except Exception:
         flash("Invalid plan data.")
-        return redirect(url_for("AI"))
+        return redirect(url_for("main.AI"))
 
     recommendation.set_training_plan(training_plan)
 
@@ -1072,10 +1018,10 @@ def save_ai_all():
     db.session.commit()
 
     flash("All edits saved.{}".format(" Plan added to your profile." if mark_saved else ""))
-    return redirect(url_for("AI"))
+    return redirect(url_for("main.AI"))
 
 
-@app.route("/AI/set-current", methods=["POST"])
+@main.route("/AI/set-current", methods=["POST"])
 @login_required
 def set_current_reco():
     csrf_form = CSRFOnlyForm()
@@ -1107,7 +1053,7 @@ def set_current_reco():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-@app.route("/AI/delete-reco", methods=["POST"])
+@main.route("/AI/delete-reco", methods=["POST"])
 @login_required
 def delete_reco():
     csrf_form = CSRFOnlyForm()
@@ -1134,7 +1080,7 @@ def delete_reco():
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route("/myprofile", methods=['GET', 'POST'])
+@main.route("/myprofile", methods=['GET', 'POST'])
 @login_required
 def myprofile():
     friend_search = request.values.get('friend_search', '').strip()
@@ -1156,7 +1102,7 @@ def myprofile():
             ))
             db.session.commit()
             flash(f"Friend request sent to {friend.name or friend.username}.")
-        return redirect(url_for('myprofile', friend_search=friend_search))
+        return redirect(url_for('main.myprofile', friend_search=friend_search))
 
     if request.method == 'POST' and request.form.get('form_type') in {"accept_friend", "decline_friend"}:
         friendship_id = request.form.get('friendship_id')
@@ -1176,7 +1122,7 @@ def myprofile():
             friendship.status = "declined"
             db.session.commit()
             flash(f"Friend request from {friendship.requester.name or friendship.requester.username} declined.")
-        return redirect(url_for('myprofile', friend_search=friend_search))
+        return redirect(url_for('main.myprofile', friend_search=friend_search))
 
     bmi = None
     bmi_category = None
@@ -1256,7 +1202,7 @@ def myprofile():
     )
 
 
-@app.route("/friends/search")
+@main.route("/friends/search")
 @login_required
 def search_friends():
     friend_search = request.args.get("q", "").strip()
@@ -1274,17 +1220,17 @@ def search_friends():
     })
 
 
-@app.route("/profile/<int:user_id>")
+@main.route("/profile/<int:user_id>")
 @login_required
 def friend_profile(user_id):
     friend = db.session.get(User, user_id)
     if not friend:
         flash("Profile could not be found.")
-        return redirect(url_for("myprofile"))
+        return redirect(url_for("main.myprofile"))
 
     if friend.id != current_user.id and not users_are_friends(current_user.id, friend.id):
         flash("You can view this profile after the friend request is accepted.")
-        return redirect(url_for("myprofile"))
+        return redirect(url_for("main.myprofile"))
 
     bmi = None
     bmi_category = None
@@ -1320,15 +1266,15 @@ def friend_profile(user_id):
     )
 
 
-@app.route("/logout")
+@main.route("/logout")
 @login_required
 def logout():
     logout_user()
     flash("You have been logged out.")
-    return redirect(url_for("login"))
+    return redirect(url_for("main.login"))
 
 
-@app.route("/details", methods=['GET', 'POST'])
+@main.route("/details", methods=['GET', 'POST'])
 def user_details():
     if request.method == 'POST':
         name = request.form.get('name')
