@@ -1007,6 +1007,22 @@ body:has(.nutrition-floating-foods) {
   margin: 0.9rem 0 0;
 }
 
+.nutrition-gif-wrap {
+  overflow: hidden;
+  border: 1px solid var(--n-border);
+  border-radius: var(--n-radius-sm);
+  background: var(--n-surface-2);
+  min-height: 11rem;
+}
+
+.nutrition-gif {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
 .nutrition-history-panel {
   gap: 1rem;
 }
