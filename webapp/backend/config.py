@@ -21,5 +21,7 @@ class DeploymentConfig(Config):
 
 class TestingConfig(Config):
     # Franco Notes: Add any testing-specific 
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    # in-memory SQLite often breaks multi-threaded Selenium/integration tests
+    #SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
     TESTING = True
