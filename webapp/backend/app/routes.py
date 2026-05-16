@@ -794,14 +794,14 @@ def exercise():
         total_minutes=total_minutes,
     )
 
-# this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
+# Franco Notes: this route allows user to update personal profile and generate new AI plan based on the updated profile and recent logs,
 # all in one flow. If user want to update the generated plan, that will be handled by a separate route /AI/save-all 
 # which only updates the training plan of the latest recommendation.
 @app.route("/AI", methods=["GET", "POST"])
 @login_required
 def AI():
     csrf_form = CSRFOnlyForm()
-    # maximum days of history allowed to include in LLM input
+    # Franco Notes: maximum days of history allowed to include in LLM input
     MAX_HISTORY_DAYS = 90
 
     if request.method == "POST":
@@ -810,7 +810,7 @@ def AI():
             return redirect(url_for("AI"))
        
         form_action = request.form.get("form_action", "generate")
-        # If user submitted the profile update form, update the user's profile and return without generating new plan
+        # Franco Notes: If user submitted the profile update form, update the user's profile and return without generating new plan
         # This form_action is corresponding to the hidden input field in the profile edit form, 
         # which allows me to use the same route for both profile updates and plan generation.
         if form_action == "update_profile":
@@ -825,7 +825,7 @@ def AI():
             return redirect(url_for("AI"))
 
 
-        # Ifg form_action is not profile update, proceed to generate new plan. 
+        # Franco Notes: If form_action is not profile update, proceed to generate new plan. 
         # This allows user to update their profile and immediately see the impact of their changes on the generated plan in one seamless flow.
         # allow user to specify number of days of history (cap to 90, default to 30) to include in LLM input when generating plan
         try:
@@ -865,7 +865,7 @@ def AI():
         db.session.commit()
 
         flash("Customised plan generated successfully.")
-        ## Updated this to inlcude the new recommendation id as query param,
+        ## Franco Notes: Updated this to inlcude the new recommendation id as query param,
         ## so that after generation, the page will show the newly generated plan 
         # instead of defaulting back to the most recent saved plan.
         return redirect(url_for("AI", recommendation_id=recommendation.id))
@@ -874,7 +874,7 @@ def AI():
     recommendation_id = request.args.get("recommendation_id", type=int)
     latest_recommendation = None
 
-    # firstly try to find the recommendation based on the recommendation_id query param, 
+    # Franco Notes: firstly try to find the recommendation based on the recommendation_id query param, 
     # which is set after a new plan generation or when user clicks on a past plan to view details. 
     # This allows the page to show the generated plan right after generation.
     if recommendation_id is not None:
@@ -883,23 +883,23 @@ def AI():
             user_id=current_user.id,
         ).first()
 
-    # If no recommendation found based on the query param, then try to find the user's current plan.
+    # Franco Notes: If no recommendation found based on the query param, then try to find the user's current plan.
     if latest_recommendation is None:
-        # On GET, prefer the user's current plan. If they have not marked one yet,
+        # Franco Notes: On GET, prefer the user's current plan. If they have not marked one yet,
         # fall back to the most recent recommendation so the page still has a plan to show.
         latest_recommendation = (
             LLMRecommendation.query
             .filter_by(user_id=current_user.id, is_current=True)
             .order_by(LLMRecommendation.created_at.desc())
             .first()
-        # if current plan not found, fall back to most recent recommendation to show on the page 
+        # Franco Notes: if current plan not found, fall back to most recent recommendation to show on the page 
         ) or (
             LLMRecommendation.query
             .filter_by(user_id=current_user.id)
             .order_by(LLMRecommendation.created_at.desc())
             .first()
         )
-    # On GET, show the recent 5 saved recommendations from the database
+    # Franco Notes: On GET, show the recent 5 saved recommendations from the database
     saved_recommendations = (
         LLMRecommendation.query
         .filter_by(user_id=current_user.id, user_saved=True)
@@ -961,7 +961,7 @@ def save_ai_all():
 
     recommendation.set_training_plan(training_plan)
 
-    # Extract exercise names from the training plan and add to Exercise table if needed
+    # Franco Notes: Extract exercise names from the training plan and add to Exercise table if needed
     try:
         for day in training_plan:
             for exercise in day.get("exercises", []):
@@ -981,10 +981,10 @@ def save_ai_all():
                         )
                         db.session.add(new_exercise)
     except Exception as e:
-        # Log the error but don't fail the save
+        # Franco Notes: Log the error but don't fail the save
         flash(f"Warning: Could not add some exercises to your exercise library: {str(e)}")
 
-    # If request included mark_saved, mark this recommendation as saved
+    # Franco Notes: If request included mark_saved, mark this recommendation as saved
     mark_saved = request.form.get("mark_saved")
     if mark_saved:
         recommendation.user_saved = True

@@ -105,6 +105,10 @@
   >
     {{ csrf_form.hidden_tag() if csrf_form }}
     <input type="hidden" name="form_action" value="update_profile" />
+    <!-- Franco Notes: # The form fields are duplicated in both view and edit mode, with the edit fields hidden by default.
+    # name attributes on the input fields are used to identify which data is being updated when the form is submitted, 
+    # and data-profile-view-field attributes are used to link the view fields to the corresponding data fields for easy
+    # toggling between view and edit modes. -->
 
     <div class="col-6 col-md-3">
       <label class="form-label" for="ai-age">Age</label>
@@ -177,7 +181,7 @@
 
 <!-- ── Generate form ─────────────────────────────────────────── -->
 <div class="ai-generate-area">
-  <!-- This is a post form that triggers generation of a new plan using the LLM.
+  <!-- Franco Notes: This is a post form that triggers generation of a new plan using the LLM.
    It includes an input for how many days of history to include in the LLM input,
    which is sent to the backend and used to determine how many days of recent exercise logs to include in the data sent to the LLM.
    -->
