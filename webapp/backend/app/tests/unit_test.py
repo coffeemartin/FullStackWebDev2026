@@ -18,6 +18,12 @@ class BasicTests(TestCase):
         db.drop_all()
         db.engine.dispose()
         self.app_context.pop()
+        # Franco Notes: Originally below code was not needed cuz I used in-memory SQLite for testing, 
+        # but I had to switch to file-based SQLite for testing due to the issues with in-memory SQLite and Selenium tests.
+        import os
+        if os.path.exists("test.db"):
+            os.remove("test.db")
+
         return super().tearDown()
     
 
